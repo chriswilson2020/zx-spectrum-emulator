@@ -11,15 +11,21 @@
 
 ## Phase 2: ZX Spectrum 48K
 
-- Add a `Spectrum48` machine wrapper.
-- Add ROM loading at `0x0000-0x3fff`.
-- Add RAM at `0x4000-0xffff`.
-- Implement port `0xfe` keyboard reads and border/beeper writes.
-- Run a 50 Hz frame loop that raises an IM 1 interrupt.
-- Model the ULA display file and attribute memory.
+- Add a `Spectrum48` machine wrapper. Done.
+- Add ROM loading at `0x0000-0x3fff`. Done.
+- Add RAM at `0x4000-0xffff`. Done.
+- Implement port `0xfe` keyboard reads and border/beeper writes. Done.
+- Run a 50 Hz frame loop that raises an IM 1 interrupt. Done.
+- Model the ULA display file and attribute memory. Done for whole-frame
+  rendering.
+- Add a browser canvas viewer with run/pause/reset controls. Done.
+- Add modern keyboard translation for normal PC keyboards. Done.
+- Add direct Sinclair BASIC paste loading. Done for tokenized program loading,
+  automatic renumbering, `RUN`, and `DEF FN` placeholders.
 - Add beeper output.
+- Add TAP loading through the ROM.
 - Add contention timing after the basic frame loop works.
-- Load/save TAP first, then TZX.
+- Load/save TZX after TAP.
 
 ## Phase 3: Teaching Tools
 

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ZX Spectrum 48K</title>
+    <link rel="stylesheet" href="/public/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="stage" aria-label="ZX Spectrum display">
+        <canvas id="screen" width="320" height="240"></canvas>
+      </section>
+      <aside class="panel" aria-label="Machine controls">
+        <header>
+          <h1>ZX Spectrum 48K</h1>
+          <output id="status">Loading ROM...</output>
+        </header>
+        <div class="controls">
+          <button id="runPause" type="button" aria-label="Pause">Pause</button>
+          <button id="reset" type="button">Reset</button>
+          <button id="typeHello" type="button">Type Hello</button>
+        </div>
+        <form id="pasteForm" class="paste-form">
+          <label for="pasteText">Paste BASIC</label>
+          <textarea id="pasteText" rows="5" spellcheck="false">10 PRINT "HELLO"
+RUN</textarea>
+          <button type="submit">Type Pasted Text</button>
+        </form>
+        <dl>
+          <div>
+            <dt>Frame</dt>
+            <dd id="frame">0</dd>
+          </div>
+          <div>
+            <dt>PC</dt>
+            <dd id="pc">0000</dd>
+          </div>
+          <div>
+            <dt>Border</dt>
+            <dd id="border">0</dd>
+          </div>
+          <div>
+            <dt>Key</dt>
+            <dd id="lastKey">-</dd>
+          </div>
+          <div>
+            <dt>Mapped</dt>
+            <dd id="mappedKeys">-</dd>
+          </div>
+          <div>
+            <dt>Held</dt>
+            <dd id="heldKeys">-</dd>
+          </div>
+        </dl>
+      </aside>
+    </main>
+    <script type="module" src="/public/app.js"></script>
+  </body>
+</html>

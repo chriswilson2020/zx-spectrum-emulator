@@ -31,6 +31,32 @@ The Spectrum will need a mapped memory implementation rather than flat RAM:
 ROM at `0x0000-0x3fff`, RAM at `0x4000-0xffff`, and later contention-aware
 accesses.
 
+### `src/spectrum48.js`
+
+`Spectrum48` is the first machine layer around the CPU. It owns:
+
+- A copied 16K ROM image at `0x0000-0x3fff`
+- 48K RAM at `0x4000-0xffff`
+- A `Z80` instance wired to the machine memory and I/O callbacks
+- Port `0xfe` keyboard, border, and beeper state
+- A frame counter and 50 Hz frame runner
+- ULA display and full-frame RGBA render helpers
+
+The machine exposes `pressKey` and `releaseKey` for Spectrum key names. The
+keyboard matrix is active-low and is read through the same port path the ROM
+uses.
+
+### `public/`
+
+The browser viewer is intentionally thin. `public/app.js` owns the page loop,
+loads `ROM/48.rom`, drives `Spectrum48`, renders the frame buffer to canvas, and
+bridges browser controls into the machine.
+
+`public/keyboard.js` translates modern PC keys and pasted text into Spectrum
+key chords. `public/basic.js` tokenizes Sinclair BASIC for direct loading into
+the ROM's program area, including keyword tokens, number markers, line
+renumbering, and `DEF FN` parameter storage expected by the ROM evaluator.
+
 ## CPU Execution
 
 `cpu.step()` executes one CPU event:
@@ -52,12 +78,13 @@ io.read(port)
 io.write(port, value)
 ```
 
-Ports are passed as 16-bit Z80 port addresses. The Spectrum machine layer will
-decode these for:
+Ports are passed as 16-bit Z80 port addresses. The Spectrum machine layer
+currently decodes:
 
 - `0xfe` keyboard reads
 - Border and beeper writes
-- Floating bus behaviour later, if needed
+
+Floating bus behaviour and exact contention are later accuracy work.
 
 ## Interrupt API
 
@@ -95,6 +122,32 @@ Interrupt entry wakes `HALT` and increments the refresh register.
 - Total T-states
 
 This is intended for the eventual web debugger and teaching UI.
+
+## Spectrum Runtime
+
+`Spectrum48.runFrame()` requests a maskable interrupt and then runs one PAL frame
+worth of CPU time. This is sufficient for the 48K ROM to maintain its interrupt
+service work and for the browser UI to animate the display.
+
+Video rendering reads the Spectrum display file directly:
+
+- Bitmap pixels from `0x4000-0x57ff`
+- Attributes from `0x5800-0x5aff`
+
+The renderer supports the Spectrum line-address layout, ink/paper attributes,
+bright colours, flash state supplied by the viewer, and border composition. It
+does not yet model per-scanline contention or floating bus timing.
+
+## BASIC Loading
+
+The paste loader in `public/basic.js` writes tokenized BASIC directly into the
+program area starting at `PROG`, then updates the relevant BASIC system
+variables (`VARS`, `E_LINE`, `K_CUR`, `WORKSP`, `STKBOT`, and `STKEND`).
+
+This path is faster and more reliable than typing long listings through the ROM
+editor, but it must still store the bytes the ROM evaluator expects. In
+particular, `DEF FN` parameters include hidden placeholder number markers in the
+line body; without them the ROM raises `Q Parameter error` when `FN` is called.
 
 ## Validation Harnesses
 
