@@ -1,0 +1,14 @@
+{
+  "name": "zx-spectrum-emulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "coverage:opcodes": "node scripts/opcode-coverage.js",
+    "run:cpm": "node scripts/run-cpm-exerciser.js",
+    "test:zexall": "node scripts/run-cpm-exerciser.js --file ZEXALL-main/zexall.com --max-instructions=120000000000 --expect \"Tests complete\"",
+    "test:zexdoc": "node scripts/run-cpm-exerciser.js --file ZEXALL-main/zexdoc.com --max-instructions=60000000000 --expect \"Tests complete\"",
+    "test:singlestep": "node scripts/run-singlestep.js",
+    "test": "node --test test/*.js"
+  }
+}
