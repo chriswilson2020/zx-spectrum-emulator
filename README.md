@@ -15,6 +15,20 @@ The Z80 CPU core is implemented and strongly validated:
   registers, flags, memory, ports, cycles, `WZ`, and `Q`.
 - `zexdoc.com` and `zexall.com` both pass through the CP/M exerciser harness.
 
+The first ZX Spectrum 48K machine layer is also in place:
+
+- `Spectrum48` maps a 16K ROM at `0x0000-0x3fff` and 48K RAM at
+  `0x4000-0xffff`.
+- Port `0xfe` implements active-low keyboard row reads plus border and beeper
+  state writes.
+- A 50 Hz frame loop raises maskable interrupts and renders the ULA display file
+  plus border into a 320x240 RGBA frame.
+- The browser viewer loads a local `ROM/48.rom`, runs the ROM, accepts modern PC
+  keyboard input, and can paste/load Sinclair BASIC listings.
+- The BASIC paste path tokenizes the full 48K keyword range, renumbers listings
+  that exceed line `9999`, auto-runs numbered listings, and handles ROM-specific
+  `DEF FN` parameter placeholders.
+
 See [CPU Status](docs/cpu-status.md) and [Validation](docs/validation.md) for
 the details and remaining caveats.
 
@@ -24,6 +38,27 @@ the details and remaining caveats.
 npm test
 npm run coverage:opcodes
 ```
+
+## Browser Viewer
+
+With `ROM/48.rom` present, start the current canvas viewer:
+
+```sh
+npm run dev
+```
+
+Then open [http://localhost:3000](http://localhost:3000). The viewer loads the
+48K ROM, runs the headless machine, draws the 320x240 border/display frame, and
+passes browser key events into the Spectrum keyboard matrix.
+
+`ROM/48.rom` is intentionally local-only and is ignored by git. Put your own
+48K ROM image at that path before starting the viewer or running ROM-level
+tests.
+
+The `Paste BASIC` box accepts normal PC text. Numbered listings are loaded
+directly into BASIC memory and then `RUN` is typed automatically unless the
+paste includes unnumbered commands. Listings with line numbers above the real
+Spectrum editor limit are renumbered before loading.
 
 The long independent Z80 exercisers are available too:
 
@@ -51,7 +86,7 @@ npm run test:singlestep
 - [Architecture](docs/architecture.md): CPU, memory, I/O, interrupts, and test
   harness structure.
 - [Spectrum Next Steps](docs/spectrum-next.md): plan for the ZX Spectrum 48K
-  machine layer.
+  machine layer and current Spectrum status.
 - [Opcode Coverage](docs/opcode-coverage.md): decoder coverage probe notes.
 - [Roadmap](docs/roadmap.md): high-level project phases.
 
@@ -74,5 +109,6 @@ or CP/M warm boot at `0x0000`.
 
 The emulator is being built as both a faithful ZX Spectrum emulator and a
 teaching environment for Z80 assembly and Sinclair BASIC. The immediate next
-engineering milestone is the Spectrum 48K shell: ROM mapping, RAM, keyboard
-ports, frame interrupts, and a minimal display pipeline.
+engineering milestone is moving from the minimal Spectrum shell to debugger
+ergonomics and more hardware accuracy: richer browser tooling, TAP loading,
+audio output, and ULA timing details.
