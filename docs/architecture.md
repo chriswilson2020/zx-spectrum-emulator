@@ -83,6 +83,38 @@ The current browser target uses the z80pack CP/M 2.2 8-inch floppy geometry.
 The FDC status codes follow z80pack's convention for invalid drive, track,
 sector, and command errors.
 
+### `src/z80mbc2.js`
+
+`Z80Mbc2Machine` is the native Z80-MBC2 CP/M hardware profile. It shares the
+same Z80 core and flat 64K RAM model, but emulates the Z80-MBC2 IOS protocol
+instead of z80pack's FDC ports.
+
+On reset it loads the CP/M system image from `DS0N00.DSK` into memory at
+`0xd200` and starts execution at the BIOS jump table at `0xe800`. The loaded
+image contains the real CCP, BDOS, and Z80-MBC2 BIOS. The BIOS then performs
+normal CP/M setup and can warm-boot by reading 512-byte host sectors from drive
+A.
+
+`RawZ80Mbc2Disk` wraps 8 MB Z80-MBC2 disk images:
+
+- 512 tracks.
+- 32 host sectors per track.
+- 512 bytes per host sector.
+- 8,388,608 bytes total.
+
+The IOS protocol uses port `0x01` for opcode selection and serial input, and
+port `0x00` for opcode data/results. The first implemented opcodes cover serial
+output/input status, disk selection, track/sector selection, 512-byte sector
+read/write, disk error status, and SD mount status.
+
+The bundled R140319 BIOS is run in a blocking console-status mode. In browser
+frame slices, reporting "character ready" through the IOS `SYSFLAG` path lets
+the BIOS line editor see a pending character before `CONIN` consumes it, which
+duplicates typed CCP commands. The emulator therefore lets `CONIN` read the
+serial byte directly and reports the status bit as empty by default. This keeps
+one-key-at-a-time browser typing aligned with the real command line while still
+allowing an opt-in polling status mode for diagnostic experiments.
+
 ### `src/cpm-disk.js`
 
 `RawCpmDisk` wraps raw z80pack floppy images. The default geometry is:
@@ -97,17 +129,19 @@ and can create a blank CP/M work disk filled with `0xe5`.
 
 ### `src/cpm-filesystem.js`
 
-`CpmFileSystem` is a host-side utility for editing files inside the z80pack
-CP/M 2.2 floppy layout. It is used by the browser file panel, not by the
-emulated machine. The CP/M machine still sees only sector reads and writes.
+`CpmFileSystem` is a host-side utility for editing files inside CP/M disk
+images. It is used by the browser file panels, not by the emulated machine. The
+CP/M machine still sees only sector reads and writes.
 
 The helper understands:
 
-- two reserved system tracks.
-- the z80pack sector skew table.
-- 1K allocation blocks.
-- 64 directory entries.
-- 128-record CP/M extents.
+- z80pack CP/M 2.2 floppies with two reserved system tracks, skewed 128-byte
+  sectors, 1K allocation blocks, and 64 directory entries.
+- Z80-MBC2 CP/M 2.2 8 MB images with 512-byte host sectors, 32 host sectors per
+  track, optional one-track system reservation, 4K allocation blocks, 512
+  directory entries, and 16-bit allocation block pointers.
+- 128-record CP/M extents, including Z80-MBC2 `EXM=1` entries that can describe
+  more than 128 records in one directory entry.
 - CP/M 8.3 filename normalization.
 
 It can list, read, write, overwrite, and delete user 0 files. It writes full
@@ -139,11 +173,13 @@ the first fast-load path for BASIC program and CODE blocks.
 `public/snapshot.js` parses and writes 48K `.z80` snapshots so the browser can
 restore complete RAM/register state or download the current state for later.
 
-`public/cpm-app.js` owns the CP/M page loop, loads `ROM/cpm22-1.dsk` and
-`ROM/cpm22-2.dsk`, mounts them as A: and C:, creates a blank B: work disk,
-drives `Cpm22Machine` in animation-frame slices, and bridges keyboard, disk
-upload/download, and file import/export controls into the machine and CP/M
-filesystem helper.
+`public/cpm-app.js` owns the CP/M page loop and profile switcher. The z80pack
+profile loads `ROM/cpm22-1.dsk` and `ROM/cpm22-2.dsk`, mounts them as A: and
+C:, creates a blank B: work disk, and drives `Cpm22Machine` in animation-frame
+slices. The Z80-MBC2 profile loads `ROM/DS0N00.DSK` through `ROM/DS0N06.DSK`,
+mounts them as A: through G:, and drives `Z80Mbc2Machine`. Both profiles share
+keyboard bridging, disk upload/download, host file import/export, foreign disk
+import controls, and the CP/M filesystem helper.
 
 `public/cpm-terminal.js` renders CP/M console output into an 80x24 screen
 buffer. It supports the control behavior needed by full-screen CP/M software
@@ -260,26 +296,33 @@ does not yet model per-scanline contention or floating bus timing.
 
 ## CP/M Runtime
 
-`Cpm22Machine` runs without a frame interrupt or video hardware. The browser
-advances it in short instruction slices on `requestAnimationFrame`, then drains
-console output into the terminal buffer. CP/M application timing is therefore
-cooperative and terminal-driven rather than display-frame-driven.
+Both CP/M machine profiles run without a frame interrupt or video hardware. The
+browser advances the active machine in short instruction slices on
+`requestAnimationFrame`, then drains console output into the terminal buffer.
+CP/M application timing is therefore cooperative and terminal-driven rather than
+display-frame-driven.
 
-The browser starts with three mounted disks:
+The z80pack profile starts with three mounted disks:
 
 - A: `ROM/cpm22-1.dsk`, the z80pack CP/M 2.2 system disk.
 - B: a blank raw z80pack floppy filled with `0xe5`.
 - C: `ROM/cpm22-2.dsk`, the matching upstream z80pack companion disk.
+
+The Z80-MBC2 profile starts with seven mounted 8 MB disks:
+
+- A: `ROM/DS0N00.DSK`, the Z80-MBC2 CP/M 2.2 boot disk.
+- B: through G: `ROM/DS0N01.DSK` through `ROM/DS0N06.DSK`.
 
 When a user imports or deletes a CP/M file through the file panel, the helper
 edits the selected disk image, then the machine is remounted from the current
 drive bytes. This lets CP/M rebuild its allocation map on reboot instead of
 continuing with stale in-memory disk state.
 
-Whole-disk upload and download operate on the selected drive image. Loading a
-disk validates the raw image size and remounts both drives. Saving downloads the
-selected drive's current bytes. Automatic IndexedDB persistence is intentionally
-not in place yet; users must download changed disks before leaving the page.
+Whole-disk upload and download operate on the selected drive image for the
+active profile. Loading a disk validates against the active profile's image type
+and remounts the profile's drives. Saving downloads the selected drive's current
+bytes. Automatic IndexedDB persistence is intentionally not in place yet; users
+must download changed disks before leaving the page.
 
 The CP/M filesystem helper repairs old full-extent directory entries at mount
 time. This matters for multi-extent `.COM` files such as WordStar's

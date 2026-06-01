@@ -238,7 +238,9 @@ Important filesystem details:
 - full 128-record extents must be written with record count `80h`; older
   imports with `00` are repaired when mounted.
 - imported host filenames are normalized to CP/M 8.3 names.
-- the helper targets the z80pack CP/M 2.2 8-inch floppy layout only.
+- Z80-MBC2 8 MB CP/M 2.2 disk images are supported as foreign read/import
+  sources. Their files can be copied into the normal z80pack B: work disk, but
+  the running z80pack BIOS does not mount those images directly.
 
 ## Terminal Strategy
 
@@ -322,6 +324,8 @@ CP/M and download a changed disk image. Automatic persistence remains open.
 - Add blank disk creation. Done.
 - Add directory listing and individual file import/export by editing the CP/M
   filesystem in the disk image. Done.
+- Add foreign Z80-MBC2 disk reader/import workflow. Done for directory listing
+  and copying selected files into the selected z80pack drive.
 - Add automated tests for common CP/M commands and simple `.COM` programs. Done
   for boot, `DIR`, `ED`, `BYE`, and disk/console behavior.
 - Keep `zexdoc` and `zexall` validation available as CPU-level checks. Done.

@@ -21,6 +21,13 @@
         </header>
         <pre id="cpmTerminal" class="cpm-terminal" tabindex="0" aria-label="CP/M terminal" aria-live="polite"></pre>
         <div class="cpm-controls">
+          <label class="cpm-profile-control">
+            <span>Machine</span>
+            <select id="cpmMachineProfile" aria-label="CP/M machine profile">
+              <option value="z80pack" selected>z80pack</option>
+              <option value="z80mbc2">Z80-MBC2</option>
+            </select>
+          </label>
           <button id="cpmReset" type="button">Reset</button>
           <select id="cpmDiskDrive" aria-label="Disk image drive">
             <option value="0">A: System Disk</option>
@@ -47,6 +54,19 @@
             <button id="cpmDownloadFile" type="button">Download File</button>
             <button id="cpmDeleteFile" type="button">Delete File</button>
             <input id="cpmHostFile" class="visually-hidden" type="file" tabindex="-1" aria-hidden="true">
+          </div>
+        </section>
+        <section class="cpm-file-panel" aria-label="Foreign CP/M disk import">
+          <header>
+            <p>Foreign Disk</p>
+            <button id="cpmLoadForeignDisk" type="button">Load Foreign Disk</button>
+            <input id="cpmForeignDiskFile" class="visually-hidden" type="file" accept=".dsk,application/octet-stream" tabindex="-1" aria-hidden="true">
+          </header>
+          <select id="cpmForeignFileList" size="8" multiple aria-label="Foreign CP/M directory"></select>
+          <div class="cpm-file-controls">
+            <button id="cpmCopyForeignFiles" type="button">Copy Selected To Drive</button>
+            <button id="cpmCopyAllForeignFiles" type="button">Copy All To Drive</button>
+            <button id="cpmClearForeignDisk" type="button">Clear Foreign Disk</button>
           </div>
         </section>
       </section>

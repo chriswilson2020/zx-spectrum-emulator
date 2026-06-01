@@ -1,19 +1,62 @@
 const SECTOR_SIZE = 128;
-const BLOCK_SIZE = 1024;
-const DIRECTORY_ENTRIES = 64;
 const DIRECTORY_ENTRY_SIZE = 32;
-const RESERVED_TRACKS = 2;
-const SECTORS_PER_TRACK = 26;
-const TOTAL_BLOCKS = 243;
-const DIRECTORY_BLOCKS = new Set([0, 1]);
 const RECORDS_PER_EXTENT = 128;
-const BLOCKS_PER_EXTENT = 16;
 const SKEW_TABLE = [1, 7, 13, 19, 25, 5, 11, 17, 23, 3, 9, 15, 21, 2, 8, 14, 20, 26, 6, 12, 18, 24, 4, 10, 16, 22];
 
+export const CPM_DISK_GEOMETRIES = {
+  z80packFloppy: {
+    id: "z80pack-floppy",
+    label: "z80pack CP/M 2.2 floppy",
+    imageSize: 77 * 26 * 128,
+    blockSize: 1024,
+    directoryEntries: 64,
+    totalBlocks: 243,
+    directoryBlocks: [0, 1],
+    extentMask: 0,
+    blockPointerSize: 1,
+    physicalSectorSize: 128,
+    physicalSectorsPerTrack: 26,
+    logicalSectorsPerTrack: 26,
+    reservedTracks: 2,
+    skewTable: SKEW_TABLE
+  },
+  z80mbc2System: {
+    id: "z80mbc2-d0",
+    label: "Z80-MBC2 CP/M 2.2 system disk",
+    imageSize: 8 * 1024 * 1024,
+    blockSize: 4096,
+    directoryEntries: 512,
+    totalBlocks: 2044,
+    directoryBlocks: [0, 1, 2, 3],
+    extentMask: 1,
+    blockPointerSize: 2,
+    physicalSectorSize: 512,
+    physicalSectorsPerTrack: 32,
+    logicalSectorsPerTrack: 128,
+    reservedTracks: 1
+  },
+  z80mbc2Data: {
+    id: "z80mbc2-d1",
+    label: "Z80-MBC2 CP/M 2.2 data disk",
+    imageSize: 8 * 1024 * 1024,
+    blockSize: 4096,
+    directoryEntries: 512,
+    totalBlocks: 2048,
+    directoryBlocks: [0, 1, 2, 3],
+    extentMask: 1,
+    blockPointerSize: 2,
+    physicalSectorSize: 512,
+    physicalSectorsPerTrack: 32,
+    logicalSectorsPerTrack: 128,
+    reservedTracks: 0
+  }
+};
+
 export class CpmFileSystem {
-  constructor(disk) {
+  constructor(disk, { geometry = CPM_DISK_GEOMETRIES.z80packFloppy } = {}) {
     this.disk = disk;
     this.bytes = disk.bytes;
+    this.geometry = normalizeGeometry(geometry);
   }
 
   listFiles({ user = 0 } = {}) {
@@ -54,7 +97,7 @@ export class CpmFileSystem {
       for (const block of entry.blocks) {
         if (remaining <= 0) break;
         const bytes = this.readBlock(block);
-        const length = Math.min(remaining, BLOCK_SIZE);
+        const length = Math.min(remaining, this.geometry.blockSize);
         chunks.push(bytes.slice(0, length));
         remaining -= length;
       }
@@ -83,15 +126,16 @@ export class CpmFileSystem {
     }
 
     const records = Math.max(1, Math.ceil(bytes.length / SECTOR_SIZE));
-    const requiredBlocks = Math.ceil((records * SECTOR_SIZE) / BLOCK_SIZE);
-    const requiredExtents = Math.ceil(records / RECORDS_PER_EXTENT);
+    const requiredBlocks = Math.ceil((records * SECTOR_SIZE) / this.geometry.blockSize);
+    const requiredExtents = Math.ceil(records / this.entryCapacityRecords());
     const directorySlots = this.findFreeDirectorySlots(requiredExtents);
     const blocks = this.findFreeBlocks(requiredBlocks);
 
     for (let extent = 0; extent < requiredExtents; extent += 1) {
       const entryOffset = directorySlots[extent];
-      const extentRecords = Math.min(RECORDS_PER_EXTENT, records - (extent * RECORDS_PER_EXTENT));
-      const extentBlocks = blocks.slice(extent * BLOCKS_PER_EXTENT, (extent + 1) * BLOCKS_PER_EXTENT);
+      const extentCapacity = this.entryCapacityRecords();
+      const extentRecords = Math.min(extentCapacity, records - (extent * extentCapacity));
+      const extentBlocks = blocks.slice(extent * this.blockPointersPerEntry(), (extent + 1) * this.blockPointersPerEntry());
       this.writeDirectoryEntry(entryOffset, {
         user,
         name: normalized,
@@ -107,8 +151,8 @@ export class CpmFileSystem {
 
     for (let blockIndex = 0; blockIndex < blocks.length; blockIndex += 1) {
       const block = blocks[blockIndex];
-      const offset = blockIndex * BLOCK_SIZE;
-      this.writeBlock(block, padded.slice(offset, offset + BLOCK_SIZE));
+      const offset = blockIndex * this.geometry.blockSize;
+      this.writeBlock(block, padded.slice(offset, offset + this.geometry.blockSize));
     }
 
     this.disk.dirty = true;
@@ -117,7 +161,7 @@ export class CpmFileSystem {
   deleteFile(name, { user = 0 } = {}) {
     const normalized = normalizeCpmName(name);
     let deleted = false;
-    for (let index = 0; index < DIRECTORY_ENTRIES; index += 1) {
+    for (let index = 0; index < this.geometry.directoryEntries; index += 1) {
       const offset = index * DIRECTORY_ENTRY_SIZE;
       const entry = this.parseDirectoryEntry(index);
       if (!entry.deleted && entry.user === user && entry.name === normalized) {
@@ -136,7 +180,7 @@ export class CpmFileSystem {
 
   readDirectoryEntries() {
     const entries = [];
-    for (let index = 0; index < DIRECTORY_ENTRIES; index += 1) {
+    for (let index = 0; index < this.geometry.directoryEntries; index += 1) {
       entries.push(this.parseDirectoryEntry(index));
     }
     return entries;
@@ -146,7 +190,7 @@ export class CpmFileSystem {
     let repaired = false;
     for (const entry of this.readDirectoryEntries()) {
       if (entry.deleted) continue;
-      if (entry.rawRecords === 0 && entry.blocks.length === BLOCKS_PER_EXTENT) {
+      if (entry.rawRecords === 0 && entry.blocks.length === this.blockPointersPerEntry()) {
         this.writeLogicalByte(entry.offset + 15, RECORDS_PER_EXTENT);
         repaired = true;
       }
@@ -164,8 +208,10 @@ export class CpmFileSystem {
     const extent = this.readLogicalByte(offset + 12);
     const s2 = this.readLogicalByte(offset + 14);
     const recordByte = this.readLogicalByte(offset + 15);
-    const blocks = [...this.readLogicalBytes(offset + 16, 16)].filter((block) => block !== 0);
-    const records = recordByte === 0 && blocks.length === BLOCKS_PER_EXTENT ? RECORDS_PER_EXTENT : recordByte;
+    const blocks = this.readBlockPointers(offset + 16);
+    const extentRecordOffset = (extent & this.geometry.extentMask) * RECORDS_PER_EXTENT;
+    const normalizedRecordByte = recordByte === 0 && blocks.length === this.blockPointersPerEntry() ? RECORDS_PER_EXTENT : recordByte;
+    const records = extentRecordOffset + normalizedRecordByte;
     return {
       index,
       offset,
@@ -173,7 +219,7 @@ export class CpmFileSystem {
       user,
       name: extension ? `${base}.${extension}` : base,
       extent,
-      extentIndex: extent + (s2 * 32),
+      extentIndex: Math.floor(extent / (this.geometry.extentMask + 1)) + (s2 * 32),
       rawRecords: recordByte,
       records,
       blocks,
@@ -188,16 +234,21 @@ export class CpmFileSystem {
     this.writeLogicalByte(offset, entry.user & 0x1f);
     writePaddedAscii(this, offset + 1, base, 8);
     writePaddedAscii(this, offset + 9, extension, 3);
-    this.writeLogicalByte(offset + 12, entry.extent & 0x1f);
+    const extentCapacity = this.entryCapacityRecords();
+    const extentBase = entry.extent * (this.geometry.extentMask + 1);
+    const extentLow = Math.max(0, Math.ceil(entry.records / RECORDS_PER_EXTENT) - 1);
+    const extentNumber = extentBase + extentLow;
+    const rawRecords = entry.records % RECORDS_PER_EXTENT || RECORDS_PER_EXTENT;
+    this.writeLogicalByte(offset + 12, extentNumber & 0x1f);
     this.writeLogicalByte(offset + 13, 0);
-    this.writeLogicalByte(offset + 14, Math.floor(entry.extent / 32) & 0xff);
-    this.writeLogicalByte(offset + 15, entry.records);
-    this.writeLogicalBytes(offset + 16, Uint8Array.from(entry.blocks));
+    this.writeLogicalByte(offset + 14, Math.floor(extentNumber / 32) & 0xff);
+    this.writeLogicalByte(offset + 15, Math.min(rawRecords, extentCapacity));
+    this.writeBlockPointers(offset + 16, entry.blocks);
   }
 
   findFreeDirectorySlots(count) {
     const slots = [];
-    for (let index = 0; index < DIRECTORY_ENTRIES; index += 1) {
+    for (let index = 0; index < this.geometry.directoryEntries; index += 1) {
       const offset = index * DIRECTORY_ENTRY_SIZE;
       if (this.readLogicalByte(offset) === 0xe5) slots.push(offset);
       if (slots.length === count) return slots;
@@ -208,7 +259,7 @@ export class CpmFileSystem {
   findFreeBlocks(count) {
     const used = this.usedBlocks();
     const blocks = [];
-    for (let block = 0; block < TOTAL_BLOCKS; block += 1) {
+    for (let block = 0; block < this.geometry.totalBlocks; block += 1) {
       if (used.has(block)) continue;
       blocks.push(block);
       if (blocks.length === count) return blocks;
@@ -217,7 +268,7 @@ export class CpmFileSystem {
   }
 
   usedBlocks() {
-    const used = new Set(DIRECTORY_BLOCKS);
+    const used = new Set(this.geometry.directoryBlocks);
     for (const entry of this.readDirectoryEntries()) {
       if (entry.deleted) continue;
       for (const block of entry.blocks) used.add(block);
@@ -227,22 +278,54 @@ export class CpmFileSystem {
 
   readBlock(block) {
     this.assertBlock(block);
-    return this.readLogicalBytes(block * BLOCK_SIZE, BLOCK_SIZE);
+    return this.readLogicalBytes(block * this.geometry.blockSize, this.geometry.blockSize);
   }
 
   writeBlock(block, values) {
     this.assertBlock(block);
     const bytes = Uint8Array.from(values);
-    if (bytes.length > BLOCK_SIZE) throw new Error("CP/M block write is too large");
-    const padded = new Uint8Array(BLOCK_SIZE).fill(0x1a);
+    if (bytes.length > this.geometry.blockSize) throw new Error("CP/M block write is too large");
+    const padded = new Uint8Array(this.geometry.blockSize).fill(0x1a);
     padded.set(bytes);
-    this.writeLogicalBytes(block * BLOCK_SIZE, padded);
+    this.writeLogicalBytes(block * this.geometry.blockSize, padded);
   }
 
   assertBlock(block) {
-    if (!Number.isInteger(block) || block < 0 || block >= TOTAL_BLOCKS) {
+    if (!Number.isInteger(block) || block < 0 || block >= this.geometry.totalBlocks) {
       throw new Error(`Invalid CP/M block ${block}`);
     }
+  }
+
+  blockPointersPerEntry() {
+    return 16 / this.geometry.blockPointerSize;
+  }
+
+  entryCapacityRecords() {
+    return RECORDS_PER_EXTENT * (this.geometry.extentMask + 1);
+  }
+
+  readBlockPointers(offset) {
+    const blocks = [];
+    for (let index = 0; index < 16; index += this.geometry.blockPointerSize) {
+      const block = this.geometry.blockPointerSize === 1
+        ? this.readLogicalByte(offset + index)
+        : this.readLogicalByte(offset + index) | (this.readLogicalByte(offset + index + 1) << 8);
+      if (block !== 0) blocks.push(block);
+    }
+    return blocks;
+  }
+
+  writeBlockPointers(offset, blocks) {
+    this.writeLogicalBytes(offset, new Uint8Array(16));
+    blocks.forEach((block, index) => {
+      const blockOffset = offset + (index * this.geometry.blockPointerSize);
+      if (this.geometry.blockPointerSize === 1) {
+        this.writeLogicalByte(blockOffset, block);
+      } else {
+        this.writeLogicalByte(blockOffset, block & 0xff);
+        this.writeLogicalByte(blockOffset + 1, block >> 8);
+      }
+    });
   }
 
   readLogicalByte(offset) {
@@ -266,11 +349,26 @@ export class CpmFileSystem {
   logicalOffsetToPhysicalOffset(offset) {
     const logicalRecord = Math.floor(offset / SECTOR_SIZE);
     const byteInRecord = offset % SECTOR_SIZE;
-    const logicalTrack = Math.floor(logicalRecord / SECTORS_PER_TRACK) + RESERVED_TRACKS;
-    const logicalSectorIndex = logicalRecord % SECTORS_PER_TRACK;
-    const physicalSector = SKEW_TABLE[logicalSectorIndex];
-    return ((logicalTrack * SECTORS_PER_TRACK) + (physicalSector - 1)) * SECTOR_SIZE + byteInRecord;
+    const recordsPerPhysicalSector = this.geometry.physicalSectorSize / SECTOR_SIZE;
+    const logicalTrack = Math.floor(logicalRecord / this.geometry.logicalSectorsPerTrack) + this.geometry.reservedTracks;
+    const logicalSectorIndex = logicalRecord % this.geometry.logicalSectorsPerTrack;
+    const physicalSectorIndex = Math.floor(logicalSectorIndex / recordsPerPhysicalSector);
+    const byteInPhysicalSector = ((logicalSectorIndex % recordsPerPhysicalSector) * SECTOR_SIZE) + byteInRecord;
+    const skewedSectorIndex = this.geometry.skewTable ? this.geometry.skewTable[physicalSectorIndex] - 1 : physicalSectorIndex;
+    return ((logicalTrack * this.geometry.physicalSectorsPerTrack) + skewedSectorIndex) * this.geometry.physicalSectorSize + byteInPhysicalSector;
   }
+}
+
+export function detectCpmDiskGeometry(bytes, filename = "") {
+  const imageSize = bytes.byteLength ?? bytes.length;
+  if (imageSize === CPM_DISK_GEOMETRIES.z80packFloppy.imageSize) return CPM_DISK_GEOMETRIES.z80packFloppy;
+  if (imageSize === CPM_DISK_GEOMETRIES.z80mbc2System.imageSize) {
+    if (/N00\.DSK$/i.test(filename) || directoryScore(bytes, CPM_DISK_GEOMETRIES.z80mbc2System) >= directoryScore(bytes, CPM_DISK_GEOMETRIES.z80mbc2Data)) {
+      return CPM_DISK_GEOMETRIES.z80mbc2System;
+    }
+    return CPM_DISK_GEOMETRIES.z80mbc2Data;
+  }
+  throw new Error(`Unsupported CP/M disk image size: ${imageSize} bytes`);
 }
 
 export function normalizeCpmName(name) {
@@ -299,4 +397,16 @@ function writePaddedAscii(target, offset, text, length) {
   for (let index = 0; index < length; index += 1) {
     target.writeLogicalByte(offset + index, index < text.length ? text.charCodeAt(index) : 0x20);
   }
+}
+
+function normalizeGeometry(geometry) {
+  if (typeof geometry !== "string") return geometry;
+  const match = Object.values(CPM_DISK_GEOMETRIES).find((candidate) => candidate.id === geometry);
+  if (!match) throw new Error(`Unknown CP/M disk geometry: ${geometry}`);
+  return match;
+}
+
+function directoryScore(bytes, geometry) {
+  const fs = new CpmFileSystem({ bytes, dirty: false }, { geometry });
+  return fs.readDirectoryEntries().filter((entry) => !entry.deleted && entry.user < 16 && /^[A-Z0-9_$~!#%&'()@^`{}-]+(\.[A-Z0-9_$~!#%&'()@^`{}-]+)?$/.test(entry.name)).length;
 }

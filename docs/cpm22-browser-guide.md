@@ -16,14 +16,20 @@ Open [http://localhost:3000](http://localhost:3000), then choose `CP/M 2.2` from
 the machine selector. The CP/M page can also be opened directly at
 [http://localhost:3000/cpm.html](http://localhost:3000/cpm.html).
 
-The machine boots from `ROM/cpm22-1.dsk`, a z80pack CP/M 2.2 system disk. On a
-normal boot the terminal prints the Z80SIM CP/M banner and reaches `A>`.
-`ROM/cpm22-2.dsk` is also bundled as the matching upstream companion disk and is
-mounted as `C:` by default.
+The CP/M page defaults to the z80pack machine profile. It boots from
+`ROM/cpm22-1.dsk`, a z80pack CP/M 2.2 system disk. On a normal boot the
+terminal prints the Z80SIM CP/M banner and reaches `A>`. `ROM/cpm22-2.dsk` is
+also bundled as the matching upstream companion disk and is mounted as `C:` by
+default.
+
+Use the machine profile control on the CP/M page to switch between:
+
+- `z80pack`: the current z80pack/cpmsim-compatible floppy machine.
+- `Z80-MBC2`: a native Z80-MBC2 IOS machine that boots `ROM/DS0N00.DSK`.
 
 ## Drives
 
-The browser mounts three drives by default:
+The z80pack profile mounts three drives by default:
 
 - `A:` is the bundled system disk from `ROM/cpm22-1.dsk`.
 - `B:` is a blank writable work disk.
@@ -33,6 +39,12 @@ Use `B:` for uploaded files, experiments, editors, and saved work. The bundled
 `A:` disk is a system disk and has very little free space. Keep `C:` as the
 upstream companion disk unless you intentionally want to replace it with another
 image through the disk controls.
+
+The Z80-MBC2 profile mounts seven 8 MB drives by default:
+
+- `A:` through `G:` map to `ROM/DS0N00.DSK` through `ROM/DS0N06.DSK`.
+- `A:` is the Z80-MBC2 CP/M 2.2 boot disk.
+- `B:` through `G:` are the matching Z80-MBC2 data disks.
 
 The disk image selector beside `Load Disk` and `Save Disk` controls which whole
 disk image is loaded or downloaded. The file-browser drive selector controls
@@ -82,6 +94,28 @@ It also writes full 128-record extents as `80h`, which is required by real CP/M
 loaders. Older disks made before that fix may have full extents recorded as
 `00`; the browser repairs those directory entries in memory when a disk is
 mounted, and saving the disk writes the repaired image.
+
+## Foreign Disk Import
+
+The Foreign Disk panel reads CP/M disk images whose filesystem layout differs
+from the running machine profile. It remains useful for copying files between
+disk families. The first supported foreign format is Z80-MBC2 CP/M 2.2:
+
+- `DS0N00.DSK`: 8 MB system disk with one reserved 16 KB track.
+- `DS0N01.DSK` through similar data disks: 8 MB data disks with no reserved
+  tracks.
+- 512-byte host sectors, 32 host sectors per track.
+- 4K allocation blocks.
+- 512 directory entries.
+- 16-bit CP/M allocation block numbers.
+
+Load a foreign disk, select one or more files, keep the file-browser drive set
+to `B: Work`, and click `Copy Selected To Drive`. The files are copied into the
+normal writable B: disk, so CP/M can run portable `.COM` programs from B: even
+though the running z80pack BIOS cannot mount the 8 MB disk directly.
+
+Use `Copy All To Drive` carefully. The B: work disk is still a 256K z80pack
+floppy, so a whole 8 MB foreign disk will not fit.
 
 ## Terminal Emulation
 
@@ -140,7 +174,8 @@ controls still need browser testing when UI behavior changes.
 - Disk persistence is explicit download/upload; automatic IndexedDB restore is
   still future work.
 - The filesystem helper currently targets the z80pack CP/M 2.2 floppy geometry,
-  not arbitrary CP/M disk formats.
+  plus Z80-MBC2 8 MB images for foreign-disk reading. It is not a general CP/M
+  disk-format library.
 - The terminal implements the control sequences needed by the current WordStar
   path, but it is not a complete emulation of every terminal listed by
   WordStar.

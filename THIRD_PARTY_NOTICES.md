@@ -61,3 +61,25 @@ to boot `cpm22-1.dsk` from its real boot sector. The images are used as runtime
 assets for the browser CP/M page and as test fixtures for the CP/M machine
 layer. Any additional CP/M disk images should get their own provenance and
 license notes before they are committed.
+
+## Z80-MBC2 ROM And CP/M Disk Images
+
+`ROM/DS0N00.DSK` through `ROM/DS0N06.DSK` are Z80-MBC2 CP/M 2.2 disk images
+used by the CP/M page's Z80-MBC2 machine profile. The CP/M system image loaded
+from `DS0N00.DSK` includes the Z80-MBC2 CP/M BIOS used by this profile. The
+images are 8 MB virtual disks and are mounted as A: through G: by default.
+
+These files come from Fabio Defabis / SuperFabius's Z80-MBC2 project:
+
+```text
+https://github.com/SuperFabius/Z80-MBC2
+SD-S220718-R290823-v2.zip
+```
+
+The Z80-MBC2 repository is licensed under the GNU General Public License
+version 3.0. The upstream project page describes the Z80-MBC2 as a Z80 SBC with
+an SD disk emulator that can run CP/M 2.2, and the repository marks the project
+license as GPL-3.0.
+
+Keep the upstream GPL-3.0 license and provenance with these ROM/disk assets
+when publishing or replacing them.

@@ -58,6 +58,7 @@ test("CP/M page exposes a live terminal entry point", async () => {
 
   assert.match(cpm, /id="cpmTerminal"/);
   assert.match(cpm, /tabindex="0"/);
+  assert.match(cpm, /id="cpmMachineProfile"/);
   assert.match(cpm, /id="cpmReset"/);
   assert.match(cpm, /id="cpmDiskFile"/);
   assert.match(cpm, /id="cpmDiskDrive"/);
@@ -70,13 +71,23 @@ test("CP/M page exposes a live terminal entry point", async () => {
   assert.match(cpm, /id="cpmImportFile"/);
   assert.match(cpm, /id="cpmDownloadFile"/);
   assert.match(cpm, /id="cpmDeleteFile"/);
+  assert.match(cpm, /id="cpmForeignDiskFile"/);
+  assert.match(cpm, /id="cpmLoadForeignDisk"/);
+  assert.match(cpm, /id="cpmForeignFileList"/);
+  assert.match(cpm, /id="cpmCopyForeignFiles"/);
+  assert.match(cpm, /id="cpmCopyAllForeignFiles"/);
   assert.match(app, /new URL\(path, import\.meta\.url\)/);
   assert.match(app, /loadDiskAsset\("\.\.\/ROM\/cpm22-1\.dsk"\)/);
   assert.match(app, /loadDiskAsset\("\.\.\/ROM\/cpm22-2\.dsk"\)/);
+  assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N00\.DSK"\)/);
+  assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N06\.DSK"\)/);
+  assert.match(app, /Z80Mbc2Machine/);
   assert.match(app, /downloadBytes/);
   assert.match(app, /RawCpmDisk\.z80simFloppy\(bytes\)/);
   assert.match(app, /RawCpmDisk\.blankZ80simFloppy\(\)/);
-  assert.match(app, /new CpmFileSystem\(selectedFileDisk\(\)\)/);
+  assert.match(app, /activeProfile\.createFileSystem\(selectedFileDisk\(\), selectedDiskIndex\(fileDriveSelect\)\)/);
+  assert.match(app, /detectCpmDiskGeometry/);
+  assert.match(app, /foreignFileSystem\.readFile/);
   assert.doesNotMatch(app, /from "\/(public|src)\//);
 });
 
@@ -96,7 +107,10 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
   assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
   assert.equal(existsSync("dist/src/spectrum48.js"), true);
+  assert.equal(existsSync("dist/src/z80mbc2.js"), true);
   assert.equal(existsSync("dist/ROM/48.rom"), true);
   assert.equal(existsSync("dist/ROM/cpm22-1.dsk"), true);
   assert.equal(existsSync("dist/ROM/cpm22-2.dsk"), true);
+  assert.equal(existsSync("dist/ROM/DS0N00.DSK"), true);
+  assert.equal(existsSync("dist/ROM/DS0N06.DSK"), true);
 });

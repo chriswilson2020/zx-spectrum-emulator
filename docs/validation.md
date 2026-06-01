@@ -64,10 +64,12 @@ fast-loading, ROM-loader interception, standard-speed EAR pulse playback,
 `.z80` snapshot save/load, GitHub Pages packaging, and the tabbed/collapsible
 browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw
 floppy geometry, FDC and console ports, CP/M command smoke tests, host-side CP/M
-filesystem import/export, full-extent record-count repair, and the screen-buffer
-terminal behavior needed by WordStar-style full-screen applications. The bundled
-`ROM/48.rom` and `ROM/cpm22-1.dsk` let ROM-level Spectrum tests and CP/M boot
-tests run without extra local setup.
+filesystem import/export, Z80-MBC2 8 MB disk reads, native Z80-MBC2 IOS boot,
+interactive frame-sliced Z80-MBC2 typing, full-extent record-count repair, and
+the screen-buffer terminal behavior needed by WordStar-style full-screen
+applications. The bundled `ROM/48.rom`,
+`ROM/cpm22-1.dsk`, and `ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M
+boot tests run without extra local setup.
 
 The `.z80` snapshot path has also been checked interactively with real snapshot
 files: loading external `.z80` files resumes the saved machine state, and a
@@ -127,8 +129,9 @@ from the BDOS-intercept exerciser harness:
   blocking console input, FDC read/write/status behavior, real CP/M boot to
   `A>`, `DIR`, `ED`, and `BYE`.
 - `cpm-filesystem.test.js` checks CP/M 8.3 name handling, directory listing,
-  file read/write/overwrite/delete, multi-extent files, and repair of old
-  full-extents written with record count `00`.
+  file read/write/overwrite/delete, multi-extent files, Z80-MBC2 8 MB disk
+  geometry detection/reading, and repair of old full-extents written with
+  record count `00`.
 - `cpm-terminal.test.js` checks carriage return, line feed, backspace,
   scrolling, cursor addressing, clear/erase behavior, and control-byte
   filtering.
@@ -137,7 +140,11 @@ Manual browser smoke tests are still useful for full application workflows. The
 most important current manual path is loading a WordStar disk as B:, running
 `INSTALL`, selecting `K` for Soroc IQ-120/140, and confirming the installed
 WordStar menu renders as a stable screen. Also confirm that the bundled
-companion disk is reachable as C: after a fresh page load.
+companion disk is reachable as C: after a fresh page load. For foreign disk
+imports, load a Z80-MBC2 image such as `DS0N00.DSK`, copy a small `.COM` file
+to B:, switch to `B:` in CP/M, and run it. Also switch the CP/M page to the
+Z80-MBC2 machine profile and verify that it boots to `A>` and can run `DIR` on
+A: and B:.
 
 ### Interactive BASIC Programs
 

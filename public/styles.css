@@ -796,6 +796,13 @@ dd {
   gap: 10px;
 }
 
+.cpm-profile-control {
+  display: grid;
+  gap: 4px;
+  color: #bbc4b7;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
 .cpm-controls button:disabled {
   cursor: not-allowed;
   opacity: 0.52;

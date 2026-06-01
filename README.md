@@ -43,7 +43,7 @@ The first ZX Spectrum 48K machine layer is in place:
   editable `.bas` files, and handle ROM-specific `DEF FN` parameter
   placeholders.
 
-The CP/M 2.2 machine layer is also bootable:
+The CP/M 2.2 page is also bootable and can switch hardware profiles:
 
 - `Cpm22Machine` owns 64K RAM, the shared Z80 CPU, z80pack-compatible console
   ports, and z80pack/cpmsim floppy disk controller ports.
@@ -51,13 +51,17 @@ The CP/M 2.2 machine layer is also bootable:
   reaching the normal `A>` prompt without BDOS interception.
 - `ROM/cpm22-2.dsk` is bundled as the matching upstream z80pack companion disk
   and is mounted as C: by default.
-- The browser CP/M page mounts the bundled system disk as A: and a blank
-  writable work disk as B:.
+- `Z80Mbc2Machine` emulates the Z80-MBC2 IOS protocol and boots
+  `ROM/DS0N00.DSK` natively, with `DS0N00.DSK` through `DS0N06.DSK` mounted as
+  A: through G: when that profile is selected.
+- The browser CP/M page defaults to the z80pack profile, mounting the bundled
+  system disk as A: and a blank writable work disk as B:.
 - Whole-disk load/save and individual CP/M file import/download/delete are
   available from the browser.
 - The CP/M file utility handles the z80pack skewed 8-inch floppy layout,
-  multi-extent files, and repair of old full-extent imports whose record counts
-  were written incorrectly.
+  Z80-MBC2 8 MB disk images for foreign-disk imports, multi-extent files, and
+  repair of old full-extent imports whose record counts were written
+  incorrectly.
 - The terminal renderer is an 80x24 screen buffer with WordStar/Soroc-style
   cursor addressing, screen clear, erase-to-end-of-line, scrolling, tabs, and
   control-byte filtering.
@@ -136,13 +140,15 @@ downloads the current emulator state as an uncompressed version 1 `.z80` file.
 This is the most convenient way to save a BASIC program or a game position in
 the browser: it preserves the whole machine state, not just the BASIC listing.
 
-The CP/M page boots the bundled z80pack CP/M 2.2 disk as drive A:, creates a
-blank B: work disk, and mounts the bundled z80pack companion disk as C:. Use B:
-for uploaded files and WordStar experiments; the factory A: disk is almost full
-and should be treated as the system disk. The file panel can import host files
-into a selected CP/M drive, download CP/M files back to the host, and delete
-files. The disk controls can load or save a whole `.dsk` image for the selected
-drive. See
+The CP/M page defaults to the z80pack profile: A: is the bundled system disk,
+B: is a blank work disk, and C: is the z80pack companion disk. Use the machine
+profile control to switch to Z80-MBC2, which boots `DS0N00.DSK` and mounts
+`DS0N00.DSK` through `DS0N06.DSK` as A: through G:. The file panel can import
+host files into a selected CP/M drive, download CP/M files back to the host, and
+delete files. The disk controls can load or save a whole `.dsk` image for the
+selected drive. The Foreign Disk panel can still load Z80-MBC2 8 MB disk images,
+list their directories, and copy selected files into the currently selected
+CP/M drive. See
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for the exact workflow.
 
 ## GitHub Pages Demo
