@@ -45,6 +45,19 @@ const BASIC_KEYWORDS = new Map([
   ["RUN", "r"]
 ]);
 
+const BROWSER_SCROLL_KEYS = new Set([
+  " ",
+  "Spacebar",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "PageUp",
+  "PageDown",
+  "Home",
+  "End"
+]);
+
 export function spectrumKeysForModernKey(event) {
   const direct = DIRECT_KEYS.get(event.key);
   if (direct) return direct;
@@ -66,6 +79,10 @@ export function shouldCaptureModernKeyEvent(event) {
   const target = event.target;
   const tagName = target?.tagName?.toUpperCase();
   return !(target?.isContentEditable || tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT");
+}
+
+export function shouldPreventBrowserScrollKey(event) {
+  return BROWSER_SCROLL_KEYS.has(event.key);
 }
 
 export function modernTextToSpectrumKeyTaps(text) {

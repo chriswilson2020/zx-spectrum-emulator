@@ -12,6 +12,7 @@ import { Spectrum48 } from "../src/spectrum48.js";
 import {
   basicTextToSpectrumKeyTaps,
   shouldCaptureModernKeyEvent,
+  shouldPreventBrowserScrollKey,
   spectrumKeysForModernKey
 } from "./keyboard.js";
 import { loadTapEntry, parseTapeFile, tapEntries } from "./tape.js";
@@ -339,6 +340,7 @@ function updateDebugger() {
 
 window.addEventListener("keydown", (event) => {
   if (!shouldCaptureModernKeyEvent(event)) return;
+  if (shouldPreventBrowserScrollKey(event)) event.preventDefault();
   if (event.repeat) return;
 
   const keys = spectrumKeysForModernKey(event);

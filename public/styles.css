@@ -15,6 +15,7 @@ body {
   display: grid;
   place-items: center;
   padding: 0;
+  overscroll-behavior: none;
   background:
     linear-gradient(120deg, rgba(180, 30, 70, 0.18), transparent 34%),
     linear-gradient(260deg, rgba(20, 160, 145, 0.16), transparent 42%),

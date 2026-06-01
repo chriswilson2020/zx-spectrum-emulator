@@ -38,7 +38,7 @@ npm run test:zexall
 
 The latest validation pass reported:
 
-- `npm test`: 170 tests passing
+- `npm test`: 171 tests passing
 - `npm run build:pages`: `dist/` artifact created
 - `npm run coverage:opcodes`: 100% for base, CB, ED, DD, FD, DDCB, and FDCB
 - `npm run test:singlestep`: 1,604,000 vectors, 0 failures

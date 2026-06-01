@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   basicTextToSpectrumKeyTaps,
   shouldCaptureModernKeyEvent,
+  shouldPreventBrowserScrollKey,
   modernTextToSpectrumKeyTaps,
   spectrumKeysForModernKey
 } from "../public/keyboard.js";
@@ -76,6 +77,14 @@ test("does not capture modern keys while editing form controls", () => {
   assert.equal(shouldCaptureModernKeyEvent({ target: { tagName: "SELECT" } }), false);
   assert.equal(shouldCaptureModernKeyEvent({ target: { isContentEditable: true } }), false);
   assert.equal(shouldCaptureModernKeyEvent({ target: { tagName: "CANVAS" } }), true);
+});
+
+test("captures browser scroll keys during gameplay", () => {
+  for (const key of [" ", "Spacebar", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "PageUp", "PageDown", "Home", "End"]) {
+    assert.equal(shouldCaptureModernKeyEvent({ key, target: { tagName: "BODY" } }), true, key);
+    assert.equal(shouldPreventBrowserScrollKey({ key }), true, key);
+  }
+  assert.equal(shouldPreventBrowserScrollKey({ key: "a" }), false);
 });
 
 test("converts pasted modern text into Spectrum key taps", () => {
