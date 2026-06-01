@@ -41,6 +41,7 @@ accesses.
 - Port `0xfe` keyboard, border, and beeper state
 - A frame counter and 50 Hz frame runner
 - ULA display and full-frame RGBA render helpers
+- Beeper transition capture with CPU t-state timestamps
 
 The machine exposes `pressKey` and `releaseKey` for Spectrum key names. The
 keyboard matrix is active-low and is read through the same port path the ROM
@@ -56,6 +57,7 @@ bridges browser controls into the machine.
 key chords. `public/basic.js` tokenizes Sinclair BASIC for direct loading into
 the ROM's program area, including keyword tokens, number markers, line
 renumbering, and `DEF FN` parameter storage expected by the ROM evaluator.
+`public/audio.js` converts beeper transitions into Web Audio sample buffers.
 
 ## CPU Execution
 
@@ -85,6 +87,11 @@ currently decodes:
 - Border and beeper writes
 
 Floating bus behaviour and exact contention are later accuracy work.
+
+Beeper writes are also recorded as timed transitions. The browser drains those
+events and schedules short mono buffers through Web Audio. This is intentionally
+buffer-based and simple for now; exact speaker filtering and contention-aware
+timing are future accuracy work.
 
 ## Interrupt API
 

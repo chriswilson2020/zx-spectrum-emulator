@@ -70,6 +70,7 @@ export class Spectrum48 {
     this.ram = new Uint8Array(0xc000);
     this.borderColor = 0;
     this.beeperOn = false;
+    this.beeperEvents = [];
     this.frame = 0;
     this.keyboardRows = new Uint8Array(8).fill(0x1f);
     this.cpu = new Z80(this, {
@@ -109,7 +110,17 @@ export class Spectrum48 {
   writePort(port, value) {
     if ((port & 0x0001) !== 0) return;
     this.borderColor = value & 0x07;
-    this.beeperOn = (value & 0x10) !== 0;
+    const beeperOn = (value & 0x10) !== 0;
+    if (beeperOn !== this.beeperOn) {
+      this.beeperEvents.push({ tState: this.cpu.tStates, on: beeperOn });
+    }
+    this.beeperOn = beeperOn;
+  }
+
+  drainBeeperEvents() {
+    const events = this.beeperEvents;
+    this.beeperEvents = [];
+    return events;
   }
 
   pressKey(key) {
@@ -228,5 +239,6 @@ export class Spectrum48 {
   reset() {
     this.cpu.reset();
     this.frame = 0;
+    this.beeperEvents = [];
   }
 }

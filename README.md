@@ -21,6 +21,8 @@ The first ZX Spectrum 48K machine layer is also in place:
   `0x4000-0xffff`.
 - Port `0xfe` implements active-low keyboard row reads plus border and beeper
   state writes.
+- Beeper transitions are captured with CPU t-state timing and can be played in
+  the browser through Web Audio.
 - A 50 Hz frame loop raises maskable interrupts and renders the ULA display file
   plus border into a 320x240 RGBA frame.
 - The browser viewer loads a local `ROM/48.rom`, runs the ROM, accepts modern PC
@@ -118,5 +120,5 @@ or CP/M warm boot at `0x0000`.
 The emulator is being built as both a faithful ZX Spectrum emulator and a
 teaching environment for Z80 assembly and Sinclair BASIC. The immediate next
 engineering milestone is moving from the minimal Spectrum shell to debugger
-ergonomics and more hardware accuracy: richer browser tooling, TAP loading,
-audio output, and ULA timing details.
+ergonomics and more hardware accuracy: richer browser tooling, TAP loading, and
+ULA timing details.

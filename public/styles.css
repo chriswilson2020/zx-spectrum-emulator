@@ -82,7 +82,11 @@ output {
 }
 
 #typeHello {
-  grid-column: 1 / -1;
+  grid-column: 1;
+}
+
+#audioToggle {
+  grid-column: 2;
 }
 
 .paste-form {
