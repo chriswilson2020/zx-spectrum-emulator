@@ -8,6 +8,12 @@ Run the unit tests:
 npm test
 ```
 
+Build the static GitHub Pages artifact:
+
+```sh
+npm run build:pages
+```
+
 Probe decoder coverage:
 
 ```sh
@@ -32,7 +38,8 @@ npm run test:zexall
 
 The latest validation pass reported:
 
-- `npm test`: 168 tests passing
+- `npm test`: 170 tests passing
+- `npm run build:pages`: `dist/` artifact created
 - `npm run coverage:opcodes`: 100% for base, CB, ED, DD, FD, DDCB, and FDCB
 - `npm run test:singlestep`: 1,604,000 vectors, 0 failures
 - `npm run test:zexdoc`: `Tests complete`
@@ -52,9 +59,17 @@ editing the CPU or the Spectrum machine layer.
 The current unit suite covers the Z80 core, CP/M exerciser harness, `Spectrum48`
 ROM/RAM/ports/frame/video behaviour, modern keyboard translation, the BASIC
 tokenizer/loader, Web Audio beeper sample generation, and debugger helper
-formatting/disassembly/status reads, and TAP/TZX parsing, fast-loading,
-ROM-loader interception, and standard-speed EAR pulse playback. ROM-level
-BASIC tests require a local `ROM/48.rom`, which is not committed.
+formatting/disassembly/status reads, TAP/TZX parsing, fast-loading,
+ROM-loader interception, standard-speed EAR pulse playback, and GitHub Pages
+packaging. The bundled `ROM/48.rom` lets ROM-level browser and BASIC tests run
+without extra local setup.
+
+### GitHub Pages Build
+
+`scripts/build-pages.js` creates a static `dist/` directory containing the
+browser entry point, `public/`, `src/`, and `ROM/` when present. The unit tests
+verify that browser imports are relative, the ROM fetch is project-page-safe,
+and the build script emits the files GitHub Pages needs.
 
 ### Opcode Coverage
 

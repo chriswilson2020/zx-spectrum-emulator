@@ -1,5 +1,5 @@
-import { BeeperAudio } from "/public/audio.js";
-import { loadBasicProgram, renumberBasicProgram } from "/public/basic.js";
+import { BeeperAudio } from "./audio.js";
+import { loadBasicProgram, renumberBasicProgram } from "./basic.js";
 import {
   disassembleWindow,
   hexByte,
@@ -7,14 +7,14 @@ import {
   readBasicStatus,
   readMemoryRows,
   readSystemVariables
-} from "/public/debugger.js";
-import { Spectrum48 } from "/src/spectrum48.js";
+} from "./debugger.js";
+import { Spectrum48 } from "../src/spectrum48.js";
 import {
   basicTextToSpectrumKeyTaps,
   shouldCaptureModernKeyEvent,
   spectrumKeysForModernKey
-} from "/public/keyboard.js";
-import { loadTapEntry, parseTapeFile, tapEntries } from "/public/tape.js";
+} from "./keyboard.js";
+import { loadTapEntry, parseTapeFile, tapEntries } from "./tape.js";
 
 const canvas = document.querySelector("#screen");
 const context = canvas.getContext("2d");
@@ -76,7 +76,7 @@ function renderKeyValueGrid(container, rows, className = "") {
 }
 
 async function loadRom() {
-  const response = await fetch("/ROM/48.rom");
+  const response = await fetch(new URL("../ROM/48.rom", import.meta.url));
   if (!response.ok) throw new Error(`ROM load failed: ${response.status}`);
   rom = new Uint8Array(await response.arrayBuffer());
 }

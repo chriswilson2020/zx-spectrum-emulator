@@ -59,9 +59,9 @@ Then open [http://localhost:3000](http://localhost:3000). The viewer loads the
 48K ROM, runs the headless machine, draws the 320x240 border/display frame, and
 passes browser key events into the Spectrum keyboard matrix.
 
-`ROM/48.rom` is intentionally local-only and is ignored by git. Put your own
-48K ROM image at that path before starting the viewer or running ROM-level
-tests.
+`ROM/48.rom` is included so the browser demo can boot without extra setup. The
+emulator code is MIT licensed; the ROM image is not part of that code license.
+See [ROM/README.md](ROM/README.md) for the ROM notice.
 
 The `Paste BASIC` box accepts normal PC text. Numbered listings are loaded
 directly into BASIC memory and then `RUN` is typed automatically unless the
@@ -84,6 +84,28 @@ blocks, and more exact custom-loader timing are later work.
 During pulse playback, flashing border colours are expected: that is the loader
 polling the tape input. Large standard-speed blocks load at cassette speed, so a
 50K-ish block can take around two minutes to finish.
+
+## GitHub Pages Demo
+
+The browser app is static and can be published with GitHub Pages. The app uses
+relative module and asset paths so it works both at `localhost:3000` and under a
+project Pages URL such as:
+
+```text
+https://chriswilson2020.github.io/zx-spectrum-emulator/
+```
+
+Build the deployable static tree locally with:
+
+```sh
+npm run build:pages
+```
+
+This writes `dist/` with `index.html`, `public/`, `src/`, and `ROM/` when the
+ROM directory is present. The workflow in `.github/workflows/pages.yml` runs the
+unit suite, builds `dist/`, uploads it as a Pages artifact, and deploys it when
+changes land on `main` or when the workflow is run manually. In GitHub, set
+`Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 
 The debugger is designed for the browser viewport rather than as a fixed-size
 desktop panel. On wide screens the Spectrum display remains in the left pane
