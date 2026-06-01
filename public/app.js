@@ -14,6 +14,7 @@ import {
   shouldCaptureModernKeyEvent,
   spectrumKeysForModernKey
 } from "/public/keyboard.js";
+import { loadTapEntry, parseTapeFile, tapEntries } from "/public/tape.js";
 
 const canvas = document.querySelector("#screen");
 const context = canvas.getContext("2d");
@@ -32,6 +33,9 @@ const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
 const pasteForm = document.querySelector("#pasteForm");
 const pasteTextInput = document.querySelector("#pasteText");
+const tapFileInput = document.querySelector("#tapFile");
+const tapList = document.querySelector("#tapList");
+const tapLoadButton = document.querySelector("#tapLoad");
 const registerGrid = document.querySelector("#registerGrid");
 const flagGrid = document.querySelector("#flagGrid");
 const basicStatusPanel = document.querySelector("#basicStatus");
@@ -48,6 +52,9 @@ let physicalShiftDown = false;
 const activeChords = new Map();
 let lastModernKey = "-";
 let lastMappedKeys = [];
+let currentTapBlocks = [];
+let currentTapEntries = [];
+let selectedTapEntryIndex = -1;
 
 function formatWord(value) {
   return value.toString(16).padStart(4, "0").toUpperCase();
@@ -76,6 +83,7 @@ async function loadRom() {
 
 function resetMachine() {
   machine = new Spectrum48({ rom });
+  if (currentTapBlocks.length > 0) machine.setTapeBlocks(currentTapBlocks);
   audio?.reset(machine.cpu.tStates);
   statusOutput.value = "Running";
 }
@@ -177,6 +185,43 @@ function typeModernText(text, { reset = false } = {}) {
     : numberedLines.length > 0
       ? `Loaded ${numberedLines.length} lines, typed ${taps.length} keys`
     : `Typed ${taps.length} keys`;
+}
+
+function typeCommand(text) {
+  const submittedText = /\n$/.test(text) ? text : `${text}\n`;
+  const taps = basicTextToSpectrumKeyTaps(submittedText);
+  for (const keys of taps) tapSpectrumKeys(keys);
+  runFrames(20);
+  return taps.length;
+}
+
+function renderTapList() {
+  tapList.replaceChildren(
+    ...currentTapEntries.map((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = index === selectedTapEntryIndex ? "tap-entry selected" : "tap-entry";
+      button.disabled = !entry.loadable;
+      const checksum = entry.headerBlock.checksumValid && entry.dataBlock?.checksumValid ? "OK" : "Bad";
+      const name = document.createElement("span");
+      name.textContent = entry.header.name || "(unnamed)";
+      const type = document.createElement("strong");
+      type.textContent = entry.header.typeName;
+      const details = document.createElement("small");
+      details.textContent = `${entry.header.length} bytes · checksum ${checksum}`;
+      button.append(name, type, details);
+      button.addEventListener("click", () => {
+        selectedTapEntryIndex = index;
+        tapLoadButton.disabled = !entry.loadable;
+        renderTapList();
+      });
+      return button;
+    })
+  );
+
+  if (currentTapEntries.length === 0) {
+    tapList.textContent = "No loadable header blocks found";
+  }
 }
 
 function draw() {
@@ -364,6 +409,49 @@ audioToggleButton.addEventListener("click", async () => {
     audioToggleButton.textContent = audioEnabled ? "Sound On" : "Sound Off";
     audioToggleButton.setAttribute("aria-pressed", String(audioEnabled));
     statusOutput.value = audioEnabled ? "Sound enabled" : "Sound disabled";
+  } catch (error) {
+    statusOutput.value = error.message;
+  }
+});
+
+tapFileInput.addEventListener("change", async () => {
+  const file = tapFileInput.files?.[0];
+  if (!file) return;
+
+  try {
+    const blocks = parseTapeFile(await file.arrayBuffer());
+    currentTapBlocks = blocks;
+    machine.setTapeBlocks(blocks);
+    currentTapEntries = tapEntries(blocks);
+    selectedTapEntryIndex = currentTapEntries.findIndex((entry) => entry.loadable);
+    tapLoadButton.disabled = selectedTapEntryIndex === -1;
+    renderTapList();
+    statusOutput.value = `Parsed and mounted ${blocks.length} TAP blocks`;
+  } catch (error) {
+    currentTapBlocks = [];
+    machine.clearTape();
+    currentTapEntries = [];
+    selectedTapEntryIndex = -1;
+    tapLoadButton.disabled = true;
+    renderTapList();
+    statusOutput.value = error.message;
+  }
+});
+
+tapLoadButton.addEventListener("click", () => {
+  const entry = currentTapEntries[selectedTapEntryIndex];
+  if (!entry) return;
+
+  try {
+    const result = loadTapEntry(machine, entry);
+    machine.setTapeCursor((entry.dataBlock?.index ?? entry.headerBlock.index) + 1);
+    let typedKeys = 0;
+    if (result.kind === "BASIC" && result.autoStartLine !== null) {
+      typedKeys = typeCommand(`RUN ${result.autoStartLine}`);
+    }
+    statusOutput.value = result.kind === "BASIC"
+      ? `Loaded TAP BASIC ${result.name || "(unnamed)"}${typedKeys ? `, typed ${typedKeys} keys` : ""}`
+      : `Loaded TAP CODE ${result.name || "(unnamed)"} at ${hexWord(result.start)}`;
   } catch (error) {
     statusOutput.value = error.message;
   }

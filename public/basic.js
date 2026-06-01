@@ -330,13 +330,18 @@ export function renumberBasicProgram(text, { start = 10, step = 10, maxLine = 99
 
 export function loadBasicProgram(machine, text) {
   const program = tokenizeBasicProgram(text);
+  return loadBasicProgramBytes(machine, program);
+}
+
+export function loadBasicProgramBytes(machine, programBytes, { variablesOffset = programBytes.length } = {}) {
+  const program = Uint8Array.from(programBytes);
   const start = machine.read16(0x5c53);
   for (let offset = 0; offset < program.length; offset += 1) {
     machine.write8(start + offset, program[offset]);
   }
 
   const end = start + program.length;
-  machine.write16(0x5c4b, end);
+  machine.write16(0x5c4b, start + Math.min(variablesOffset, program.length));
   machine.write16(0x5c59, end + 1);
   machine.write16(0x5c5b, end + 1);
   machine.write8(end, 0x80);

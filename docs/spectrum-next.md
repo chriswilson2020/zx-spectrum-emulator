@@ -147,11 +147,39 @@ The paste path renumbers listings that exceed the Spectrum editor's four-digit
 line-number limit and auto-types `RUN` for numbered listings that do not include
 an explicit command.
 
+## Tape Loading
+
+Status: implemented for fast-loading, ROM byte-loader interception, and
+standard-speed EAR pulse playback. The viewer can open `.tap` files and
+standard-speed `.tzx` data blocks, decode Spectrum header blocks, validate
+checksums, and show the block list in the control panel. Parsed files are
+mounted as a virtual tape so the 48K ROM's byte-loading routine can consume
+later blocks in sequence.
+
+Supported fast-load entries:
+
+- BASIC program header/data pairs. Data bytes are copied directly into the BASIC
+  program area. If the header has an auto-start line, the viewer types
+  `RUN <line>` after loading. Subsequent ROM `LOAD "" CODE` calls can be fed
+  from the mounted tape cursor.
+- CODE header/data pairs. Data bytes are copied to the header's start address.
+- Standard-speed tape pulse playback. Remaining mounted blocks can be expanded
+  into pilot/sync/data pulses and exposed through the EAR bit on port `0xfe` for
+  loaders that poll tape input directly.
+
+For real pulse playback, flashing border colours are normal. The emulated loader
+is seeing tape level transitions, and large standard-speed blocks still take
+cassette-scale time to load.
+
+Number arrays, character arrays, TZX turbo/pure-data blocks, and higher-fidelity
+loader timing remain future work.
+
 ## Current Next Work
 
 Highest-value next slices:
 
-- Add TAP loading so real tape images can enter through the ROM loader path.
+- Add fuller tape support: arrays, TZX turbo/pure-data blocks, and richer loader
+  compatibility.
 - Improve renderer timing toward scanline accuracy, contention, and floating
   bus behaviour.
 - Add save/load snapshots once the runtime state is stable.

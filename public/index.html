@@ -51,6 +51,12 @@
 RUN</textarea>
           <button type="submit">Type Pasted Text</button>
         </form>
+        <section class="tape-panel" aria-label="TAP loader">
+          <label for="tapFile">Load TAP</label>
+          <input id="tapFile" type="file" accept=".tap,.tzx">
+          <div id="tapList" class="tap-list" aria-live="polite"></div>
+          <button id="tapLoad" type="button" disabled>Load Selected Block</button>
+        </section>
         <dl>
           <div>
             <dt>Frame</dt>

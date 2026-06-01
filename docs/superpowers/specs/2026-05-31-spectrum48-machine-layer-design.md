@@ -11,7 +11,9 @@ Spectrum-shaped memory and I/O boundary.
 This slice creates a `Spectrum48` class with ROM/RAM mapping, CPU ownership,
 basic I/O hooks, a frame-sized run helper, keyboard matrix support, initial
 display rendering, first-pass Web Audio beeper output, and a visual browser
-debugger. It does not model contention or implement tape/snapshot formats yet.
+debugger. It includes first-pass TAP/TZX loading and standard-speed EAR pulse
+playback, but does not model contention, snapshot formats, turbo tape blocks, or
+tape audio output yet.
 
 ## Architecture
 
@@ -51,6 +53,20 @@ rail on desktop-width screens. The display scales down before it overlaps the
 right rail, and debugger cards reflow through named grid areas for medium and
 narrow screens.
 
+## Tape Loader
+
+The browser UI includes a `.tap`/`.tzx` file picker. The parser reads TAP blocks
+and standard-speed TZX data blocks, validates checksums, decodes Spectrum
+headers, and pairs each header with the following data block when present. BASIC
+program pairs are loaded into the BASIC program area and can auto-start from the
+header line number. CODE pairs are loaded to the start address from the header.
+Parsed tape blocks are mounted as a virtual tape, and the machine intercepts the
+48K ROM byte loader at `0x0556` so ordinary ROM `LOAD "" CODE` calls can consume
+later blocks in sequence. Remaining standard-speed blocks can also be expanded
+into pilot/sync/data pulses and exposed through the EAR bit on port `0xfe`.
+Number arrays, character arrays, TZX turbo/pure-data blocks, and tougher custom
+loader timing remain out of scope for this slice.
+
 ## Testing
 
 Tests cover ROM size validation, ROM reads, ignored ROM writes, RAM
@@ -58,11 +74,13 @@ reads/writes, little-endian 16-bit access across the machine map, loading
 `ROM/48.rom`, CPU fetching through the machine memory callbacks, port `0xfe`
 state, keyboard rows, frame stepping, display rendering, browser keyboard
 translation, BASIC paste loading, Web Audio sample generation, and debugger
-formatting/disassembly/status helpers.
+formatting/disassembly/status helpers, plus TAP/TZX parsing and BASIC/CODE
+fast-loading.
 
 ## Open Follow-Ups
 
 - Add breakpoints and richer disassembly coverage.
-- Add TAP loading through the ROM.
+- Add array block loading, turbo/pure-data TZX blocks, and tougher custom-loader
+  compatibility.
 - Improve beeper timing and filtering beyond the first Web Audio buffer output.
 - Add ULA contention once the basic machine loop works.

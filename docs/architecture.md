@@ -61,6 +61,9 @@ renumbering, and `DEF FN` parameter storage expected by the ROM evaluator.
 `public/debugger.js` supplies browser-friendly debug helpers: hex formatting,
 small-window disassembly, system variable reads, BASIC status extraction, and
 memory row formatting.
+`public/tape.js` parses TAP containers and standard-speed TZX data blocks,
+validates block checksums, pairs header blocks with data blocks, and implements
+the first fast-load path for BASIC program and CODE blocks.
 
 ## CPU Execution
 
@@ -177,6 +180,45 @@ This path is faster and more reliable than typing long listings through the ROM
 editor, but it must still store the bytes the ROM evaluator expects. In
 particular, `DEF FN` parameters include hidden placeholder number markers in the
 line body; without them the ROM raises `Q Parameter error` when `FN` is called.
+
+## Tape Loading
+
+The first tape path is a pragmatic fast loader rather than an audio/pulse-level
+emulation of cassette input. `parseTap()` reads TAP containers as a sequence of
+length-prefixed blocks. `parseTzx()` supports TZX standard-speed data blocks
+(`0x10`) and skips common descriptive metadata blocks. Header blocks decode the
+Spectrum header payload: type, 10-character name, data length, and two
+type-specific parameters. Data blocks keep their payload and checksum status.
+
+The UI presents header/data pairs as tape entries. The current loader supports:
+
+- BASIC program blocks (`type 0`): payload bytes are copied directly to `PROG`.
+  `VARS`, `E_LINE`, `K_CUR`, `WORKSP`, `STKBOT`, and `STKEND` are updated in the
+  same style as the BASIC paste loader. Header parameter 2 is used as the
+  variables offset, and header parameter 1 is used as an optional auto-start
+  line.
+- CODE blocks (`type 3`): payload bytes are copied to the start address in
+  header parameter 1.
+
+Parsed tape files are also mounted into the machine as a virtual tape. The
+first path is a fast ROM byte-loader intercept: when the 48K ROM reaches
+`0x0556`, the machine checks the next block against the ROM's requested flag
+byte, destination in `IX`, and length in `DE`. Matching blocks are copied into
+the requested buffer, carry is set for a successful ROM return, and the tape
+cursor advances. This lets multi-block BASIC loaders such as
+`LOAD "" CODE: LOAD "" CODE: RANDOMIZE USR n` continue through the original ROM
+control flow.
+
+The second path is standard-speed pulse playback. Mounted tape blocks can be
+expanded into Spectrum cassette pulses: pilot tone, sync pulses, and two pulses
+per data bit using the ROM timings. The machine exposes those transitions as
+the EAR bit on port `0xfe`, while pauses advance time without toggling the EAR
+level. This covers standard TZX blocks that are read by polling code instead of
+calling the ROM byte-loader entry point.
+
+Number-array and character-array blocks are parsed and displayed but not loaded
+yet. TZX turbo and pure-data blocks remain future work for software with
+non-standard cassette timings.
 
 ## Validation Harnesses
 
