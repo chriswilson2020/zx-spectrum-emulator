@@ -20,6 +20,35 @@
           <output id="cpmStatus">Loading disk</output>
         </header>
         <pre id="cpmTerminal" class="cpm-terminal" tabindex="0" aria-label="CP/M terminal" aria-live="polite"></pre>
+        <details id="cpmDebugDrawer" class="debug-drawer cpm-debug-drawer">
+          <summary>
+            <span>Debug Drawer</span>
+            <strong>Registers, disassembly, disk I/O, console queues</strong>
+          </summary>
+          <section class="debugger cpm-debugger" aria-label="CP/M machine debugger">
+            <div class="debug-card registers-card">
+              <h2>Registers</h2>
+              <div id="cpmRegisterGrid" class="register-grid"></div>
+              <div id="cpmFlagGrid" class="flag-grid" aria-label="CPU flags"></div>
+            </div>
+            <div class="debug-card disassembly-card">
+              <h2>Disassembly</h2>
+              <ol id="cpmDisassembly" class="disassembly"></ol>
+            </div>
+            <div class="debug-card cpm-io-card">
+              <h2>Machine I/O</h2>
+              <div id="cpmIoState" class="basic-status"></div>
+            </div>
+            <div class="debug-card cpm-console-card">
+              <h2>Console</h2>
+              <div id="cpmConsoleState" class="basic-status"></div>
+            </div>
+            <div class="debug-card cpm-trace-card">
+              <h2>Recent Calls</h2>
+              <pre id="cpmTraceState" class="cpm-trace-state">Tracing not enabled</pre>
+            </div>
+          </section>
+        </details>
         <div class="cpm-controls">
           <label class="cpm-profile-control">
             <span>Machine</span>

@@ -149,6 +149,33 @@ test("FDC reports z80pack-compatible status codes for invalid operations", () =>
   assert.equal(machine.readPort(0x0e), 7);
 });
 
+test("reports compact debug state for the z80pack CP/M machine", () => {
+  const machine = new Cpm22Machine({ drives: [loadBootDisk()] });
+  machine.queueInput("X");
+  machine.writePort(0x0a, 1);
+  machine.writePort(0x0b, 2);
+  machine.writePort(0x0c, 3);
+  machine.writePort(0x0f, 0x34);
+  machine.writePort(0x10, 0x12);
+
+  const state = machine.getDebugState();
+
+  assert.equal(state.profile, "z80pack");
+  assert.equal(state.halted, false);
+  assert.equal(state.cpu.registers.PC, machine.cpu.PC);
+  assert.deepEqual(state.io, {
+    drive: 1,
+    track: 2,
+    sector: 3,
+    fdcStatus: 0,
+    dmaAddress: 0x1234
+  });
+  assert.deepEqual(state.console, {
+    inputQueueLength: 1,
+    outputQueueLength: 0
+  });
+});
+
 test("boots the z80pack CP/M 2.2 disk to the CCP prompt", () => {
   const machine = new Cpm22Machine({ drives: [loadBootDisk()] });
   const result = machine.runUntilOutput("A>", { maxInstructions: 100_000 });

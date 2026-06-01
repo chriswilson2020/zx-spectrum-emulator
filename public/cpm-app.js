@@ -4,6 +4,7 @@ import { Cpm22Machine } from "../src/cpm22.js";
 import { RawZ80Mbc2Disk, Z80Mbc2Machine } from "../src/z80mbc2.js";
 import { createZip, jsonBytes, parseJsonBytes, readZip } from "./cpm-session.js";
 import { CpmTerminal, keyEventToCpmInput } from "./cpm-terminal.js";
+import { disassembleWindow, hexByte, hexWord } from "./debugger.js";
 
 const terminalElement = document.querySelector("#cpmTerminal");
 const statusOutput = document.querySelector("#cpmStatus");
@@ -31,6 +32,12 @@ const foreignFileList = document.querySelector("#cpmForeignFileList");
 const copyForeignFilesButton = document.querySelector("#cpmCopyForeignFiles");
 const copyAllForeignFilesButton = document.querySelector("#cpmCopyAllForeignFiles");
 const clearForeignDiskButton = document.querySelector("#cpmClearForeignDisk");
+const debugRegisterGrid = document.querySelector("#cpmRegisterGrid");
+const debugFlagGrid = document.querySelector("#cpmFlagGrid");
+const debugDisassembly = document.querySelector("#cpmDisassembly");
+const debugIoState = document.querySelector("#cpmIoState");
+const debugConsoleState = document.querySelector("#cpmConsoleState");
+const debugTraceState = document.querySelector("#cpmTraceState");
 
 const terminal = new CpmTerminal(terminalElement);
 const LOCAL_DISK_DB = "z80-machine-lab-cpm-disks";
@@ -191,6 +198,7 @@ function resetMachine(driveImages = mountedDisks.map((disk) => disk.toBytes())) 
   refreshFileList();
   running = true;
   statusOutput.value = "Booting";
+  updateDebugDrawer();
   terminalElement.focus();
 }
 
@@ -214,6 +222,7 @@ async function switchProfile(profileId) {
   }
   resetMachine(driveImages);
   refreshDriveLabels();
+  updateDebugDrawer();
 }
 
 function setDriveOptions(select, labels) {
@@ -316,6 +325,98 @@ function selectedFileDisk() {
 
 function selectedDiskLetter(driveIndex) {
   return String.fromCharCode(65 + driveIndex);
+}
+
+function renderKeyValueGrid(container, rows, className = "") {
+  container.replaceChildren(
+    ...rows.map(([label, value]) => {
+      const item = document.createElement("div");
+      if (className) item.className = className;
+      const labelElement = document.createElement("span");
+      labelElement.textContent = label;
+      const valueElement = document.createElement("strong");
+      valueElement.textContent = value;
+      item.append(labelElement, valueElement);
+      return item;
+    })
+  );
+}
+
+function updateDebugDrawer() {
+  if (!machine) return;
+  const state = machine.getDebugState();
+  const registers = state.cpu.registers;
+  renderKeyValueGrid(debugRegisterGrid, [
+    ["AF", hexWord(registers.AF)],
+    ["BC", hexWord(registers.BC)],
+    ["DE", hexWord(registers.DE)],
+    ["HL", hexWord(registers.HL)],
+    ["IX", hexWord(registers.IX)],
+    ["IY", hexWord(registers.IY)],
+    ["SP", hexWord(registers.SP)],
+    ["PC", hexWord(registers.PC)],
+    ["I", hexByte(registers.I)],
+    ["R", hexByte(registers.R)],
+    ["IM", String(state.cpu.interruptMode)],
+    ["TLO", hexWord(state.cpu.tStates)]
+  ], "register-cell");
+
+  debugFlagGrid.replaceChildren(
+    ...["S", "Z", "Y", "H", "X", "PV", "N", "C"].map((flag) => {
+      const flagElement = document.createElement("span");
+      flagElement.className = state.cpu.flags[flag] ? "flag on" : "flag";
+      flagElement.textContent = flag;
+      return flagElement;
+    })
+  );
+
+  debugDisassembly.replaceChildren(
+    ...disassembleWindow((address) => machine.read8(address), registers.PC, { beforeBytes: 6, count: 9 }).map((row) => {
+      const item = document.createElement("li");
+      item.className = row.isPc ? "current" : "";
+      const address = document.createElement("span");
+      address.className = "addr";
+      address.textContent = hexWord(row.address);
+      const bytes = document.createElement("span");
+      bytes.className = "bytes";
+      bytes.textContent = row.bytes.map(hexByte).join(" ");
+      const text = document.createElement("span");
+      text.className = "asm";
+      text.textContent = row.text;
+      item.append(address, bytes, text);
+      return item;
+    })
+  );
+
+  const ioRows = state.profile === "z80mbc2"
+    ? [
+        ["OP", hexByte(state.io.opcode)],
+        ["DRV", `${selectedDiskLetter(state.io.drive)}:`],
+        ["TRK", String(state.io.track)],
+        ["SEC", String(state.io.sector)],
+        ["ERR", hexByte(state.io.diskError)],
+        ["RD", `${state.io.readOffset}/${state.io.readBufferLength}`],
+        ["WR", String(state.io.writeBufferLength)],
+        ["TRK LO", state.io.trackLowPending ? "yes" : "no"]
+      ]
+    : [
+        ["DRV", `${selectedDiskLetter(state.io.drive)}:`],
+        ["TRK", String(state.io.track)],
+        ["SEC", String(state.io.sector)],
+        ["DMA", hexWord(state.io.dmaAddress)],
+        ["FDC", hexByte(state.io.fdcStatus)]
+      ];
+  renderKeyValueGrid(debugIoState, ioRows, "basic-cell");
+
+  renderKeyValueGrid(debugConsoleState, [
+    ["IN", String(state.console.inputQueueLength)],
+    ["OUT", String(state.console.outputQueueLength)],
+    ["RUN", running ? "yes" : "no"],
+    ["HALT", state.halted ? "yes" : "no"],
+    ...(state.console.statusMode ? [["MODE", state.console.statusMode]] : [])
+  ], "basic-cell");
+
+  debugTraceState.textContent = "Tracing not enabled";
 }
 
 function clearLocalSaveTimers() {
@@ -430,6 +531,7 @@ async function loadSession(bytes) {
   refreshFileList();
   running = !machine.halted;
   statusOutput.value = `Loaded ${activeProfile.label} session`;
+  updateDebugDrawer();
   terminalElement.focus();
 }
 
@@ -458,6 +560,7 @@ function runSlice() {
 
 function frame() {
   runSlice();
+  updateDebugDrawer();
   requestAnimationFrame(frame);
 }
 

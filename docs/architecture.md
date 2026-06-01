@@ -181,6 +181,14 @@ mounts them as A: through G:, and drives `Z80Mbc2Machine`. Both profiles share
 keyboard bridging, disk upload/download, host file import/export, foreign disk
 import controls, and the CP/M filesystem helper.
 
+The CP/M app also renders a compact debug drawer using the shared
+`public/debugger.js` formatting and disassembly helpers. Each CP/M machine layer
+exposes `getDebugState()`, returning the CPU snapshot, halted state,
+profile-specific disk/controller fields, and console queue lengths. The browser
+renders those fields without mutating the emulated machine. The drawer already
+reserves a recent-call trace panel, but BIOS/BDOS call tracing is intentionally a
+later machine-layer feature rather than a UI-only guess.
+
 The CP/M page uses IndexedDB as an optional browser-local disk cache. Bundled
 disk images are still fetched from GitHub Pages as immutable defaults. Local
 records are keyed by machine profile and drive index, and only changed drives

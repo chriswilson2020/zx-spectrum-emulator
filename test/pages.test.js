@@ -66,6 +66,13 @@ test("CP/M page exposes a live terminal entry point", async () => {
   const app = await readFile("public/cpm-app.js", "utf8");
 
   assert.match(cpm, /id="cpmTerminal"/);
+  assert.match(cpm, /id="cpmDebugDrawer"/);
+  assert.match(cpm, /id="cpmRegisterGrid"/);
+  assert.match(cpm, /id="cpmFlagGrid"/);
+  assert.match(cpm, /id="cpmDisassembly"/);
+  assert.match(cpm, /id="cpmIoState"/);
+  assert.match(cpm, /id="cpmConsoleState"/);
+  assert.match(cpm, /id="cpmTraceState"/);
   assert.match(cpm, /tabindex="0"/);
   assert.match(cpm, /id="cpmMachineProfile"/);
   assert.match(cpm, /id="cpmReset"/);
@@ -100,6 +107,8 @@ test("CP/M page exposes a live terminal entry point", async () => {
   assert.match(app, /createZip/);
   assert.match(app, /readZip/);
   assert.match(app, /SESSION_FORMAT/);
+  assert.match(app, /updateDebugDrawer/);
+  assert.match(app, /machine\.getDebugState\(\)/);
   assert.match(app, /autoPersistDrive\(driveIndex\)/);
   assert.match(app, /scheduleDirtyDiskPersistence/);
   assert.match(app, /downloadBytes/);

@@ -238,6 +238,25 @@ export class Cpm22Machine {
     this.consoleOutput = [];
   }
 
+  getDebugState() {
+    return {
+      profile: "z80pack",
+      cpu: this.cpu.getState(),
+      halted: this.halted,
+      io: {
+        drive: this.drive,
+        track: this.track,
+        sector: this.sector,
+        fdcStatus: this.fdcStatus,
+        dmaAddress: this.dmaAddress
+      },
+      console: {
+        inputQueueLength: this.consoleInput.length,
+        outputQueueLength: this.consoleOutput.length
+      }
+    };
+  }
+
   saveState() {
     return {
       kind: "cpm22",

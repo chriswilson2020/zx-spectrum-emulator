@@ -61,6 +61,9 @@ The CP/M 2.2 page is also bootable and can switch hardware profiles:
 - `Save Session` downloads a compressed local ZIP containing CPU state, RAM,
   terminal state, active profile, and the mounted disk images; `Load Session`
   restores that ZIP without using any server-side storage.
+- A compact CP/M debug drawer shows live CPU registers, flags, PC disassembly,
+  disk/controller state, console queue status, and a reserved recent-call trace
+  panel for future BIOS/BDOS tracing.
 - The CP/M file utility handles the z80pack skewed 8-inch floppy layout,
   Z80-MBC2 8 MB disk images for foreign-disk imports, multi-extent files, and
   repair of old full-extent imports whose record counts were written
@@ -159,7 +162,10 @@ download CP/M files back to the host, and delete files. The disk controls can
 load or save a whole `.dsk` image for the selected drive, restore a drive to its
 bundled image, or clear local browser disk changes. The Foreign Disk panel can
 still load Z80-MBC2 8 MB disk images, list their directories, and copy selected
-files into the currently selected CP/M drive. See
+files into the currently selected CP/M drive. The Debug Drawer below the terminal
+mirrors the Spectrum debugger at CP/M scale: it shows registers, flags,
+disassembly at `PC`, z80pack FDC or Z80-MBC2 IOS disk state, console queue
+counts, and a placeholder for later BIOS/BDOS call tracing. See
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for the exact workflow.
 
 ## GitHub Pages Demo

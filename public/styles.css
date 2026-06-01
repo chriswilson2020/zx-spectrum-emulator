@@ -454,6 +454,39 @@ dd {
   grid-area: memory;
 }
 
+.cpm-debug-drawer {
+  border-color: rgba(93, 255, 139, 0.24);
+  background: rgba(3, 16, 6, 0.5);
+}
+
+.cpm-debugger {
+  grid-template-areas:
+    "registers disassembly"
+    "io console"
+    "trace trace";
+  grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.2fr);
+}
+
+.cpm-io-card {
+  grid-area: io;
+}
+
+.cpm-console-card {
+  grid-area: console;
+}
+
+.cpm-trace-card {
+  grid-area: trace;
+}
+
+.cpm-trace-state {
+  min-height: 40px;
+  margin: 0;
+  color: var(--muted);
+  font: 12px/1.45 "SFMono-Regular", Consolas, monospace;
+  white-space: pre-wrap;
+}
+
 .memory-inspector {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -482,6 +515,13 @@ dd {
       "basic disassembly memory";
     grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.1fr) minmax(360px, 1.35fr);
   }
+
+  .cpm-debugger {
+    grid-template-areas:
+      "registers disassembly io"
+      "console disassembly trace";
+    grid-template-columns: minmax(230px, 0.8fr) minmax(320px, 1.15fr) minmax(250px, 0.85fr);
+  }
 }
 
 @media (max-width: 1180px) {
@@ -504,6 +544,14 @@ dd {
     grid-template-areas:
       "registers disassembly"
       "basic memory";
+    grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
+  }
+
+  .cpm-debugger {
+    grid-template-areas:
+      "registers disassembly"
+      "io console"
+      "trace trace";
     grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
   }
 
@@ -532,6 +580,16 @@ dd {
       "basic"
       "disassembly"
       "memory";
+    grid-template-columns: 1fr;
+  }
+
+  .cpm-debugger {
+    grid-template-areas:
+      "registers"
+      "disassembly"
+      "io"
+      "console"
+      "trace";
     grid-template-columns: 1fr;
   }
 

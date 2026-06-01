@@ -174,6 +174,24 @@ supports the control behavior needed by the current WordStar setup path:
 This is enough for WordStar's Soroc IQ-120/140 profile to render its menu as a
 screen instead of a stream of raw control characters.
 
+## Debug Drawer
+
+The CP/M page includes a compact `Debug Drawer` below the terminal. It is meant
+to provide the same kind of always-available machine insight as the Spectrum
+debugger, without taking over the normal CP/M workflow.
+
+The drawer shows:
+
+- live Z80 registers, interrupt mode, low t-state counter, and flags.
+- a short disassembly window around the current `PC`.
+- z80pack FDC state: drive, track, sector, DMA address, and FDC status.
+- Z80-MBC2 IOS state: opcode, drive, track, sector, disk error, read/write
+  buffer progress, and track-byte phase.
+- console input/output queue lengths and halted/running state.
+- a reserved `Recent Calls` panel. It currently reports that tracing is not
+  enabled; later BIOS/BDOS tracing should feed this panel instead of adding a
+  second debug surface.
+
 ## WordStar Setup
 
 A typical WordStar 3.00 install flow from a B: work disk is:

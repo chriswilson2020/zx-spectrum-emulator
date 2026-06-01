@@ -35,6 +35,43 @@ test("Z80-MBC2 IOS protocol reads and writes selected host sectors", () => {
   assert.equal(machine.readPort(0), 0);
 });
 
+test("reports compact debug state for the Z80-MBC2 CP/M machine", () => {
+  const machine = new Z80Mbc2Machine({ drives: [loadDisk()] });
+  machine.queueInput("Z");
+  machine.writePort(1, 0x09);
+  machine.writePort(0, 2);
+  machine.writePort(1, 0x0a);
+  machine.writePort(0, 4);
+  machine.writePort(0, 1);
+  machine.writePort(1, 0x0b);
+  machine.writePort(0, 7);
+  machine.writePort(1, 0x86);
+  machine.readPort(0);
+  machine.readPort(0);
+
+  const state = machine.getDebugState();
+
+  assert.equal(state.profile, "z80mbc2");
+  assert.equal(state.halted, false);
+  assert.equal(state.cpu.registers.PC, machine.cpu.PC);
+  assert.deepEqual(state.io, {
+    opcode: 0x86,
+    drive: 2,
+    track: 0x0104,
+    trackLowPending: false,
+    sector: 7,
+    diskError: 1,
+    readBufferLength: 512,
+    readOffset: 2,
+    writeBufferLength: 0
+  });
+  assert.deepEqual(state.console, {
+    inputQueueLength: 1,
+    outputQueueLength: 0,
+    statusMode: "blocking"
+  });
+});
+
 test("boots the Z80-MBC2 CP/M 2.2 disk to the CCP prompt", () => {
   const machine = new Z80Mbc2Machine({ drives: [loadDisk()] });
   const result = machine.runUntilOutput("A>", { maxInstructions: 500_000 });

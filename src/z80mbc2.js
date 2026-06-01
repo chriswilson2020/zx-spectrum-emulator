@@ -278,6 +278,30 @@ export class Z80Mbc2Machine {
     this.consoleOutput = [];
   }
 
+  getDebugState() {
+    return {
+      profile: "z80mbc2",
+      cpu: this.cpu.getState(),
+      halted: this.halted,
+      io: {
+        opcode: this.opcode,
+        drive: this.drive,
+        track: this.track,
+        trackLowPending: this.trackLowPending,
+        sector: this.sector,
+        diskError: this.diskError,
+        readBufferLength: this.readBuffer.length,
+        readOffset: this.readOffset,
+        writeBufferLength: this.writeBuffer.length
+      },
+      console: {
+        inputQueueLength: this.consoleInput.length,
+        outputQueueLength: this.consoleOutput.length,
+        statusMode: this.consoleStatusMode
+      }
+    };
+  }
+
   saveState() {
     return {
       kind: "z80mbc2",

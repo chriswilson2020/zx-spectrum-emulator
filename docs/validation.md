@@ -66,11 +66,11 @@ browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw
 floppy geometry, FDC and console ports, CP/M command smoke tests, host-side CP/M
 filesystem import/export, Z80-MBC2 8 MB disk reads, native Z80-MBC2 IOS boot,
 interactive frame-sliced Z80-MBC2 typing, browser-local CP/M disk persistence
-wiring, compressed CP/M session ZIP round-trips, full-extent record-count
-repair, and the screen-buffer terminal behavior needed by WordStar-style
-full-screen applications. The bundled `ROM/48.rom`, `ROM/cpm22-1.dsk`, and
-`ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M boot tests run without
-extra local setup.
+wiring, compact CP/M debug-state APIs, compressed CP/M session ZIP round-trips,
+full-extent record-count repair, and the screen-buffer terminal behavior needed
+by WordStar-style full-screen applications. The bundled `ROM/48.rom`,
+`ROM/cpm22-1.dsk`, and `ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M
+boot tests run without extra local setup.
 
 The `.z80` snapshot path has also been checked interactively with real snapshot
 files: loading external `.z80` files resumes the saved machine state, and a
@@ -127,8 +127,8 @@ from the BDOS-intercept exerciser harness:
 - `cpm-disk.test.js` checks z80pack raw floppy image size, sector addressing,
   invalid sector handling, writes, dirty tracking, and blank disk creation.
 - `cpm22.test.js` checks boot-sector loading, console status/data ports,
-  blocking console input, FDC read/write/status behavior, real CP/M boot to
-  `A>`, `DIR`, `ED`, and `BYE`.
+  blocking console input, FDC read/write/status behavior, compact debug state,
+  real CP/M boot to `A>`, `DIR`, `ED`, and `BYE`.
 - `cpm-filesystem.test.js` checks CP/M 8.3 name handling, directory listing,
   file read/write/overwrite/delete, multi-extent files, Z80-MBC2 8 MB disk
   geometry detection/reading, and repair of old full-extents written with
@@ -136,6 +136,8 @@ from the BDOS-intercept exerciser harness:
 - `cpm-terminal.test.js` checks carriage return, line feed, backspace,
   scrolling, cursor addressing, clear/erase behavior, and control-byte
   filtering.
+- `z80mbc2.test.js` checks native Z80-MBC2 disk sectors, IOS disk protocol,
+  compact debug state, boot, drive switching, and browser-style typing.
 
 Manual browser smoke tests are still useful for full application workflows. The
 most important current manual path is loading a WordStar disk as B:, running
@@ -211,4 +213,7 @@ npm run build:pages
 ```
 
 Then do a browser smoke pass through `cpm.html` for disk load/save and any
-interactive application affected by the change.
+interactive application affected by the change. For debug-drawer work, open the
+drawer in both z80pack and Z80-MBC2 profiles and confirm the register,
+disassembly, disk I/O, console, and trace-placeholder panels populate without
+overlapping the terminal or controls.
