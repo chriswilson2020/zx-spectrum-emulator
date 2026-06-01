@@ -1,7 +1,9 @@
-# ZX Spectrum Emulator
+# Z80 Machine Lab
 
-A faithful Zilog Z80 emulator, growing into a ZX Spectrum emulator for teaching
-Z80 assembly and Sinclair BASIC.
+A faithful Zilog Z80 emulator with two browser-hosted machine layers:
+
+- a ZX Spectrum 48K emulator for teaching Z80 assembly and Sinclair BASIC.
+- a bootable CP/M 2.2 machine using z80pack-compatible disk and console I/O.
 
 ## Current Status
 
@@ -15,7 +17,7 @@ The Z80 CPU core is implemented and strongly validated:
   registers, flags, memory, ports, cycles, `WZ`, and `Q`.
 - `zexdoc.com` and `zexall.com` both pass through the CP/M exerciser harness.
 
-The first ZX Spectrum 48K machine layer is also in place:
+The first ZX Spectrum 48K machine layer is in place:
 
 - `Spectrum48` maps a 16K ROM at `0x0000-0x3fff` and 48K RAM at
   `0x4000-0xffff`.
@@ -41,8 +43,28 @@ The first ZX Spectrum 48K machine layer is also in place:
   editable `.bas` files, and handle ROM-specific `DEF FN` parameter
   placeholders.
 
-See [CPU Status](docs/cpu-status.md) and [Validation](docs/validation.md) for
-the details and remaining caveats.
+The CP/M 2.2 machine layer is also bootable:
+
+- `Cpm22Machine` owns 64K RAM, the shared Z80 CPU, z80pack-compatible console
+  ports, and z80pack/cpmsim floppy disk controller ports.
+- `ROM/cpm22-1.dsk` boots through its real boot sector and BIOS into CP/M 2.2,
+  reaching the normal `A>` prompt without BDOS interception.
+- `ROM/cpm22-2.dsk` is bundled as the matching upstream z80pack companion disk
+  and is mounted as C: by default.
+- The browser CP/M page mounts the bundled system disk as A: and a blank
+  writable work disk as B:.
+- Whole-disk load/save and individual CP/M file import/download/delete are
+  available from the browser.
+- The CP/M file utility handles the z80pack skewed 8-inch floppy layout,
+  multi-extent files, and repair of old full-extent imports whose record counts
+  were written incorrectly.
+- The terminal renderer is an 80x24 screen buffer with WordStar/Soroc-style
+  cursor addressing, screen clear, erase-to-end-of-line, scrolling, tabs, and
+  control-byte filtering.
+
+See [CPU Status](docs/cpu-status.md), [Validation](docs/validation.md),
+[Architecture](docs/architecture.md), and the
+[CP/M Browser Guide](docs/cpm22-browser-guide.md) for details and caveats.
 
 ## Quick Validation
 
@@ -51,17 +73,29 @@ npm test
 npm run coverage:opcodes
 ```
 
-## Browser Viewer
+Quick CP/M boot smoke test from Node:
 
-With `ROM/48.rom` present, start the current canvas viewer:
+```sh
+npm run run:cpm22
+```
+
+## Browser Apps
+
+With `ROM/48.rom` and `ROM/cpm22-1.dsk` present, start the local static server:
 
 ```sh
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000). The viewer loads the
-48K ROM, runs the headless machine, draws the 320x240 border/display frame, and
-passes browser key events into the Spectrum keyboard matrix.
+Then open [http://localhost:3000](http://localhost:3000). The first page is a
+machine selector with links to:
+
+- `spectrum.html` for the ZX Spectrum 48K app.
+- `cpm.html` for the CP/M 2.2 terminal app.
+
+The Spectrum viewer loads the 48K ROM, runs the headless machine, draws the
+320x240 border/display frame, and passes browser key events into the Spectrum
+keyboard matrix.
 
 `ROM/48.rom` is included so the browser demo can boot without extra setup. The
 emulator code is MIT licensed; the ROM image is not part of that code license.
@@ -102,6 +136,15 @@ downloads the current emulator state as an uncompressed version 1 `.z80` file.
 This is the most convenient way to save a BASIC program or a game position in
 the browser: it preserves the whole machine state, not just the BASIC listing.
 
+The CP/M page boots the bundled z80pack CP/M 2.2 disk as drive A:, creates a
+blank B: work disk, and mounts the bundled z80pack companion disk as C:. Use B:
+for uploaded files and WordStar experiments; the factory A: disk is almost full
+and should be treated as the system disk. The file panel can import host files
+into a selected CP/M drive, download CP/M files back to the host, and delete
+files. The disk controls can load or save a whole `.dsk` image for the selected
+drive. See
+[CP/M Browser Guide](docs/cpm22-browser-guide.md) for the exact workflow.
+
 ## GitHub Pages Demo
 
 The browser app is static and can be published with GitHub Pages. The app uses
@@ -118,10 +161,11 @@ Build the deployable static tree locally with:
 npm run build:pages
 ```
 
-This writes `dist/` with `index.html`, `public/`, `src/`, and `ROM/` when the
-ROM directory is present. The workflow in `.github/workflows/pages.yml` runs the
-unit suite, builds `dist/`, uploads it as a Pages artifact, and deploys it when
-changes land on `main` or when the workflow is run manually. In GitHub, set
+This writes `dist/` with `index.html`, `spectrum.html`, `cpm.html`, `public/`,
+`src/`, and `ROM/` when the ROM directory is present. The workflow in
+`.github/workflows/pages.yml` runs the unit suite, builds `dist/`, uploads it as
+a Pages artifact, and deploys it when changes land on `main` or when the
+workflow is run manually. In GitHub, set
 `Settings -> Pages -> Build and deployment -> Source` to `GitHub Actions`.
 
 The debugger is designed for the browser viewport rather than as a fixed-size
@@ -159,6 +203,10 @@ npm run test:singlestep
   harness structure.
 - [Spectrum Next Steps](docs/spectrum-next.md): plan for the ZX Spectrum 48K
   machine layer and current Spectrum status.
+- [CP/M Browser Guide](docs/cpm22-browser-guide.md): using the browser CP/M
+  machine, disk workflow, file import/export, and WordStar setup.
+- [CP/M 2.2 Machine Plan](docs/cpm22-bootable-machine-plan.md): design notes
+  and implementation status for the bootable CP/M target.
 - [Opcode Coverage](docs/opcode-coverage.md): decoder coverage probe notes.
 - [Roadmap](docs/roadmap.md): high-level project phases.
 
@@ -167,7 +215,8 @@ npm run test:singlestep
 The emulator code is licensed under the MIT License. See [LICENSE](LICENSE).
 
 Third-party validation material under `ZEXALL-main/` is GPLv2-licensed and is
-kept separate from the emulator runtime. See
+kept separate from the emulator runtime. The bundled CP/M disk image comes from
+Udo Munk's MIT-licensed z80pack project. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.
 
 ## CP/M Exerciser Harness
@@ -187,8 +236,8 @@ or CP/M warm boot at `0x0000`.
 
 ## Goal
 
-The emulator is being built as both a faithful ZX Spectrum emulator and a
-teaching environment for Z80 assembly and Sinclair BASIC. The immediate next
-engineering milestone is moving from the current booting/debuggable Spectrum
-shell toward richer tape handling and more hardware accuracy, including ULA
-timing details.
+The emulator is being built as a small lab for Z80 machines: a faithful ZX
+Spectrum emulator, a browser-bootable CP/M machine, and a teaching environment
+for Z80 assembly, Sinclair BASIC, and classic 8-bit workflows. The immediate
+next engineering milestones are richer Spectrum tape/hardware accuracy and
+polishing the CP/M disk persistence and application workflow.

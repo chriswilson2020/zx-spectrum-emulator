@@ -47,11 +47,82 @@ The machine exposes `pressKey` and `releaseKey` for Spectrum key names. The
 keyboard matrix is active-low and is read through the same port path the ROM
 uses.
 
+### `src/cpm22.js`
+
+`Cpm22Machine` is a second machine layer around the CPU. It is not a Spectrum
+mode. It owns:
+
+- 64K flat RAM.
+- A `Z80` instance wired to CP/M memory and z80pack-compatible I/O callbacks.
+- Console input and output queues.
+- A selected drive, track, sector, DMA address, and FDC status byte.
+- One or more `RawCpmDisk` drive images.
+
+On reset, the machine clears RAM, loads drive A track 0 sector 1 at `0x0000`,
+resets the CPU, and lets the z80pack boot sector load CP/M through the virtual
+FDC ports. There is no BDOS trap in this boot path; the real CP/M CCP, BDOS,
+and BIOS come from the disk image.
+
+Console input uses z80pack ports `0x00` and `0x01`. If CP/M executes a direct
+`IN A,(1)` while no browser key is queued, `step()` waits in place instead of
+returning a synthetic NUL. This models blocking console input closely enough
+for the CCP prompt and interactive programs.
+
+Disk I/O uses z80pack/cpmsim FDC ports:
+
+- `0x0a`: selected drive.
+- `0x0b`: track.
+- `0x0c`: sector low byte.
+- `0x0d`: command, where `0` reads and `1` writes.
+- `0x0e`: status/result.
+- `0x0f`: DMA address low byte.
+- `0x10`: DMA address high byte.
+- `0x11`: sector high byte.
+
+The current browser target uses the z80pack CP/M 2.2 8-inch floppy geometry.
+The FDC status codes follow z80pack's convention for invalid drive, track,
+sector, and command errors.
+
+### `src/cpm-disk.js`
+
+`RawCpmDisk` wraps raw z80pack floppy images. The default geometry is:
+
+- 77 tracks.
+- 26 sectors per track.
+- 128 bytes per sector.
+- 256,256 bytes total.
+
+It validates sector addresses, reads and writes sectors, tracks a dirty flag,
+and can create a blank CP/M work disk filled with `0xe5`.
+
+### `src/cpm-filesystem.js`
+
+`CpmFileSystem` is a host-side utility for editing files inside the z80pack
+CP/M 2.2 floppy layout. It is used by the browser file panel, not by the
+emulated machine. The CP/M machine still sees only sector reads and writes.
+
+The helper understands:
+
+- two reserved system tracks.
+- the z80pack sector skew table.
+- 1K allocation blocks.
+- 64 directory entries.
+- 128-record CP/M extents.
+- CP/M 8.3 filename normalization.
+
+It can list, read, write, overwrite, and delete user 0 files. It writes full
+extents with record count `80h`, which real CP/M loaders require, and can repair
+older images that incorrectly used `00` for full extents.
+
 ### `public/`
 
-The browser viewer is intentionally thin. `public/app.js` owns the page loop,
-loads `ROM/48.rom`, drives `Spectrum48`, renders the frame buffer to canvas, and
-bridges browser controls into the machine.
+The browser apps are intentionally thin. `public/index.html` is the machine
+selector. `public/spectrum.html` hosts the Spectrum viewer and `public/cpm.html`
+hosts the CP/M terminal.
+
+`public/app.js` owns the Spectrum page loop, loads `ROM/48.rom`, drives
+`Spectrum48`, renders the frame buffer to canvas, and bridges browser controls
+into the machine.
 
 `public/keyboard.js` translates modern PC keys and pasted text into Spectrum
 key chords. `public/basic.js` tokenizes Sinclair BASIC for direct loading into
@@ -67,6 +138,17 @@ validates block checksums, pairs header blocks with data blocks, and implements
 the first fast-load path for BASIC program and CODE blocks.
 `public/snapshot.js` parses and writes 48K `.z80` snapshots so the browser can
 restore complete RAM/register state or download the current state for later.
+
+`public/cpm-app.js` owns the CP/M page loop, loads `ROM/cpm22-1.dsk` and
+`ROM/cpm22-2.dsk`, mounts them as A: and C:, creates a blank B: work disk,
+drives `Cpm22Machine` in animation-frame slices, and bridges keyboard, disk
+upload/download, and file import/export controls into the machine and CP/M
+filesystem helper.
+
+`public/cpm-terminal.js` renders CP/M console output into an 80x24 screen
+buffer. It supports the control behavior needed by full-screen CP/M software
+such as WordStar's Soroc IQ-120/140 profile: cursor addressing, clear screen,
+erase-to-end-of-line, scrolling, tabs, backspace, and control-byte filtering.
 
 ## CPU Execution
 
@@ -175,6 +257,34 @@ Video rendering reads the Spectrum display file directly:
 The renderer supports the Spectrum line-address layout, ink/paper attributes,
 bright colours, flash state supplied by the viewer, and border composition. It
 does not yet model per-scanline contention or floating bus timing.
+
+## CP/M Runtime
+
+`Cpm22Machine` runs without a frame interrupt or video hardware. The browser
+advances it in short instruction slices on `requestAnimationFrame`, then drains
+console output into the terminal buffer. CP/M application timing is therefore
+cooperative and terminal-driven rather than display-frame-driven.
+
+The browser starts with three mounted disks:
+
+- A: `ROM/cpm22-1.dsk`, the z80pack CP/M 2.2 system disk.
+- B: a blank raw z80pack floppy filled with `0xe5`.
+- C: `ROM/cpm22-2.dsk`, the matching upstream z80pack companion disk.
+
+When a user imports or deletes a CP/M file through the file panel, the helper
+edits the selected disk image, then the machine is remounted from the current
+drive bytes. This lets CP/M rebuild its allocation map on reboot instead of
+continuing with stale in-memory disk state.
+
+Whole-disk upload and download operate on the selected drive image. Loading a
+disk validates the raw image size and remounts both drives. Saving downloads the
+selected drive's current bytes. Automatic IndexedDB persistence is intentionally
+not in place yet; users must download changed disks before leaving the page.
+
+The CP/M filesystem helper repairs old full-extent directory entries at mount
+time. This matters for multi-extent `.COM` files such as WordStar's
+`INSTALL.COM`: real CP/M expects a full extent to have record count `80h`, not
+`00`.
 
 ## BASIC Loading
 

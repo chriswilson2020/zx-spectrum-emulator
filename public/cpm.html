@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CP/M 2.2</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./public/styles.css">
+  </head>
+  <body class="cpm-page-body">
+    <main class="cpm-shell">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./spectrum.html">ZX Spectrum</a>
+      </nav>
+      <section class="cpm-terminal-frame" aria-label="CP/M terminal">
+        <header>
+          <p>CP/M 2.2</p>
+          <h1>Terminal</h1>
+          <output id="cpmStatus">Loading disk</output>
+        </header>
+        <pre id="cpmTerminal" class="cpm-terminal" tabindex="0" aria-label="CP/M terminal" aria-live="polite"></pre>
+        <div class="cpm-controls">
+          <button id="cpmReset" type="button">Reset</button>
+          <select id="cpmDiskDrive" aria-label="Disk image drive">
+            <option value="0">A: System Disk</option>
+            <option value="1" selected>B: Work Disk</option>
+            <option value="2">C: Companion Disk</option>
+          </select>
+          <button id="cpmLoadDisk" type="button">Load Disk</button>
+          <button id="cpmSaveDisk" type="button">Save Disk</button>
+          <input id="cpmDiskFile" class="visually-hidden" type="file" accept=".dsk,application/octet-stream" tabindex="-1" aria-hidden="true">
+        </div>
+        <section class="cpm-file-panel" aria-label="CP/M files">
+          <header>
+            <p>Files</p>
+            <select id="cpmFileDrive" aria-label="File browser drive">
+              <option value="0">A: System</option>
+              <option value="1" selected>B: Work</option>
+              <option value="2">C: Companion</option>
+            </select>
+            <button id="cpmRefreshFiles" type="button">Refresh</button>
+          </header>
+          <select id="cpmFileList" size="8" aria-label="CP/M directory"></select>
+          <div class="cpm-file-controls">
+            <button id="cpmImportFile" type="button">Import File</button>
+            <button id="cpmDownloadFile" type="button">Download File</button>
+            <button id="cpmDeleteFile" type="button">Delete File</button>
+            <input id="cpmHostFile" class="visually-hidden" type="file" tabindex="-1" aria-hidden="true">
+          </div>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="./public/cpm-app.js"></script>
+  </body>
+</html>

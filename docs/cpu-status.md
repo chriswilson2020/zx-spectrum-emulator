@@ -3,7 +3,8 @@
 ## Summary
 
 The Z80 CPU core is implemented as a JavaScript module in `src/z80.js`. It is
-currently suitable for moving into the ZX Spectrum 48K machine layer.
+currently shared by the ZX Spectrum 48K machine layer, the bootable CP/M 2.2
+machine layer, and the CP/M exerciser harness.
 
 The core has complete decoder coverage for:
 
@@ -64,4 +65,6 @@ areas to revisit as Spectrum hardware accuracy increases:
 - Precise wait-state modelling once the ULA can contend memory
 
 For ZX Spectrum 48K work, the most important remaining CPU-adjacent item is a
-clean timing interface so the machine layer can add ULA contention delays.
+clean timing interface so the machine layer can add ULA contention delays. The
+CP/M target currently needs instruction-level correctness and port callbacks,
+which are already covered by the existing validation paths.

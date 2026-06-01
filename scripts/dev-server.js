@@ -10,12 +10,15 @@ const contentTypes = new Map([
   [".html", "text/html; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],
   [".json", "application/json; charset=utf-8"],
-  [".rom", "application/octet-stream"]
+  [".png", "image/png"],
+  [".rom", "application/octet-stream"],
+  [".dsk", "application/octet-stream"]
 ]);
 
 function resolveRequestPath(url) {
   const pathname = new URL(url, `http://localhost:${port}`).pathname;
-  const requested = pathname === "/" ? "/public/index.html" : pathname;
+  const htmlEntryPoints = new Set(["/index.html", "/spectrum.html", "/cpm.html"]);
+  const requested = pathname === "/" ? "/public/index.html" : htmlEntryPoints.has(pathname) ? `/public${pathname}` : pathname;
   const resolved = resolve(root, normalize(`.${requested}`));
   if (!resolved.startsWith(root)) return null;
   return resolved;
@@ -45,5 +48,5 @@ const server = createServer((request, response) => {
 });
 
 server.listen(port, () => {
-  console.log(`ZX Spectrum viewer: http://localhost:${port}`);
+  console.log(`Z80 Machine Lab: http://localhost:${port}`);
 });

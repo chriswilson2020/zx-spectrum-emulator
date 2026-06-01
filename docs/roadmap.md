@@ -46,3 +46,23 @@
   instruction-step; breakpoints remain.
 - Add BASIC examples that run through the real ROM.
 - Add guided lessons for Z80 flags, loops, interrupts, and screen memory.
+
+## Phase 4: CP/M 2.2 Machine
+
+- Add a separate bootable CP/M 2.2-compatible machine layer beside
+  `Spectrum48`, sharing the Z80 CPU core but not Spectrum hardware behavior.
+  Done.
+- Define a small project-specific CP/M virtual machine with 64K RAM, terminal
+  console, real boot-sector startup, and raw disk-image-backed drives. Done.
+- Boot from a known CP/M 2.2 system disk image rather than injecting BDOS/CCP
+  directly into RAM. Done with `ROM/cpm22-1.dsk` from z80pack.
+- Support GitHub Pages deployment with static factory disk images and
+  upload/download of `.dsk` images. Done.
+- Mount a blank B: work disk by default so imports do not fill the A: system
+  disk, and mount the upstream companion disk as C:. Done.
+- Add host-side CP/M file import, download, delete, and directory listing for
+  the z80pack CP/M 2.2 floppy layout. Done.
+- Add a screen-buffer terminal suitable for full-screen CP/M software. Done for
+  WordStar's Soroc IQ-120/140 profile.
+- Add IndexedDB working-disk persistence and named saved disks. Future work.
+- See [CP/M 2.2 Bootable Machine Plan](cpm22-bootable-machine-plan.md).

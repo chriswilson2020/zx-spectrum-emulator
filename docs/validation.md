@@ -38,7 +38,7 @@ npm run test:zexall
 
 The latest validation pass reported:
 
-- `npm test`: 177 tests passing
+- `npm test`: 211 tests passing
 - `npm run build:pages`: `dist/` artifact created
 - `npm run coverage:opcodes`: 100% for base, CB, ED, DD, FD, DDCB, and FDCB
 - `npm run test:singlestep`: 1,604,000 vectors, 0 failures
@@ -62,8 +62,12 @@ tokenizer/loader/detokenizer/export path, Web Audio beeper sample generation,
 and debugger helper formatting/disassembly/status reads, TAP/TZX parsing,
 fast-loading, ROM-loader interception, standard-speed EAR pulse playback,
 `.z80` snapshot save/load, GitHub Pages packaging, and the tabbed/collapsible
-browser layout. The bundled `ROM/48.rom` lets ROM-level browser and BASIC tests
-run without extra local setup.
+browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw
+floppy geometry, FDC and console ports, CP/M command smoke tests, host-side CP/M
+filesystem import/export, full-extent record-count repair, and the screen-buffer
+terminal behavior needed by WordStar-style full-screen applications. The bundled
+`ROM/48.rom` and `ROM/cpm22-1.dsk` let ROM-level Spectrum tests and CP/M boot
+tests run without extra local setup.
 
 The `.z80` snapshot path has also been checked interactively with real snapshot
 files: loading external `.z80` files resumes the saved machine state, and a
@@ -111,6 +115,29 @@ functions `2` and `9`.
 `zexdoc.com` checks documented Z80 behaviour. `zexall.com` also checks
 undocumented flag bits. These programs validate long instruction sequences and
 CRC-based machine-state results.
+
+### Bootable CP/M Machine Tests
+
+The `test/cpm*.test.js` suite validates the CP/M 2.2 machine target separately
+from the BDOS-intercept exerciser harness:
+
+- `cpm-disk.test.js` checks z80pack raw floppy image size, sector addressing,
+  invalid sector handling, writes, dirty tracking, and blank disk creation.
+- `cpm22.test.js` checks boot-sector loading, console status/data ports,
+  blocking console input, FDC read/write/status behavior, real CP/M boot to
+  `A>`, `DIR`, `ED`, and `BYE`.
+- `cpm-filesystem.test.js` checks CP/M 8.3 name handling, directory listing,
+  file read/write/overwrite/delete, multi-extent files, and repair of old
+  full-extents written with record count `00`.
+- `cpm-terminal.test.js` checks carriage return, line feed, backspace,
+  scrolling, cursor addressing, clear/erase behavior, and control-byte
+  filtering.
+
+Manual browser smoke tests are still useful for full application workflows. The
+most important current manual path is loading a WordStar disk as B:, running
+`INSTALL`, selecting `K` for Soroc IQ-120/140, and confirming the installed
+WordStar menu renders as a stable screen. Also confirm that the bundled
+companion disk is reachable as C: after a fresh page load.
 
 ### Interactive BASIC Programs
 
@@ -161,3 +188,13 @@ npm run test:zexall
 
 The `zexdoc` and `zexall` runs are long. They are best treated as milestone
 checks rather than every-edit checks.
+
+For CP/M browser work, also run:
+
+```sh
+npm test
+npm run build:pages
+```
+
+Then do a browser smoke pass through `cpm.html` for disk load/save and any
+interactive application affected by the change.

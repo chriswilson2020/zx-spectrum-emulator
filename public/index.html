@@ -3,118 +3,35 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ZX Spectrum 48K</title>
+    <title>Z80 Machine Lab</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="./public/styles.css">
   </head>
-  <body>
-    <main class="shell">
-      <section class="stage" aria-label="ZX Spectrum display and debugger">
-        <div class="screen-wrap">
-          <canvas id="screen" width="320" height="240"></canvas>
+  <body class="selector-body">
+    <main class="selector-shell" aria-label="Machine selector">
+      <section class="selector-hero">
+        <img src="./public/assets/machine-selector-banner.png" alt="" class="selector-hero-image">
+        <div class="selector-overlay">
+          <p class="selector-kicker">Z80 Machine Lab</p>
+          <h1>Choose a machine</h1>
         </div>
-        <details class="debug-drawer">
-          <summary>
-            <span>Debug Workbench</span>
-            <strong>Registers, BASIC, disassembly, memory</strong>
-          </summary>
-          <section class="debugger" aria-label="Machine debugger">
-            <div class="debug-card registers-card">
-              <h2>Registers</h2>
-              <div id="registerGrid" class="register-grid"></div>
-              <div id="flagGrid" class="flag-grid" aria-label="CPU flags"></div>
-            </div>
-            <div class="debug-card basic-card">
-              <h2>BASIC</h2>
-              <div id="basicStatus" class="basic-status"></div>
-            </div>
-            <div class="debug-card disassembly-card">
-              <h2>Disassembly</h2>
-              <ol id="disassembly" class="disassembly"></ol>
-            </div>
-            <div class="debug-card memory-card">
-              <h2>Memory</h2>
-              <div id="memoryInspector" class="memory-inspector"></div>
-            </div>
-          </section>
-        </details>
       </section>
-      <aside class="panel" aria-label="Machine controls">
-        <header>
-          <h1>ZX Spectrum 48K</h1>
-          <output id="status">Loading ROM...</output>
-        </header>
-        <div class="controls">
-          <button id="runPause" type="button" aria-label="Pause">Pause</button>
-          <button id="stepFrame" type="button">Frame</button>
-          <button id="stepInstruction" type="button">Step</button>
-          <button id="reset" type="button">Reset</button>
-          <button id="typeHello" type="button">Type Hello</button>
-          <button id="audioToggle" type="button" aria-pressed="false">Sound Off</button>
-        </div>
-        <nav class="tool-tabs" role="tablist" aria-label="Tools">
-          <button id="basicTab" type="button" role="tab" aria-selected="true" aria-controls="basicPanel" data-tool-tab="basic">BASIC</button>
-          <button id="tapeTab" type="button" role="tab" aria-selected="false" aria-controls="tapePanel" data-tool-tab="tape">Tape</button>
-          <button id="snapshotsTab" type="button" role="tab" aria-selected="false" aria-controls="snapshotsPanel" data-tool-tab="snapshots">Snapshots</button>
-          <button id="debugTab" type="button" role="tab" aria-selected="false" aria-controls="debugPanel" data-tool-tab="debug">Debug</button>
-        </nav>
-        <section id="basicPanel" class="tool-panel active" role="tabpanel" aria-labelledby="basicTab" data-tool-panel="basic">
-          <form id="pasteForm" class="paste-form">
-            <label for="pasteText">Paste BASIC</label>
-            <textarea id="pasteText" rows="5" spellcheck="false">10 PRINT "HELLO"
-RUN</textarea>
-            <button type="submit">Type Pasted Text</button>
-          </form>
-          <div class="basic-file-panel" aria-label="BASIC source files">
-            <label for="basicFile">BASIC Source</label>
-            <input id="basicFile" type="file" accept=".bas,.txt,text/plain">
-            <button id="basicExport" type="button">Export BASIC</button>
-          </div>
-        </section>
-        <section id="tapePanel" class="tool-panel" role="tabpanel" aria-labelledby="tapeTab" data-tool-panel="tape" hidden>
-          <div class="tape-panel" aria-label="TAP loader">
-            <label for="tapFile">Load TAP/TZX</label>
-            <input id="tapFile" type="file" accept=".tap,.tzx">
-            <div id="tapList" class="tap-list" aria-live="polite"></div>
-            <button id="tapLoad" type="button" disabled>Load Selected Block</button>
-          </div>
-        </section>
-        <section id="snapshotsPanel" class="tool-panel" role="tabpanel" aria-labelledby="snapshotsTab" data-tool-panel="snapshots" hidden>
-          <div class="snapshot-panel" aria-label="Snapshot loader">
-            <label for="snapshotFile">Load Snapshot</label>
-            <input id="snapshotFile" type="file" accept=".z80">
-            <button id="snapshotSave" type="button">Save Z80 Snapshot</button>
-          </div>
-        </section>
-        <section id="debugPanel" class="tool-panel" role="tabpanel" aria-labelledby="debugTab" data-tool-panel="debug" hidden>
-          <dl class="telemetry">
-            <div>
-              <dt>Frame</dt>
-              <dd id="frame">0</dd>
-            </div>
-            <div>
-              <dt>PC</dt>
-              <dd id="pc">0000</dd>
-            </div>
-            <div>
-              <dt>Border</dt>
-              <dd id="border">0</dd>
-            </div>
-            <div>
-              <dt>Key</dt>
-              <dd id="lastKey">-</dd>
-            </div>
-            <div>
-              <dt>Mapped</dt>
-              <dd id="mappedKeys">-</dd>
-            </div>
-            <div>
-              <dt>Held</dt>
-              <dd id="heldKeys">-</dd>
-            </div>
-          </dl>
-        </section>
-      </aside>
+      <section class="machine-grid" aria-label="Available machines">
+        <a class="machine-link spectrum-link" href="./spectrum.html">
+          <span class="machine-screen spectrum-screen" aria-hidden="true">
+            <span></span>
+          </span>
+          <strong>ZX Spectrum 48K</strong>
+          <small>ROM, BASIC, display, tape, snapshots, debugger</small>
+        </a>
+        <a class="machine-link cpm-link" href="./cpm.html">
+          <span class="machine-screen cpm-screen" aria-hidden="true">
+            <span>A&gt;</span>
+          </span>
+          <strong>CP/M 2.2</strong>
+          <small>Bootable z80pack disk, terminal, disk workflow</small>
+        </a>
+      </section>
     </main>
-    <script type="module" src="./public/app.js"></script>
   </body>
 </html>

@@ -17,3 +17,47 @@ The ZEXALL materials are not part of the emulator runtime. They are included
 only as validation inputs and reference exercisers for development and testing.
 The root `LICENSE` applies to this project's emulator code, documentation, and
 runtime assets, except where a file or directory carries its own license notice.
+
+## z80pack CP/M Disk Images
+
+`ROM/cpm22-1.dsk` and `ROM/cpm22-2.dsk` are copied from Udo Munk's z80pack
+project:
+
+```text
+https://github.com/udo-munk/z80pack
+cpmsim/disks/library/cpm22-1.dsk
+cpmsim/disks/library/cpm22-2.dsk
+```
+
+z80pack is licensed under the MIT License:
+
+```text
+Copyright (c) 1987-2025 Udo Munk and others
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+```
+
+The project emulates the z80pack Z80SIM/cpmsim virtual hardware closely enough
+to boot `cpm22-1.dsk` from its real boot sector. The images are used as runtime
+assets for the browser CP/M page and as test fixtures for the CP/M machine
+layer. Any additional CP/M disk images should get their own provenance and
+license notes before they are committed.
