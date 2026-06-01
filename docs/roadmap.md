@@ -29,6 +29,8 @@
 - Add TAP/TZX loading. Done for parsed TAP files, standard-speed TZX data
   blocks, fast-loading BASIC/CODE header-data pairs, and ROM byte-load
   interception, plus standard-speed EAR pulse playback.
+- Add `.z80` snapshot save/load. Done for 48K version 1 save, compressed and
+  uncompressed version 1 load, and extended 48K page-block load.
 - Add contention timing after the basic frame loop works.
 - Add fuller TZX support after the standard-speed block path: turbo blocks,
   pure-data blocks, and tougher custom loaders.
@@ -41,4 +43,6 @@
 - Add step/run/breakpoint controls. Started with run/pause, frame-step, and
   instruction-step; breakpoints remain.
 - Add BASIC examples that run through the real ROM.
+- Add BASIC listing export/import for users who want portable source text rather
+  than a whole-machine snapshot.
 - Add guided lessons for Z80 flags, loops, interrupts, and screen memory.

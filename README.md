@@ -33,6 +33,9 @@ The first ZX Spectrum 48K machine layer is also in place:
 - `.tap` files and standard-speed `.tzx` blocks can be parsed in the browser,
   inspected as tape blocks, and fast-loaded for BASIC program and CODE
   header/data pairs.
+- `.z80` snapshots can be loaded and the current machine state can be saved as
+  an uncompressed 48K `.z80` snapshot for returning to BASIC programs or game
+  positions later.
 - The BASIC paste path tokenizes the full 48K keyword range, renumbers listings
   that exceed line `9999`, auto-runs numbered listings, and handles ROM-specific
   `DEF FN` parameter placeholders.
@@ -84,6 +87,14 @@ blocks, and more exact custom-loader timing are later work.
 During pulse playback, flashing border colours are expected: that is the loader
 polling the tape input. Large standard-speed blocks load at cassette speed, so a
 50K-ish block can take around two minutes to finish.
+
+The `Snapshots` panel accepts `.z80` files. Loading a snapshot restores the
+Z80 registers, interrupt state, border colour, and all 48K RAM. Version 1
+snapshots are supported with compressed or uncompressed RAM; extended snapshots
+are supported when they contain the normal 48K pages. `Save Z80 Snapshot`
+downloads the current emulator state as an uncompressed version 1 `.z80` file.
+This is the most convenient way to save a BASIC program or a game position in
+the browser: it preserves the whole machine state, not just the BASIC listing.
 
 ## GitHub Pages Demo
 

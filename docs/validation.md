@@ -38,7 +38,7 @@ npm run test:zexall
 
 The latest validation pass reported:
 
-- `npm test`: 171 tests passing
+- `npm test`: 174 tests passing
 - `npm run build:pages`: `dist/` artifact created
 - `npm run coverage:opcodes`: 100% for base, CB, ED, DD, FD, DDCB, and FDCB
 - `npm run test:singlestep`: 1,604,000 vectors, 0 failures
@@ -60,9 +60,13 @@ The current unit suite covers the Z80 core, CP/M exerciser harness, `Spectrum48`
 ROM/RAM/ports/frame/video behaviour, modern keyboard translation, the BASIC
 tokenizer/loader, Web Audio beeper sample generation, and debugger helper
 formatting/disassembly/status reads, TAP/TZX parsing, fast-loading,
-ROM-loader interception, standard-speed EAR pulse playback, and GitHub Pages
-packaging. The bundled `ROM/48.rom` lets ROM-level browser and BASIC tests run
-without extra local setup.
+ROM-loader interception, standard-speed EAR pulse playback, `.z80` snapshot
+save/load, and GitHub Pages packaging. The bundled `ROM/48.rom` lets ROM-level
+browser and BASIC tests run without extra local setup.
+
+The `.z80` snapshot path has also been checked interactively with real snapshot
+files: loading external `.z80` files resumes the saved machine state, and a
+snapshot downloaded from the browser can be loaded back into the emulator.
 
 ### GitHub Pages Build
 

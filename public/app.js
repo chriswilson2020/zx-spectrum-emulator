@@ -15,6 +15,7 @@ import {
   shouldPreventBrowserScrollKey,
   spectrumKeysForModernKey
 } from "./keyboard.js";
+import { applyZ80Snapshot, createZ80Snapshot } from "./snapshot.js";
 import { loadTapEntry, parseTapeFile, tapEntries } from "./tape.js";
 
 const canvas = document.querySelector("#screen");
@@ -37,6 +38,8 @@ const pasteTextInput = document.querySelector("#pasteText");
 const tapFileInput = document.querySelector("#tapFile");
 const tapList = document.querySelector("#tapList");
 const tapLoadButton = document.querySelector("#tapLoad");
+const snapshotFileInput = document.querySelector("#snapshotFile");
+const snapshotSaveButton = document.querySelector("#snapshotSave");
 const registerGrid = document.querySelector("#registerGrid");
 const flagGrid = document.querySelector("#flagGrid");
 const basicStatusPanel = document.querySelector("#basicStatus");
@@ -457,6 +460,39 @@ tapLoadButton.addEventListener("click", () => {
   } catch (error) {
     statusOutput.value = error.message;
   }
+});
+
+snapshotFileInput.addEventListener("change", async () => {
+  const file = snapshotFileInput.files?.[0];
+  if (!file) return;
+
+  try {
+    const snapshot = applyZ80Snapshot(machine, await file.arrayBuffer());
+    currentTapBlocks = [];
+    currentTapEntries = [];
+    selectedTapEntryIndex = -1;
+    tapLoadButton.disabled = true;
+    renderTapList();
+    audio?.reset(machine.cpu.tStates);
+    statusOutput.value = `Loaded ${snapshot.format} snapshot ${file.name}`;
+    updateDebugger();
+  } catch (error) {
+    statusOutput.value = error.message;
+  } finally {
+    snapshotFileInput.value = "";
+  }
+});
+
+snapshotSaveButton.addEventListener("click", () => {
+  const bytes = createZ80Snapshot(machine);
+  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "zx-spectrum-state.z80";
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  statusOutput.value = "Saved current machine state as a Z80 snapshot";
 });
 
 pasteForm.addEventListener("submit", (event) => {

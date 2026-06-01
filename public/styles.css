@@ -99,7 +99,8 @@ output {
 }
 
 .paste-form label,
-.tape-panel label {
+.tape-panel label,
+.snapshot-panel label {
   color: #c9c9bd;
   font-size: 14px;
 }
@@ -121,12 +122,14 @@ output {
   outline-offset: 2px;
 }
 
-.tape-panel {
+.tape-panel,
+.snapshot-panel {
   display: grid;
   gap: 8px;
 }
 
-.tape-panel input {
+.tape-panel input,
+.snapshot-panel input {
   width: 100%;
   color: #c9c9bd;
   font: 12px/1.2 "SFMono-Regular", Consolas, monospace;

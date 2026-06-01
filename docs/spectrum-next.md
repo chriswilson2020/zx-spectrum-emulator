@@ -174,15 +174,28 @@ cassette-scale time to load.
 Number arrays, character arrays, TZX turbo/pure-data blocks, and higher-fidelity
 loader timing remain future work.
 
+## Snapshot Save And Load
+
+Status: implemented for useful 48K `.z80` snapshots. The browser can load
+version 1 snapshots with compressed or uncompressed RAM, plus extended snapshots
+that contain the normal 48K memory pages. Loading restores CPU registers,
+alternate registers, interrupt state, border colour, and RAM.
+
+The viewer can also download the current machine state as an uncompressed
+version 1 `.z80` snapshot. This gives users a practical save path for BASIC
+programs and games: the snapshot preserves the entire live machine, not just a
+text listing.
+
 ## Current Next Work
 
 Highest-value next slices:
 
 - Add fuller tape support: arrays, TZX turbo/pure-data blocks, and richer loader
   compatibility.
+- Add a more BASIC-friendly export/import path for listings, separate from
+  whole-machine snapshots.
 - Improve renderer timing toward scanline accuracy, contention, and floating
   bus behaviour.
-- Add save/load snapshots once the runtime state is stable.
 
 ## Later Accuracy Work
 
@@ -190,10 +203,9 @@ After the first booting Spectrum works:
 
 - ULA contention timing
 - Floating bus behaviour
-- Tape loading, TAP first
-- TZX support
+- Fuller tape loading beyond standard-speed TAP/TZX blocks
 - More exact audio timing
-- Snapshot formats such as `.z80` and `.sna`
+- Additional snapshot formats such as `.sna`
 
 The CPU and first machine shell are ready; the next work is tooling and hardware
 accuracy.

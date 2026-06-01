@@ -64,6 +64,8 @@ memory row formatting.
 `public/tape.js` parses TAP containers and standard-speed TZX data blocks,
 validates block checksums, pairs header blocks with data blocks, and implements
 the first fast-load path for BASIC program and CODE blocks.
+`public/snapshot.js` parses and writes 48K `.z80` snapshots so the browser can
+restore complete RAM/register state or download the current state for later.
 
 ## CPU Execution
 
@@ -219,6 +221,25 @@ calling the ROM byte-loader entry point.
 Number-array and character-array blocks are parsed and displayed but not loaded
 yet. TZX turbo and pure-data blocks remain future work for software with
 non-standard cassette timings.
+
+## Snapshot Loading
+
+The snapshot module supports the 48K `.z80` paths used by many Spectrum tools:
+
+- Version 1 snapshots with uncompressed 48K RAM.
+- Version 1 snapshots with `ED ED count value` compressed RAM.
+- Extended `.z80` snapshots that contain 48K pages 8, 4, and 5, mapped to
+  `0x4000`, `0x8000`, and `0xc000`.
+
+Loading a snapshot writes the saved CPU registers, alternate registers, `I`,
+`R`, `IX`, `IY`, `SP`, `PC`, interrupt flip-flops, interrupt mode, border
+colour, and 48K RAM into the live `Spectrum48` instance. Transient browser-side
+state such as held keys, beeper events, tape playback, and the frame counter is
+cleared so the restored machine resumes from a clean input/audio boundary.
+
+Saving writes an uncompressed version 1 `.z80` file. This keeps the output simple
+and widely compatible while preserving the whole 48K machine state, which is
+enough to save BASIC programs typed in the browser as well as game positions.
 
 ## Validation Harnesses
 
