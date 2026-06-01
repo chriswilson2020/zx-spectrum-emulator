@@ -2,6 +2,7 @@
   "name": "zx-spectrum-emulator",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "coverage:opcodes": "node scripts/opcode-coverage.js",
