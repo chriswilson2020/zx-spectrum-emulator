@@ -90,6 +90,25 @@ functions `2` and `9`.
 undocumented flag bits. These programs validate long instruction sequences and
 CRC-based machine-state results.
 
+### Interactive BASIC Programs
+
+The `progs/` directory contains interactive Sinclair BASIC validation programs
+for the browser viewer and a local `ROM/48.rom`.
+
+- `progs/shorter_suite.bas` is the quick smoke suite. It covers BASIC paste,
+  `INKEY$` pauses, UDG setup with `POKE` and `USR`, colour attributes,
+  `SCREEN$`, `PLOT`, `DRAW`, `CIRCLE`, string sorting and slicing, `DATA` /
+  `READ` / `RESTORE`, `BEEP`, `PEEK`, `CHR$`, `CODE`, `VAL`, and `STR$`.
+- `progs/full_suite.bas` adds a heavier cellular automaton section that stresses
+  numeric arrays, nested loops, conditional branches, long-running screen
+  updates, and interpreter responsiveness.
+
+These programs are not automated yet. Run them through `npm run dev`, paste the
+selected `.bas` file into the viewer, and watch for ROM errors, stalled input,
+broken display output, missing beeper feedback, or incorrect `ATTR`,
+`SCREEN$`, `PEEK`, `POKE`, and `USR` results. See `progs/README.md` for the
+detailed section-by-section notes.
+
 ## Recommended Validation Flow
 
 For normal CPU edits:
