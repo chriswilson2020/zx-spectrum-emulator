@@ -90,6 +90,14 @@ npm run test:singlestep
 - [Opcode Coverage](docs/opcode-coverage.md): decoder coverage probe notes.
 - [Roadmap](docs/roadmap.md): high-level project phases.
 
+## License
+
+The emulator code is licensed under the MIT License. See [LICENSE](LICENSE).
+
+Third-party validation material under `ZEXALL-main/` is GPLv2-licensed and is
+kept separate from the emulator runtime. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.
+
 ## CP/M Exerciser Harness
 
 The CPU can run CP/M-style `.COM` validation programs through a small BDOS
