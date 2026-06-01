@@ -56,7 +56,8 @@ bridges browser controls into the machine.
 `public/keyboard.js` translates modern PC keys and pasted text into Spectrum
 key chords. `public/basic.js` tokenizes Sinclair BASIC for direct loading into
 the ROM's program area, including keyword tokens, number markers, line
-renumbering, and `DEF FN` parameter storage expected by the ROM evaluator.
+renumbering, and `DEF FN` parameter storage expected by the ROM evaluator. It
+also detokenizes the current program back to editable text for `.bas` export.
 `public/audio.js` converts beeper transitions into Web Audio sample buffers.
 `public/debugger.js` supplies browser-friendly debug helpers: hex formatting,
 small-window disassembly, system variable reads, BASIC status extraction, and
@@ -182,6 +183,13 @@ This path is faster and more reliable than typing long listings through the ROM
 editor, but it must still store the bytes the ROM evaluator expects. In
 particular, `DEF FN` parameters include hidden placeholder number markers in the
 line body; without them the ROM raises `Q Parameter error` when `FN` is called.
+
+The file loader uses the same tokenizer for `.bas` and plain-text files. The
+export path reads bytes from `PROG` to `VARS`, walks each Spectrum line header,
+converts token bytes back to their keyword text, and skips hidden numeric
+marker records (`0x0e` plus five bytes). That makes exported listings suitable
+for editing, sharing, and source control, while `.z80` snapshots remain the
+right tool for preserving complete machine state.
 
 ## Tape Loading
 

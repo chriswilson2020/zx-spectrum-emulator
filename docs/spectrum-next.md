@@ -135,17 +135,24 @@ effects.
 
 ## BASIC Loading And Keyboard Input
 
-The browser UI supports two input paths:
+The browser UI supports three input paths:
 
 - Modern key events are translated into Spectrum matrix chords, including common
   punctuation through Symbol Shift.
 - Pasted BASIC text is tokenized and loaded directly into the ROM's BASIC
   program area. The tokenizer covers the 48K keyword range, numeric markers, and
   `DEF FN` parameter placeholders required by the ROM evaluator.
+- `.bas` and plain-text files can be loaded directly from disk through the BASIC
+  source controls.
 
 The paste path renumbers listings that exceed the Spectrum editor's four-digit
 line-number limit and auto-types `RUN` for numbered listings that do not include
 an explicit command.
+
+The viewer can also export the current BASIC program as editable text. Export
+detokenizes the bytes between `PROG` and `VARS`, restores keyword text, and
+omits hidden Spectrum numeric markers so the result can be edited or kept under
+source control.
 
 ## Tape Loading
 
@@ -192,10 +199,10 @@ Highest-value next slices:
 
 - Add fuller tape support: arrays, TZX turbo/pure-data blocks, and richer loader
   compatibility.
-- Add a more BASIC-friendly export/import path for listings, separate from
-  whole-machine snapshots.
 - Improve renderer timing toward scanline accuracy, contention, and floating
   bus behaviour.
+- Add debugger breakpoints and watchpoints now that the machine can be paused,
+  stepped, snapshotted, and exported.
 
 ## Later Accuracy Work
 

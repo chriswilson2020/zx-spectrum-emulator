@@ -36,9 +36,10 @@ The first ZX Spectrum 48K machine layer is also in place:
 - `.z80` snapshots can be loaded and the current machine state can be saved as
   an uncompressed 48K `.z80` snapshot for returning to BASIC programs or game
   positions later.
-- The BASIC paste path tokenizes the full 48K keyword range, renumbers listings
-  that exceed line `9999`, auto-runs numbered listings, and handles ROM-specific
-  `DEF FN` parameter placeholders.
+- The BASIC source paths tokenize and detokenize the full 48K keyword range,
+  renumber listings that exceed line `9999`, auto-run pasted listings, export
+  editable `.bas` files, and handle ROM-specific `DEF FN` parameter
+  placeholders.
 
 See [CPU Status](docs/cpu-status.md) and [Validation](docs/validation.md) for
 the details and remaining caveats.
@@ -70,6 +71,11 @@ The `Paste BASIC` box accepts normal PC text. Numbered listings are loaded
 directly into BASIC memory and then `RUN` is typed automatically unless the
 paste includes unnumbered commands. Listings with line numbers above the real
 Spectrum editor limit are renumbered before loading.
+
+The `BASIC Source` controls load `.bas` or plain-text listings directly from
+disk using the same tokenizer as paste loading. `Export BASIC` reads the current
+program from `PROG` to `VARS`, detokenizes Spectrum keyword bytes, skips hidden
+numeric markers, and downloads editable text as `zx-spectrum-program.bas`.
 
 The `Load TAP` panel accepts `.tap` and `.tzx` files. TAP containers and
 standard-speed TZX data blocks are parsed into header/data blocks, showing block

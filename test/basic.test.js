@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   BASIC_TOKENS,
+  detokenizeBasicProgram,
+  exportBasicProgram,
   loadBasicProgram,
   renumberBasicProgram,
   tokenizeBasicBody,
@@ -150,5 +152,29 @@ test("loads a tokenized BASIC program into Spectrum RAM", () => {
   assert.deepEqual(
     Array.from({ length }, (_, offset) => machine.read8(start + offset)),
     tokenizeBasicLine("10 PRINT \"HELLO\"")
+  );
+});
+
+test("detokenizes BASIC program bytes back to editable source", () => {
+  const program = [
+    ...tokenizeBasicLine("10 DEF FN r(n)=n+1"),
+    ...tokenizeBasicLine("20 PRINT \"HELLO\"; FN r(7)"),
+    ...tokenizeBasicLine("30 REM PRINT 99")
+  ];
+
+  assert.equal(
+    detokenizeBasicProgram(program),
+    "10 DEF FN r(n)=n+1\n20 PRINT \"HELLO\"; FN r(7)\n30 REM PRINT 99"
+  );
+});
+
+test("exports the current BASIC program from Spectrum memory", () => {
+  const machine = Spectrum48.fromRomFile("ROM/48.rom");
+  runFrames(machine, 180);
+  loadBasicProgram(machine, "10 BORDER 1: PAPER 0: CLS\n20 PRINT \"OK\"");
+
+  assert.equal(
+    exportBasicProgram(machine),
+    "10 BORDER 1: PAPER 0: CLS\n20 PRINT \"OK\""
   );
 });

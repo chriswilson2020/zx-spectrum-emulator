@@ -1,5 +1,5 @@
 import { BeeperAudio } from "./audio.js";
-import { loadBasicProgram, renumberBasicProgram } from "./basic.js";
+import { exportBasicProgram, loadBasicProgram, renumberBasicProgram } from "./basic.js";
 import {
   disassembleWindow,
   hexByte,
@@ -35,6 +35,8 @@ const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
 const pasteForm = document.querySelector("#pasteForm");
 const pasteTextInput = document.querySelector("#pasteText");
+const basicFileInput = document.querySelector("#basicFile");
+const basicExportButton = document.querySelector("#basicExport");
 const tapFileInput = document.querySelector("#tapFile");
 const tapList = document.querySelector("#tapList");
 const tapLoadButton = document.querySelector("#tapLoad");
@@ -197,6 +199,16 @@ function typeCommand(text) {
   for (const keys of taps) tapSpectrumKeys(keys);
   runFrames(20);
   return taps.length;
+}
+
+function downloadBytes(bytes, filename, type = "application/octet-stream") {
+  const blob = new Blob([bytes], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function renderTapList() {
@@ -485,14 +497,41 @@ snapshotFileInput.addEventListener("change", async () => {
 
 snapshotSaveButton.addEventListener("click", () => {
   const bytes = createZ80Snapshot(machine);
-  const blob = new Blob([bytes], { type: "application/octet-stream" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "zx-spectrum-state.z80";
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  downloadBytes(bytes, "zx-spectrum-state.z80");
   statusOutput.value = "Saved current machine state as a Z80 snapshot";
+});
+
+basicFileInput.addEventListener("change", async () => {
+  const file = basicFileInput.files?.[0];
+  if (!file) return;
+
+  try {
+    let text = await file.text();
+    try {
+      loadBasicProgram(machine, text);
+    } catch (error) {
+      if (!/Invalid BASIC line number/.test(error.message)) throw error;
+      text = renumberBasicProgram(text);
+      loadBasicProgram(machine, text);
+    }
+    pasteTextInput.value = text;
+    statusOutput.value = `Loaded BASIC source ${file.name}`;
+    updateDebugger();
+  } catch (error) {
+    statusOutput.value = error.message;
+  } finally {
+    basicFileInput.value = "";
+  }
+});
+
+basicExportButton.addEventListener("click", () => {
+  try {
+    const text = `${exportBasicProgram(machine)}\n`;
+    downloadBytes(text, "zx-spectrum-program.bas", "text/plain;charset=utf-8");
+    statusOutput.value = "Exported current BASIC program";
+  } catch (error) {
+    statusOutput.value = error.message;
+  }
 });
 
 pasteForm.addEventListener("submit", (event) => {

@@ -96,6 +96,11 @@ export const BASIC_TOKENS = new Map([
 ]);
 
 const TOKEN_MATCHES = [...BASIC_TOKENS.entries()].sort((a, b) => b[0].length - a[0].length);
+const TOKEN_TEXT = new Map(
+  [...BASIC_TOKENS.entries()]
+    .filter(([keyword]) => keyword !== "GOTO" && keyword !== "GOSUB" && keyword !== "RAND")
+    .map(([keyword, token]) => [token, keyword])
+);
 const EMPTY_NUMERIC_PARAMETER = [0x0e, 0x00, 0x00, 0x00, 0x00, 0x00];
 
 function isWordByte(value) {
@@ -245,6 +250,69 @@ export function tokenizeBasicProgram(text) {
   return lines.flatMap((line) => tokenizeBasicLine(line));
 }
 
+function detokenizeBasicBody(bytes) {
+  let text = "";
+  let inString = false;
+  let inRem = false;
+  let defFnInParameters = false;
+
+  for (let index = 0; index < bytes.length; index += 1) {
+    const byte = bytes[index];
+
+    if (!inString && byte === 0x0e) {
+      index += 5;
+      continue;
+    }
+
+    if (!inRem && byte === 0x22) {
+      inString = !inString;
+      text += "\"";
+      continue;
+    }
+
+    if (!inString && !inRem && defFnInParameters && /[A-Za-z]/.test(String.fromCharCode(byte))) {
+      text += String.fromCharCode(byte);
+      if (bytes[index + 1] === 0x24) {
+        text += "$";
+        index += 1;
+      }
+      if (bytes[index + 1] === 0x0e) index += 6;
+      continue;
+    }
+
+    const token = !inString && !inRem ? TOKEN_TEXT.get(byte) : undefined;
+    if (token) {
+      text += token;
+      if (token === "REM") inRem = true;
+      if (token === "DEF FN") defFnInParameters = true;
+      continue;
+    }
+
+    const char = String.fromCharCode(byte);
+    text += char;
+    if (!inString && defFnInParameters && char === ")") defFnInParameters = false;
+  }
+
+  return text;
+}
+
+export function detokenizeBasicProgram(programBytes) {
+  const bytes = Uint8Array.from(programBytes);
+  const lines = [];
+  let offset = 0;
+
+  while (offset + 4 <= bytes.length) {
+    const lineNumber = (bytes[offset] << 8) | bytes[offset + 1];
+    const length = bytes[offset + 2] | (bytes[offset + 3] << 8);
+    if (length === 0 || offset + 4 + length > bytes.length) break;
+    const bodyEnd = offset + 4 + length - 1;
+    lines.push(`${lineNumber} ${detokenizeBasicBody(bytes.slice(offset + 4, bodyEnd))}`);
+    offset += 4 + length;
+  }
+
+  return lines.join("\n");
+}
+
 function splitBasicLines(text) {
   return String(text)
     .replace(/\r\n?/g, "\n")
@@ -331,6 +399,14 @@ export function renumberBasicProgram(text, { start = 10, step = 10, maxLine = 99
 export function loadBasicProgram(machine, text) {
   const program = tokenizeBasicProgram(text);
   return loadBasicProgramBytes(machine, program);
+}
+
+export function exportBasicProgram(machine) {
+  const start = machine.read16(0x5c53);
+  const vars = machine.read16(0x5c4b);
+  if (vars < start) throw new Error("BASIC pointers are invalid");
+  const bytes = Array.from({ length: vars - start }, (_, offset) => machine.read8(start + offset));
+  return detokenizeBasicProgram(bytes);
 }
 
 export function loadBasicProgramBytes(machine, programBytes, { variablesOffset = programBytes.length } = {}) {

@@ -25,6 +25,8 @@
 - Add modern keyboard translation for normal PC keyboards. Done.
 - Add direct Sinclair BASIC paste loading. Done for tokenized program loading,
   automatic renumbering, `RUN`, and `DEF FN` placeholders.
+- Add BASIC listing import/export. Done for `.bas`/text import and detokenized
+  editable `.bas` export from the live BASIC program area.
 - Add beeper output. Done for a first Web Audio buffer-based implementation.
 - Add TAP/TZX loading. Done for parsed TAP files, standard-speed TZX data
   blocks, fast-loading BASIC/CODE header-data pairs, and ROM byte-load
@@ -43,6 +45,4 @@
 - Add step/run/breakpoint controls. Started with run/pause, frame-step, and
   instruction-step; breakpoints remain.
 - Add BASIC examples that run through the real ROM.
-- Add BASIC listing export/import for users who want portable source text rather
-  than a whole-machine snapshot.
 - Add guided lessons for Z80 flags, loops, interrupts, and screen memory.
