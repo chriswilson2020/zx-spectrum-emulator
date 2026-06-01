@@ -151,6 +151,31 @@ export class CpmTerminal {
     this.element.textContent = renderedRows.join("\n");
     this.element.scrollTop = this.element.scrollHeight;
   }
+
+  saveState() {
+    return {
+      columns: this.columns,
+      rows: this.rows,
+      cursorVisible: this.cursorVisible,
+      cursorRow: this.cursorRow,
+      cursorColumn: this.cursorColumn,
+      screen: this.screen.map((row) => row.join(""))
+    };
+  }
+
+  restoreState(state) {
+    this.columns = state.columns ?? this.columns;
+    this.rows = state.rows ?? this.rows;
+    this.cursorVisible = state.cursorVisible ?? this.cursorVisible;
+    this.screen = Array.from({ length: this.rows }, (_, rowIndex) => {
+      const source = state.screen?.[rowIndex] ?? "";
+      return Array.from({ length: this.columns }, (_, columnIndex) => source[columnIndex] ?? " ");
+    });
+    this.cursorRow = Math.max(0, Math.min(this.rows - 1, state.cursorRow ?? 0));
+    this.cursorColumn = Math.max(0, Math.min(this.columns - 1, state.cursorColumn ?? 0));
+    this.escapeState = null;
+    this.render();
+  }
 }
 
 export function keyEventToCpmInput(event) {

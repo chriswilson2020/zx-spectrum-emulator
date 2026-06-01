@@ -282,6 +282,64 @@ test("getState returns debugger-friendly register and flag snapshots", () => {
   assert.equal(state.tStates, 7);
 });
 
+test("setState restores CPU registers and interrupt state", () => {
+  const { cpu } = makeCpu([0x00]);
+  cpu.setState({
+    registers: {
+      A: 0x12,
+      F: FLAG.C,
+      B: 0x34,
+      C: 0x56,
+      D: 0x78,
+      E: 0x9a,
+      H: 0xbc,
+      L: 0xde,
+      A_: 0x21,
+      F_: 0x43,
+      B_: 0x65,
+      C_: 0x87,
+      D_: 0xa9,
+      E_: 0xcb,
+      H_: 0xed,
+      L_: 0x0f,
+      IX: 0x1357,
+      IY: 0x2468,
+      SP: 0xff00,
+      PC: 0x8123,
+      I: 0x5a,
+      R: 0x25,
+      WZ: 0x4567,
+      Q: FLAG.C
+    },
+    interruptMode: 2,
+    IFF1: true,
+    IFF2: true,
+    interruptDelay: 1,
+    pendingInterrupt: true,
+    interruptData: 0xcf,
+    pendingNmi: true,
+    halted: true,
+    tStates: 1234
+  });
+
+  assert.equal(cpu.AF, 0x1201);
+  assert.equal(cpu.BC, 0x3456);
+  assert.equal(cpu.DE, 0x789a);
+  assert.equal(cpu.HL, 0xbcde);
+  assert.equal(cpu.A_, 0x21);
+  assert.equal(cpu.L_, 0x0f);
+  assert.equal(cpu.IX, 0x1357);
+  assert.equal(cpu.IY, 0x2468);
+  assert.equal(cpu.SP, 0xff00);
+  assert.equal(cpu.PC, 0x8123);
+  assert.equal(cpu.WZ, 0x4567);
+  assert.equal(cpu.interruptMode, 2);
+  assert.equal(cpu.IFF1, true);
+  assert.equal(cpu.pendingNmi, true);
+  assert.equal(cpu.halted, true);
+  assert.equal(cpu.tStates, 1234);
+});
+
 test("immediate ALU opcodes operate on the byte after the opcode", () => {
   const { cpu } = makeCpu([
     0x3e, 0x10, // LD A,$10

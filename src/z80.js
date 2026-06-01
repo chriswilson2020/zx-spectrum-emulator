@@ -1575,7 +1575,17 @@ export class Z80 {
         SP: this.SP,
         PC: this.PC,
         I: this.I,
-        R: this.R
+        R: this.R,
+        A_: this.A_,
+        F_: this.F_,
+        B_: this.B_,
+        C_: this.C_,
+        D_: this.D_,
+        E_: this.E_,
+        H_: this.H_,
+        L_: this.L_,
+        WZ: this.WZ,
+        Q: this.Q
       },
       flags: {
         S: Boolean(this.F & FLAG.S),
@@ -1597,5 +1607,26 @@ export class Z80 {
       halted: this.halted,
       tStates: this.tStates
     };
+  }
+
+  setState(state) {
+    const registers = state.registers ?? {};
+    for (const name of ["A", "F", "B", "C", "D", "E", "H", "L", "A_", "F_", "B_", "C_", "D_", "E_", "H_", "L_", "I"]) {
+      if (registers[name] !== undefined) this[name] = registers[name] & 0xff;
+    }
+    for (const name of ["IX", "IY", "SP", "PC", "WZ"]) {
+      if (registers[name] !== undefined) this[name] = registers[name] & 0xffff;
+    }
+    if (registers.R !== undefined) this.R = registers.R & 0x7f;
+    this.Q = registers.Q ?? this.Q;
+    this.interruptMode = state.interruptMode ?? this.interruptMode;
+    this.IFF1 = Boolean(state.IFF1);
+    this.IFF2 = Boolean(state.IFF2);
+    this.interruptDelay = state.interruptDelay ?? 0;
+    this.pendingInterrupt = Boolean(state.pendingInterrupt);
+    this.interruptData = state.interruptData ?? 0xff;
+    this.pendingNmi = Boolean(state.pendingNmi);
+    this.halted = Boolean(state.halted);
+    this.tStates = state.tStates ?? 0;
   }
 }

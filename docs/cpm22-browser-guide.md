@@ -53,7 +53,7 @@ which CP/M directory is shown and which drive receives imported host files.
 
 ## Whole-Disk Workflow
 
-Use whole-disk load/save when you want to preserve a CP/M session exactly:
+Use whole-disk load/save when you want a portable copy of one CP/M disk:
 
 1. Select `B: Work Disk` in the disk image selector.
 2. Click `Load Disk` to mount an existing `.dsk` file into B:.
@@ -61,8 +61,8 @@ Use whole-disk load/save when you want to preserve a CP/M session exactly:
 4. Click `Save Disk` to download the current selected drive image.
 
 The downloaded image is named for the selected drive, such as
-`cpm22-drive-b.dsk` or `cpm22-drive-c.dsk`. Keep this file if you want to resume
-the same CP/M disk later.
+`cpm22-drive-b.dsk` or `cpm22-drive-c.dsk`. Keep this file if you want to reuse
+the same CP/M disk later or move it to another emulator.
 
 The Z80-MBC2 profile also supports browser-local disk persistence. Changes to
 F: and G: are saved automatically in IndexedDB on the same browser/device. A
@@ -76,6 +76,29 @@ a substitute for a backup. Use `Save Disk` to download a portable `.DSK` copy.
 Use `Restore Bundled` to discard the selected drive's local override and reload
 the bundled image. Use `Clear Local` to remove all local disk overrides for the
 active CP/M machine profile.
+
+## Session Workflow
+
+Use `Save Session` when you want to resume the emulator exactly where it is,
+including full-screen applications.
+
+The downloaded session is a compressed `.zip` file containing:
+
+- a JSON manifest with the active CP/M machine profile and selected controls.
+- CPU registers, interrupt state, and machine I/O state.
+- the full 64K RAM image.
+- the 80x24 terminal screen and cursor state.
+- every mounted disk image.
+
+`Load Session` reads the ZIP back into the browser and restores the active
+profile, RAM, CPU, terminal, and mounted disks. This is all local file handling:
+the ZIP is not uploaded to GitHub Pages, and no repository storage is used.
+
+Session ZIPs are the friendliest project-file format for browser use because
+they are portable, compressed, inspectable with normal operating-system tools,
+and can still be loaded on a different browser or computer. Whole-disk `.dsk`
+downloads remain better when you only want to carry one disk image to another
+CP/M emulator.
 
 ## File Import And Export
 
@@ -186,8 +209,9 @@ controls still need browser testing when UI behavior changes.
 
 ## Current Limitations
 
-- Disk persistence is explicit download/upload; automatic IndexedDB restore is
-  still future work.
+- Browser-local disk persistence is intentionally limited to changed drives and
+  currently auto-saves the Z80-MBC2 F: and G: work disks. Use `Save Disk` or
+  `Save Session` for portable backups.
 - The filesystem helper currently targets the z80pack CP/M 2.2 floppy geometry,
   plus Z80-MBC2 8 MB images for foreign-disk reading. It is not a general CP/M
   disk-format library.
@@ -195,3 +219,5 @@ controls still need browser testing when UI behavior changes.
   path, but it is not a complete emulation of every terminal listed by
   WordStar.
 - Printer output is not routed to a browser printer or file yet.
+- Session ZIPs preserve emulator state for this project, not a standardized
+  CP/M interchange format.

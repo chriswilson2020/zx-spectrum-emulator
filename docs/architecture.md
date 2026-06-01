@@ -189,6 +189,16 @@ F: work and G: scratch disks; manually loaded disk images are persisted as
 explicit local overrides for the selected drive. Restore and clear controls
 delete those local overrides and fall back to the bundled disk bytes.
 
+The CP/M page also supports portable whole-session files. `public/cpm-session.js`
+creates and reads small ZIP archives in the browser, using raw deflate through
+`CompressionStream`/`DecompressionStream` when available and falling back to
+stored ZIP entries when compression is not available. A session ZIP contains
+`manifest.json`, `machine/state.json`, `machine/ram.bin`, `terminal.json`, and
+one `drives/<letter>.dsk` entry per mounted drive. The machine state is restored
+through `Z80.setState()` plus the active CP/M machine layer's `restoreState()`,
+so a loaded session resumes the same profile, CPU registers, RAM, terminal
+screen, selected controls, and disk bytes entirely on the client.
+
 `public/cpm-terminal.js` renders CP/M console output into an 80x24 screen
 buffer. It supports the control behavior needed by full-screen CP/M software
 such as WordStar's Soroc IQ-120/140 profile: cursor addressing, clear screen,

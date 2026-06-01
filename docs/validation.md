@@ -66,10 +66,11 @@ browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw
 floppy geometry, FDC and console ports, CP/M command smoke tests, host-side CP/M
 filesystem import/export, Z80-MBC2 8 MB disk reads, native Z80-MBC2 IOS boot,
 interactive frame-sliced Z80-MBC2 typing, browser-local CP/M disk persistence
-wiring, full-extent record-count repair, and the screen-buffer terminal behavior
-needed by WordStar-style full-screen applications. The bundled `ROM/48.rom`,
-`ROM/cpm22-1.dsk`, and `ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M
-boot tests run without extra local setup.
+wiring, compressed CP/M session ZIP round-trips, full-extent record-count
+repair, and the screen-buffer terminal behavior needed by WordStar-style
+full-screen applications. The bundled `ROM/48.rom`, `ROM/cpm22-1.dsk`, and
+`ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M boot tests run without
+extra local setup.
 
 The `.z80` snapshot path has also been checked interactively with real snapshot
 files: loading external `.z80` files resumes the saved machine state, and a
@@ -147,7 +148,10 @@ Z80-MBC2 machine profile and verify that it boots to `A>` and can run `DIR` on
 A: and B:. For local persistence, import or create a file on F: or G:, reload
 the page, switch back to Z80-MBC2, and confirm that the selected drive is marked
 `local` and still contains the file. Then use `Restore Bundled` or `Clear Local`
-and confirm the local marker disappears.
+and confirm the local marker disappears. For session files, save a CP/M session
+while the terminal is on a recognizable screen, reload the page, use `Load
+Session`, and confirm the same profile, terminal contents, selected drive, and
+disk directory return.
 
 ### Interactive BASIC Programs
 

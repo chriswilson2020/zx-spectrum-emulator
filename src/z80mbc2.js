@@ -277,4 +277,44 @@ export class Z80Mbc2Machine {
   clearOutput() {
     this.consoleOutput = [];
   }
+
+  saveState() {
+    return {
+      kind: "z80mbc2",
+      cpu: this.cpu.getState(),
+      halted: this.halted,
+      consoleStatusMode: this.consoleStatusMode,
+      consoleInput: [...this.consoleInput],
+      consoleOutput: [...this.consoleOutput],
+      io: {
+        opcode: this.opcode,
+        drive: this.drive,
+        track: this.track,
+        trackLowPending: this.trackLowPending,
+        sector: this.sector,
+        diskError: this.diskError,
+        readBuffer: [...this.readBuffer],
+        readOffset: this.readOffset,
+        writeBuffer: [...this.writeBuffer]
+      }
+    };
+  }
+
+  restoreState(state) {
+    this.cpu.setState(state.cpu);
+    this.halted = Boolean(state.halted);
+    this.cpu.halted = this.halted;
+    this.consoleStatusMode = state.consoleStatusMode ?? this.consoleStatusMode;
+    this.consoleInput = [...(state.consoleInput ?? [])];
+    this.consoleOutput = [...(state.consoleOutput ?? [])];
+    this.opcode = state.io?.opcode ?? 0;
+    this.drive = state.io?.drive ?? 0;
+    this.track = state.io?.track ?? 0;
+    this.trackLowPending = Boolean(state.io?.trackLowPending);
+    this.sector = state.io?.sector ?? 0;
+    this.diskError = state.io?.diskError ?? 0;
+    this.readBuffer = Uint8Array.from(state.io?.readBuffer ?? []);
+    this.readOffset = state.io?.readOffset ?? 0;
+    this.writeBuffer = [...(state.io?.writeBuffer ?? [])];
+  }
 }

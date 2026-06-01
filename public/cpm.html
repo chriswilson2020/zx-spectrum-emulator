@@ -38,7 +38,10 @@
           <button id="cpmSaveDisk" type="button">Save Disk</button>
           <button id="cpmRestoreDisk" type="button">Restore Bundled</button>
           <button id="cpmClearLocalDisks" type="button">Clear Local</button>
+          <button id="cpmSaveSession" type="button">Save Session</button>
+          <button id="cpmLoadSession" type="button">Load Session</button>
           <input id="cpmDiskFile" class="visually-hidden" type="file" accept=".dsk,application/octet-stream" tabindex="-1" aria-hidden="true">
+          <input id="cpmSessionFile" class="visually-hidden" type="file" accept=".zip,application/zip,application/octet-stream" tabindex="-1" aria-hidden="true">
         </div>
         <section class="cpm-file-panel" aria-label="CP/M files">
           <header>
@@ -73,6 +76,6 @@
         </section>
       </section>
     </main>
-    <script type="module" src="./public/cpm-app.js?v=20260601-cpm-local"></script>
+    <script type="module" src="./public/cpm-app.js?v=20260601-cpm-session"></script>
   </body>
 </html>

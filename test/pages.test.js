@@ -66,6 +66,9 @@ test("CP/M page exposes a live terminal entry point", async () => {
   assert.match(cpm, /id="cpmSaveDisk"/);
   assert.match(cpm, /id="cpmRestoreDisk"/);
   assert.match(cpm, /id="cpmClearLocalDisks"/);
+  assert.match(cpm, /id="cpmSaveSession"/);
+  assert.match(cpm, /id="cpmLoadSession"/);
+  assert.match(cpm, /id="cpmSessionFile"/);
   assert.match(cpm, /id="cpmFileDrive"/);
   assert.match(cpm, /<option value="2">C: Companion Disk<\/option>/);
   assert.match(cpm, /<option value="2">C: Companion<\/option>/);
@@ -85,6 +88,9 @@ test("CP/M page exposes a live terminal entry point", async () => {
   assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N06\.DSK"\)/);
   assert.match(app, /Z80Mbc2Machine/);
   assert.match(app, /indexedDB\.open\(LOCAL_DISK_DB/);
+  assert.match(app, /createZip/);
+  assert.match(app, /readZip/);
+  assert.match(app, /SESSION_FORMAT/);
   assert.match(app, /autoPersistDrive\(driveIndex\)/);
   assert.match(app, /scheduleDirtyDiskPersistence/);
   assert.match(app, /downloadBytes/);
@@ -109,6 +115,7 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/cpm.html"), true);
   assert.equal(existsSync("dist/public/app.js"), true);
   assert.equal(existsSync("dist/public/cpm-app.js"), true);
+  assert.equal(existsSync("dist/public/cpm-session.js"), true);
   assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
   assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
   assert.equal(existsSync("dist/src/spectrum48.js"), true);

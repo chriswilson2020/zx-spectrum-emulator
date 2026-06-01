@@ -58,6 +58,9 @@ The CP/M 2.2 page is also bootable and can switch hardware profiles:
   system disk as A: and a blank writable work disk as B:.
 - Whole-disk load/save and individual CP/M file import/download/delete are
   available from the browser.
+- `Save Session` downloads a compressed local ZIP containing CPU state, RAM,
+  terminal state, active profile, and the mounted disk images; `Load Session`
+  restores that ZIP without using any server-side storage.
 - The CP/M file utility handles the z80pack skewed 8-inch floppy layout,
   Z80-MBC2 8 MB disk images for foreign-disk imports, multi-extent files, and
   repair of old full-extent imports whose record counts were written
@@ -146,13 +149,17 @@ profile control to switch to Z80-MBC2, which boots `DS0N00.DSK` and mounts
 `DS0N00.DSK` through `DS0N06.DSK` as A: through G:. In the Z80-MBC2 profile,
 F: and G: are labelled as work/scratch disks and changes to those drives are
 saved to the user's browser-local IndexedDB storage. Nothing is written back to
-GitHub; whole-disk downloads remain the portable backup path. The file panel can
-import host files into a selected CP/M drive, download CP/M files back to the
-host, and delete files. The disk controls can load or save a whole `.dsk` image
-for the selected drive, restore a drive to its bundled image, or clear local
-browser disk changes. The Foreign Disk panel can still load Z80-MBC2 8 MB disk
-images, list their directories, and copy selected files into the currently
-selected CP/M drive. See
+GitHub; whole-disk downloads remain the portable per-disk backup path. For a
+full resume point, `Save Session` downloads a compressed `.zip` containing RAM,
+CPU registers, terminal screen state, active CP/M profile, selected controls,
+and all mounted disk bytes. `Load Session` restores that ZIP locally in the
+browser, so it works on GitHub Pages without accounts, uploads, or repository
+writes. The file panel can import host files into a selected CP/M drive,
+download CP/M files back to the host, and delete files. The disk controls can
+load or save a whole `.dsk` image for the selected drive, restore a drive to its
+bundled image, or clear local browser disk changes. The Foreign Disk panel can
+still load Z80-MBC2 8 MB disk images, list their directories, and copy selected
+files into the currently selected CP/M drive. See
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for the exact workflow.
 
 ## GitHub Pages Demo

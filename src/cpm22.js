@@ -237,4 +237,34 @@ export class Cpm22Machine {
   clearOutput() {
     this.consoleOutput = [];
   }
+
+  saveState() {
+    return {
+      kind: "cpm22",
+      cpu: this.cpu.getState(),
+      halted: this.halted,
+      consoleInput: [...this.consoleInput],
+      consoleOutput: [...this.consoleOutput],
+      io: {
+        drive: this.drive,
+        track: this.track,
+        sector: this.sector,
+        fdcStatus: this.fdcStatus,
+        dmaAddress: this.dmaAddress
+      }
+    };
+  }
+
+  restoreState(state) {
+    this.cpu.setState(state.cpu);
+    this.halted = Boolean(state.halted);
+    this.cpu.halted = this.halted;
+    this.consoleInput = [...(state.consoleInput ?? [])];
+    this.consoleOutput = [...(state.consoleOutput ?? [])];
+    this.drive = state.io?.drive ?? 0;
+    this.track = state.io?.track ?? 0;
+    this.sector = state.io?.sector ?? 1;
+    this.fdcStatus = state.io?.fdcStatus ?? 0;
+    this.dmaAddress = state.io?.dmaAddress ?? 0;
+  }
 }

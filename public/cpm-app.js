@@ -2,6 +2,7 @@ import { RawCpmDisk } from "../src/cpm-disk.js";
 import { CpmFileSystem, detectCpmDiskGeometry, normalizeCpmName } from "../src/cpm-filesystem.js";
 import { Cpm22Machine } from "../src/cpm22.js";
 import { RawZ80Mbc2Disk, Z80Mbc2Machine } from "../src/z80mbc2.js";
+import { createZip, jsonBytes, parseJsonBytes, readZip } from "./cpm-session.js";
 import { CpmTerminal, keyEventToCpmInput } from "./cpm-terminal.js";
 
 const terminalElement = document.querySelector("#cpmTerminal");
@@ -12,7 +13,10 @@ const loadDiskButton = document.querySelector("#cpmLoadDisk");
 const saveDiskButton = document.querySelector("#cpmSaveDisk");
 const restoreDiskButton = document.querySelector("#cpmRestoreDisk");
 const clearLocalDisksButton = document.querySelector("#cpmClearLocalDisks");
+const saveSessionButton = document.querySelector("#cpmSaveSession");
+const loadSessionButton = document.querySelector("#cpmLoadSession");
 const diskFileInput = document.querySelector("#cpmDiskFile");
+const sessionFileInput = document.querySelector("#cpmSessionFile");
 const diskDriveSelect = document.querySelector("#cpmDiskDrive");
 const refreshFilesButton = document.querySelector("#cpmRefreshFiles");
 const fileDriveSelect = document.querySelector("#cpmFileDrive");
@@ -32,6 +36,8 @@ const terminal = new CpmTerminal(terminalElement);
 const LOCAL_DISK_DB = "z80-machine-lab-cpm-disks";
 const LOCAL_DISK_STORE = "disk-images";
 const LOCAL_DISK_VERSION = 1;
+const SESSION_FORMAT = "z80lab-cpm-session";
+const SESSION_VERSION = 1;
 let mountedDisks;
 let machine;
 let running = false;
@@ -349,6 +355,84 @@ function remountMachine() {
   resetMachine(mountedDisks.map((disk) => disk.toBytes()));
 }
 
+function sessionTimestamp() {
+  return new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "Z");
+}
+
+function drivePath(driveIndex) {
+  return `drives/${selectedDiskLetter(driveIndex)}.dsk`;
+}
+
+function makeSessionManifest() {
+  return {
+    format: SESSION_FORMAT,
+    version: SESSION_VERSION,
+    createdAt: new Date().toISOString(),
+    profile: activeProfile.id,
+    selectedDiskDrive: selectedDiskIndex(diskDriveSelect),
+    selectedFileDrive: selectedDiskIndex(fileDriveSelect),
+    localDiskOverrides: [...localDiskOverrides],
+    drives: mountedDisks.map((_, driveIndex) => ({
+      index: driveIndex,
+      letter: selectedDiskLetter(driveIndex),
+      name: activeProfile.diskName(driveIndex),
+      path: drivePath(driveIndex)
+    }))
+  };
+}
+
+function requireSessionEntry(entries, path) {
+  const bytes = entries.get(path);
+  if (!bytes) throw new Error(`Session is missing ${path}`);
+  return bytes;
+}
+
+async function saveSession() {
+  if (!machine || !mountedDisks) return;
+  const manifest = makeSessionManifest();
+  const entries = [
+    { name: "manifest.json", bytes: jsonBytes(manifest) },
+    { name: "machine/state.json", bytes: jsonBytes(machine.saveState()) },
+    { name: "machine/ram.bin", bytes: machine.memory.bytes },
+    { name: "terminal.json", bytes: jsonBytes(terminal.saveState()) },
+    ...mountedDisks.map((disk, driveIndex) => ({ name: drivePath(driveIndex), bytes: disk.toBytes() }))
+  ];
+  const zip = await createZip(entries);
+  downloadBytes(zip, `cpm-session-${activeProfile.id}-${sessionTimestamp()}.zip`);
+  statusOutput.value = `Saved ${activeProfile.label} session`;
+}
+
+async function loadSession(bytes) {
+  const entries = await readZip(bytes);
+  const manifestBytes = entries.get("manifest.json");
+  if (!manifestBytes) throw new Error("Session is missing manifest.json");
+  const manifest = parseJsonBytes(manifestBytes);
+  if (manifest.format !== SESSION_FORMAT || manifest.version !== SESSION_VERSION) throw new Error("Unsupported CP/M session format");
+  if (!profiles[manifest.profile]) throw new Error(`Unknown CP/M profile ${manifest.profile}`);
+  if (!Array.isArray(manifest.drives) || manifest.drives.length === 0) throw new Error("Session manifest does not list any drives");
+
+  await switchProfile(manifest.profile);
+  const driveImages = manifest.drives.map((drive) => {
+    return requireSessionEntry(entries, drive.path);
+  });
+  resetMachine(driveImages);
+  const ram = requireSessionEntry(entries, "machine/ram.bin");
+  const machineState = parseJsonBytes(requireSessionEntry(entries, "machine/state.json"));
+  if (!ram || ram.length !== machine.memory.bytes.length) throw new Error("Session RAM image has the wrong size");
+  machine.memory.bytes.set(ram);
+  machine.restoreState(machineState);
+  const terminalState = entries.get("terminal.json");
+  if (terminalState) terminal.restoreState(parseJsonBytes(terminalState));
+  localDiskOverrides = new Set(manifest.localDiskOverrides ?? []);
+  diskDriveSelect.value = String(manifest.selectedDiskDrive ?? activeProfile.defaultSelectedDrive ?? 1);
+  fileDriveSelect.value = String(manifest.selectedFileDrive ?? activeProfile.defaultSelectedDrive ?? 1);
+  refreshDriveLabels();
+  refreshFileList();
+  running = !machine.halted;
+  statusOutput.value = `Loaded ${activeProfile.label} session`;
+  terminalElement.focus();
+}
+
 function runSlice() {
   if (!running || !machine) return;
 
@@ -446,6 +530,30 @@ clearLocalDisksButton.addEventListener("click", async () => {
   } catch (error) {
     statusOutput.value = "Clear local failed";
     terminal.write(`\nClear local disk error: ${error.message}\n`);
+  }
+});
+
+saveSessionButton.addEventListener("click", () => {
+  saveSession().catch((error) => {
+    statusOutput.value = "Session save failed";
+    terminal.write(`\nSession save error: ${error.message}\n`);
+  });
+});
+
+loadSessionButton.addEventListener("click", () => {
+  sessionFileInput.click();
+});
+
+sessionFileInput.addEventListener("change", async () => {
+  const file = sessionFileInput.files?.[0];
+  sessionFileInput.value = "";
+  if (!file) return;
+
+  try {
+    await loadSession(new Uint8Array(await file.arrayBuffer()));
+  } catch (error) {
+    statusOutput.value = "Session load failed";
+    terminal.write(`\nSession load error: ${error.message}\n`);
   }
 });
 
