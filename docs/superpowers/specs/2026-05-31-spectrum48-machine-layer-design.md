@@ -9,9 +9,9 @@ Spectrum-shaped memory and I/O boundary.
 ## Scope
 
 This slice creates a `Spectrum48` class with ROM/RAM mapping, CPU ownership,
-basic I/O hooks, a frame-sized run helper, keyboard matrix support, and initial
-display rendering. It does not model contention, produce audio, or implement
-tape/snapshot formats yet.
+basic I/O hooks, a frame-sized run helper, keyboard matrix support, initial
+display rendering, and first-pass Web Audio beeper output. It does not model
+contention or implement tape/snapshot formats yet.
 
 ## Architecture
 
@@ -50,5 +50,5 @@ translation, and BASIC paste loading.
 
 - Add debugger views for registers, memory, disassembly, and stepping.
 - Add TAP loading through the ROM.
-- Produce audio from the beeper bit.
+- Improve beeper timing and filtering beyond the first Web Audio buffer output.
 - Add ULA contention once the basic machine loop works.

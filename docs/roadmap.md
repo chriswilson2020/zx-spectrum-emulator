@@ -22,7 +22,7 @@
 - Add modern keyboard translation for normal PC keyboards. Done.
 - Add direct Sinclair BASIC paste loading. Done for tokenized program loading,
   automatic renumbering, `RUN`, and `DEF FN` placeholders.
-- Add beeper output.
+- Add beeper output. Done for a first Web Audio buffer-based implementation.
 - Add TAP loading through the ROM.
 - Add contention timing after the basic frame loop works.
 - Load/save TZX after TAP.

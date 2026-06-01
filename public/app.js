@@ -1,3 +1,4 @@
+import { BeeperAudio } from "/public/audio.js";
 import { loadBasicProgram, renumberBasicProgram } from "/public/basic.js";
 import { Spectrum48 } from "/src/spectrum48.js";
 import {
@@ -18,11 +19,14 @@ const heldKeysOutput = document.querySelector("#heldKeys");
 const runPauseButton = document.querySelector("#runPause");
 const resetButton = document.querySelector("#reset");
 const typeHelloButton = document.querySelector("#typeHello");
+const audioToggleButton = document.querySelector("#audioToggle");
 const pasteForm = document.querySelector("#pasteForm");
 const pasteTextInput = document.querySelector("#pasteText");
 
 let rom;
 let machine;
+let audio;
+let audioEnabled = false;
 let running = true;
 let flashOn = false;
 let physicalShiftDown = false;
@@ -42,12 +46,24 @@ async function loadRom() {
 
 function resetMachine() {
   machine = new Spectrum48({ rom });
+  audio?.reset(machine.cpu.tStates);
   statusOutput.value = "Running";
+}
+
+function pumpAudio() {
+  const events = machine.drainBeeperEvents();
+  if (!audioEnabled || !audio) return;
+  audio.push(events, machine.cpu.tStates);
+}
+
+function runMachineFrame() {
+  machine.runFrame();
+  pumpAudio();
 }
 
 function runFrames(count) {
   for (let frame = 0; frame < count; frame += 1) {
-    machine.runFrame();
+    runMachineFrame();
   }
 }
 
@@ -132,8 +148,10 @@ function draw() {
   if (!machine) return;
 
   if (running) {
-    machine.runFrame();
+    runMachineFrame();
     flashOn = Math.floor(machine.frame / 16) % 2 === 1;
+  } else {
+    pumpAudio();
   }
 
   const frame = machine.renderFrameRgba({ flashOn });
@@ -193,6 +211,20 @@ resetButton.addEventListener("click", () => {
 
 typeHelloButton.addEventListener("click", () => {
   typeHelloWorldProgram();
+});
+
+audioToggleButton.addEventListener("click", async () => {
+  try {
+    audio ??= new BeeperAudio();
+    await audio.resume();
+    audioEnabled = !audioEnabled;
+    audio.reset(machine.cpu.tStates);
+    audioToggleButton.textContent = audioEnabled ? "Sound On" : "Sound Off";
+    audioToggleButton.setAttribute("aria-pressed", String(audioEnabled));
+    statusOutput.value = audioEnabled ? "Sound enabled" : "Sound disabled";
+  } catch (error) {
+    statusOutput.value = error.message;
+  }
 });
 
 pasteForm.addEventListener("submit", (event) => {

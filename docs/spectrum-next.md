@@ -105,7 +105,18 @@ Once the machine runs a ROM frame loop, add the web experience:
 Status: implemented as a usable first slice. `npm run dev` serves a canvas viewer that loads
 `ROM/48.rom`, runs frames, draws the frame buffer, and forwards browser key
 events into the keyboard matrix. The viewer also includes run/pause/reset,
-basic machine diagnostics, a Hello World button, and a `Paste BASIC` flow.
+basic machine diagnostics, a Hello World button, a Web Audio beeper toggle, and
+a `Paste BASIC` flow.
+
+## Beeper Audio
+
+Status: implemented for a first audible slice. The machine records beeper bit
+transitions from port `0xfe` with CPU t-state timestamps. The browser drains
+those transitions into Web Audio buffers when sound is enabled by the user.
+
+This is good enough for BASIC `BEEP` feedback and demos that toggle the beeper.
+It is not yet a cycle-perfect model of speaker output, tape audio, or contention
+effects.
 
 ## BASIC Loading And Keyboard Input
 
@@ -128,7 +139,6 @@ Highest-value next slices:
 - Add a small debugger panel: pause, single-step, registers, disassembly, and
   memory inspection.
 - Add TAP loading so real tape images can enter through the ROM loader path.
-- Implement beeper audio output from port `0xfe`.
 - Improve renderer timing toward scanline accuracy, contention, and floating
   bus behaviour.
 - Add save/load snapshots once the runtime state is stable.

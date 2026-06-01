@@ -87,6 +87,33 @@ test("port fe writes update border colour and beeper state", () => {
   assert.equal(machine.readPort(0x00fe), 0xff);
 });
 
+test("records beeper transitions with CPU timing", () => {
+  const machine = new Spectrum48({ rom: makeRom() });
+
+  machine.writePort(0x00fe, 0x10);
+  machine.runTStates(12);
+  machine.writePort(0x00fe, 0x00);
+
+  assert.deepEqual(machine.drainBeeperEvents(), [
+    { tState: 0, on: true },
+    { tState: 12, on: false }
+  ]);
+  assert.deepEqual(machine.drainBeeperEvents(), []);
+});
+
+test("does not record beeper events when the beeper bit is unchanged", () => {
+  const machine = new Spectrum48({ rom: makeRom() });
+
+  machine.writePort(0x00fe, 0x10);
+  machine.writePort(0x00fe, 0x17);
+  machine.writePort(0x00fe, 0x00);
+
+  assert.deepEqual(machine.drainBeeperEvents(), [
+    { tState: 0, on: true },
+    { tState: 0, on: false }
+  ]);
+});
+
 test("port fe reads idle keyboard rows as unpressed", () => {
   const machine = new Spectrum48({ rom: makeRom() });
 
