@@ -58,6 +58,9 @@ key chords. `public/basic.js` tokenizes Sinclair BASIC for direct loading into
 the ROM's program area, including keyword tokens, number markers, line
 renumbering, and `DEF FN` parameter storage expected by the ROM evaluator.
 `public/audio.js` converts beeper transitions into Web Audio sample buffers.
+`public/debugger.js` supplies browser-friendly debug helpers: hex formatting,
+small-window disassembly, system variable reads, BASIC status extraction, and
+memory row formatting.
 
 ## CPU Execution
 
@@ -128,7 +131,26 @@ Interrupt entry wakes `HALT` and increments the refresh register.
 - HALT state
 - Total T-states
 
-This is intended for the eventual web debugger and teaching UI.
+The browser debugger consumes this state live. It shows register pairs, `I`,
+`R`, interrupt mode, total T-states, active flags as visual pills, a small
+disassembly window around `PC`, BASIC status (`ERR_NR`, current line, and
+sub-statement), and memory inspections for `PROG`, `VARS`, `E_LINE`, screen
+memory at `0x4000`, and system variables around `0x5c00`.
+
+The disassembler is intentionally partial and conservative. It renders common
+base Z80 instructions and control flow mnemonics that are useful when watching
+the ROM. Unknown or less common opcode forms fall back to byte output instead
+of showing a misleading mnemonic.
+
+## Browser Layout
+
+The viewer uses CSS grid with responsive breakpoints. The preferred layout keeps
+the Spectrum display and debugger in the left pane with machine controls in a
+right rail. The canvas has a viewport-aware maximum size so it scales down
+before colliding with the controls. At medium widths, debugger cards reflow into
+two columns using named grid areas; at narrow widths, controls and debugger
+cards stack into one column. This keeps the emulator usable in full-screen,
+split-screen, and laptop-width browser windows.
 
 ## Spectrum Runtime
 

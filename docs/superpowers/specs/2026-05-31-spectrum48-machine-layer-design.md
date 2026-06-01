@@ -10,8 +10,8 @@ Spectrum-shaped memory and I/O boundary.
 
 This slice creates a `Spectrum48` class with ROM/RAM mapping, CPU ownership,
 basic I/O hooks, a frame-sized run helper, keyboard matrix support, initial
-display rendering, and first-pass Web Audio beeper output. It does not model
-contention or implement tape/snapshot formats yet.
+display rendering, first-pass Web Audio beeper output, and a visual browser
+debugger. It does not model contention or implement tape/snapshot formats yet.
 
 ## Architecture
 
@@ -38,17 +38,31 @@ stable place to attach without changing the CPU core.
 - `pressKey(key)`, `releaseKey(key)`, `getPressedKeys()`: update and inspect the Spectrum keyboard matrix.
 - `renderDisplayRgba(options)`, `renderFrameRgba(options)`: render the Spectrum display file and border.
 
+## Browser Debugger
+
+The viewer includes a visual debugger intended for iterative emulator work and
+teaching. It exposes run/pause, frame-step, and instruction-step controls, plus
+live register pairs, flags, interrupt mode, T-state count, BASIC status, system
+variable pointers, a conservative disassembly window around `PC`, and memory
+panels for important Spectrum regions.
+
+The layout keeps the Spectrum display in the left pane and controls in a right
+rail on desktop-width screens. The display scales down before it overlaps the
+right rail, and debugger cards reflow through named grid areas for medium and
+narrow screens.
+
 ## Testing
 
 Tests cover ROM size validation, ROM reads, ignored ROM writes, RAM
 reads/writes, little-endian 16-bit access across the machine map, loading
 `ROM/48.rom`, CPU fetching through the machine memory callbacks, port `0xfe`
 state, keyboard rows, frame stepping, display rendering, browser keyboard
-translation, and BASIC paste loading.
+translation, BASIC paste loading, Web Audio sample generation, and debugger
+formatting/disassembly/status helpers.
 
 ## Open Follow-Ups
 
-- Add debugger views for registers, memory, disassembly, and stepping.
+- Add breakpoints and richer disassembly coverage.
 - Add TAP loading through the ROM.
 - Improve beeper timing and filtering beyond the first Web Audio buffer output.
 - Add ULA contention once the basic machine loop works.

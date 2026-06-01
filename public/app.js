@@ -1,5 +1,13 @@
 import { BeeperAudio } from "/public/audio.js";
 import { loadBasicProgram, renumberBasicProgram } from "/public/basic.js";
+import {
+  disassembleWindow,
+  hexByte,
+  hexWord,
+  readBasicStatus,
+  readMemoryRows,
+  readSystemVariables
+} from "/public/debugger.js";
 import { Spectrum48 } from "/src/spectrum48.js";
 import {
   basicTextToSpectrumKeyTaps,
@@ -17,11 +25,18 @@ const lastKeyOutput = document.querySelector("#lastKey");
 const mappedKeysOutput = document.querySelector("#mappedKeys");
 const heldKeysOutput = document.querySelector("#heldKeys");
 const runPauseButton = document.querySelector("#runPause");
+const stepFrameButton = document.querySelector("#stepFrame");
+const stepInstructionButton = document.querySelector("#stepInstruction");
 const resetButton = document.querySelector("#reset");
 const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
 const pasteForm = document.querySelector("#pasteForm");
 const pasteTextInput = document.querySelector("#pasteText");
+const registerGrid = document.querySelector("#registerGrid");
+const flagGrid = document.querySelector("#flagGrid");
+const basicStatusPanel = document.querySelector("#basicStatus");
+const disassemblyPanel = document.querySelector("#disassembly");
+const memoryInspector = document.querySelector("#memoryInspector");
 
 let rom;
 let machine;
@@ -36,6 +51,21 @@ let lastMappedKeys = [];
 
 function formatWord(value) {
   return value.toString(16).padStart(4, "0").toUpperCase();
+}
+
+function renderKeyValueGrid(container, rows, className = "") {
+  container.replaceChildren(
+    ...rows.map(([label, value]) => {
+      const item = document.createElement("div");
+      if (className) item.className = className;
+      const labelElement = document.createElement("span");
+      labelElement.textContent = label;
+      const valueElement = document.createElement("strong");
+      valueElement.textContent = value;
+      item.append(labelElement, valueElement);
+      return item;
+    })
+  );
 }
 
 async function loadRom() {
@@ -58,6 +88,11 @@ function pumpAudio() {
 
 function runMachineFrame() {
   machine.runFrame();
+  pumpAudio();
+}
+
+function stepInstruction() {
+  machine.step();
   pumpAudio();
 }
 
@@ -164,8 +199,97 @@ function draw() {
   lastKeyOutput.textContent = lastModernKey;
   mappedKeysOutput.textContent = lastMappedKeys.length ? lastMappedKeys.join(" + ") : "-";
   heldKeysOutput.textContent = machine.getPressedKeys().join(" + ") || "-";
+  updateDebugger();
 
   requestAnimationFrame(draw);
+}
+
+function updateDebugger() {
+  const state = machine.cpu.getState();
+  const registers = state.registers;
+  renderKeyValueGrid(registerGrid, [
+    ["AF", hexWord(registers.AF)],
+    ["BC", hexWord(registers.BC)],
+    ["DE", hexWord(registers.DE)],
+    ["HL", hexWord(registers.HL)],
+    ["IX", hexWord(registers.IX)],
+    ["IY", hexWord(registers.IY)],
+    ["SP", hexWord(registers.SP)],
+    ["PC", hexWord(registers.PC)],
+    ["I", hexByte(registers.I)],
+    ["R", hexByte(registers.R)],
+    ["IM", String(state.interruptMode)],
+    ["T", String(state.tStates)]
+  ], "register-cell");
+
+  flagGrid.replaceChildren(
+    ...["S", "Z", "Y", "H", "X", "PV", "N", "C"].map((flag) => {
+      const flagElement = document.createElement("span");
+      flagElement.className = state.flags[flag] ? "flag on" : "flag";
+      flagElement.textContent = flag;
+      return flagElement;
+    })
+  );
+
+  const basic = readBasicStatus(machine);
+  const pointerRows = Object.entries(basic.pointers).map(([name, value]) => [name, hexWord(value)]);
+  renderKeyValueGrid(basicStatusPanel, [
+    ["ERR", basic.errText],
+    ["LINE", String(basic.currentLine)],
+    ["SUB", String(basic.subStatement)],
+    ...pointerRows
+  ], "basic-cell");
+
+  disassemblyPanel.replaceChildren(
+    ...disassembleWindow((address) => machine.read8(address), registers.PC, { beforeBytes: 6, count: 9 }).map((row) => {
+      const item = document.createElement("li");
+      item.className = row.isPc ? "current" : "";
+      const address = document.createElement("span");
+      address.className = "addr";
+      address.textContent = hexWord(row.address);
+      const bytes = document.createElement("span");
+      bytes.className = "bytes";
+      bytes.textContent = row.bytes.map(hexByte).join(" ");
+      const text = document.createElement("span");
+      text.className = "asm";
+      text.textContent = row.text;
+      item.append(address, bytes, text);
+      return item;
+    })
+  );
+
+  const memorySections = [
+    ["PROG", basic.pointers.PROG, 3],
+    ["VARS", basic.pointers.VARS, 2],
+    ["E_LINE", basic.pointers.E_LINE, 2],
+    ["Screen", 0x4000, 2],
+    ["SysVars", 0x5c00, 4]
+  ];
+  memoryInspector.replaceChildren(
+    ...memorySections.map(([title, address, rows]) => {
+      const section = document.createElement("section");
+      const heading = document.createElement("h3");
+      heading.textContent = `${title} ${hexWord(address)}`;
+      const listing = document.createElement("pre");
+      listing.textContent = readMemoryRows((readAddress) => machine.read8(readAddress), address, {
+        rows,
+        bytesPerRow: 8
+      }).map((row) => `${hexWord(row.address)}  ${row.bytes.map(hexByte).join(" ")}`).join("\n");
+      section.append(heading, listing);
+      return section;
+    })
+  );
+
+  const systemVariableRows = readSystemVariables(machine).slice(0, 6);
+  const systemSection = document.createElement("section");
+  const systemHeading = document.createElement("h3");
+  systemHeading.textContent = "Pointers";
+  const systemList = document.createElement("pre");
+  systemList.textContent = systemVariableRows
+    .map((item) => `${item.name.padEnd(6, " ")} ${hexWord(item.address)} ${item.size === 1 ? hexByte(item.value) : hexWord(item.value)}`)
+    .join("\n");
+  systemSection.append(systemHeading, systemList);
+  memoryInspector.append(systemSection);
 }
 
 window.addEventListener("keydown", (event) => {
@@ -203,6 +327,24 @@ runPauseButton.addEventListener("click", () => {
   runPauseButton.textContent = running ? "Pause" : "Run";
   runPauseButton.setAttribute("aria-label", running ? "Pause" : "Run");
   statusOutput.value = running ? "Running" : "Paused";
+});
+
+stepFrameButton.addEventListener("click", () => {
+  running = false;
+  runPauseButton.textContent = "Run";
+  runPauseButton.setAttribute("aria-label", "Run");
+  runMachineFrame();
+  updateDebugger();
+  statusOutput.value = "Stepped one frame";
+});
+
+stepInstructionButton.addEventListener("click", () => {
+  running = false;
+  runPauseButton.textContent = "Run";
+  runPauseButton.setAttribute("aria-label", "Run");
+  stepInstruction();
+  updateDebugger();
+  statusOutput.value = "Stepped one instruction";
 });
 
 resetButton.addEventListener("click", () => {
