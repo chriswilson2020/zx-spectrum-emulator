@@ -143,12 +143,16 @@ the browser: it preserves the whole machine state, not just the BASIC listing.
 The CP/M page defaults to the z80pack profile: A: is the bundled system disk,
 B: is a blank work disk, and C: is the z80pack companion disk. Use the machine
 profile control to switch to Z80-MBC2, which boots `DS0N00.DSK` and mounts
-`DS0N00.DSK` through `DS0N06.DSK` as A: through G:. The file panel can import
-host files into a selected CP/M drive, download CP/M files back to the host, and
-delete files. The disk controls can load or save a whole `.dsk` image for the
-selected drive. The Foreign Disk panel can still load Z80-MBC2 8 MB disk images,
-list their directories, and copy selected files into the currently selected
-CP/M drive. See
+`DS0N00.DSK` through `DS0N06.DSK` as A: through G:. In the Z80-MBC2 profile,
+F: and G: are labelled as work/scratch disks and changes to those drives are
+saved to the user's browser-local IndexedDB storage. Nothing is written back to
+GitHub; whole-disk downloads remain the portable backup path. The file panel can
+import host files into a selected CP/M drive, download CP/M files back to the
+host, and delete files. The disk controls can load or save a whole `.dsk` image
+for the selected drive, restore a drive to its bundled image, or clear local
+browser disk changes. The Foreign Disk panel can still load Z80-MBC2 8 MB disk
+images, list their directories, and copy selected files into the currently
+selected CP/M drive. See
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for the exact workflow.
 
 ## GitHub Pages Demo

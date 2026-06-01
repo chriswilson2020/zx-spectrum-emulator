@@ -64,6 +64,8 @@ test("CP/M page exposes a live terminal entry point", async () => {
   assert.match(cpm, /id="cpmDiskDrive"/);
   assert.match(cpm, /id="cpmLoadDisk"/);
   assert.match(cpm, /id="cpmSaveDisk"/);
+  assert.match(cpm, /id="cpmRestoreDisk"/);
+  assert.match(cpm, /id="cpmClearLocalDisks"/);
   assert.match(cpm, /id="cpmFileDrive"/);
   assert.match(cpm, /<option value="2">C: Companion Disk<\/option>/);
   assert.match(cpm, /<option value="2">C: Companion<\/option>/);
@@ -82,6 +84,9 @@ test("CP/M page exposes a live terminal entry point", async () => {
   assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N00\.DSK"\)/);
   assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N06\.DSK"\)/);
   assert.match(app, /Z80Mbc2Machine/);
+  assert.match(app, /indexedDB\.open\(LOCAL_DISK_DB/);
+  assert.match(app, /autoPersistDrive\(driveIndex\)/);
+  assert.match(app, /scheduleDirtyDiskPersistence/);
   assert.match(app, /downloadBytes/);
   assert.match(app, /RawCpmDisk\.z80simFloppy\(bytes\)/);
   assert.match(app, /RawCpmDisk\.blankZ80simFloppy\(\)/);

@@ -44,7 +44,8 @@ The Z80-MBC2 profile mounts seven 8 MB drives by default:
 
 - `A:` through `G:` map to `ROM/DS0N00.DSK` through `ROM/DS0N06.DSK`.
 - `A:` is the Z80-MBC2 CP/M 2.2 boot disk.
-- `B:` through `G:` are the matching Z80-MBC2 data disks.
+- `B:` through `E:` are the matching Z80-MBC2 data disks.
+- `F:` is labelled as a work disk and `G:` as a scratch disk.
 
 The disk image selector beside `Load Disk` and `Save Disk` controls which whole
 disk image is loaded or downloaded. The file-browser drive selector controls
@@ -63,9 +64,18 @@ The downloaded image is named for the selected drive, such as
 `cpm22-drive-b.dsk` or `cpm22-drive-c.dsk`. Keep this file if you want to resume
 the same CP/M disk later.
 
-The current implementation keeps mounted disks in memory during the page
-session. It does not yet auto-save to IndexedDB between visits, so download
-modified disks before closing or reloading the page.
+The Z80-MBC2 profile also supports browser-local disk persistence. Changes to
+F: and G: are saved automatically in IndexedDB on the same browser/device. A
+manually loaded disk image is also stored locally for the selected drive. On the
+next visit, the page loads the bundled disk set from GitHub Pages, then replaces
+any drives that have a local override. Drives with local overrides are marked
+`local` in the selectors.
+
+This storage is private to the browser. It is not uploaded to GitHub and is not
+a substitute for a backup. Use `Save Disk` to download a portable `.DSK` copy.
+Use `Restore Bundled` to discard the selected drive's local override and reload
+the bundled image. Use `Clear Local` to remove all local disk overrides for the
+active CP/M machine profile.
 
 ## File Import And Export
 
@@ -75,6 +85,11 @@ The file panel edits the CP/M filesystem inside the selected disk image.
 - `Download File` downloads the selected CP/M file to the host.
 - `Delete File` deletes the selected CP/M file from the selected drive.
 - `Refresh` rereads the selected drive directory.
+
+In the Z80-MBC2 profile, importing, deleting, copying from a foreign disk, or
+writing from inside CP/M to F: or G: schedules a local browser save for that
+whole disk image. Other drives remain memory-only unless you explicitly load a
+replacement disk image or download them yourself.
 
 Host filenames are converted to CP/M 8.3 names. For example, a host file named
 `wordstar-install-notes.txt` is shortened and sanitized before it is written to

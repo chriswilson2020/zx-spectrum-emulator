@@ -10,6 +10,8 @@ const machineProfileSelect = document.querySelector("#cpmMachineProfile");
 const resetButton = document.querySelector("#cpmReset");
 const loadDiskButton = document.querySelector("#cpmLoadDisk");
 const saveDiskButton = document.querySelector("#cpmSaveDisk");
+const restoreDiskButton = document.querySelector("#cpmRestoreDisk");
+const clearLocalDisksButton = document.querySelector("#cpmClearLocalDisks");
 const diskFileInput = document.querySelector("#cpmDiskFile");
 const diskDriveSelect = document.querySelector("#cpmDiskDrive");
 const refreshFilesButton = document.querySelector("#cpmRefreshFiles");
@@ -27,12 +29,18 @@ const copyAllForeignFilesButton = document.querySelector("#cpmCopyAllForeignFile
 const clearForeignDiskButton = document.querySelector("#cpmClearForeignDisk");
 
 const terminal = new CpmTerminal(terminalElement);
+const LOCAL_DISK_DB = "z80-machine-lab-cpm-disks";
+const LOCAL_DISK_STORE = "disk-images";
+const LOCAL_DISK_VERSION = 1;
 let mountedDisks;
 let machine;
 let running = false;
 let foreignFileSystem;
 let foreignDiskName = "";
 let activeProfile;
+let activeBundledDriveImages = [];
+let localDiskOverrides = new Set();
+const localSaveTimers = new Map();
 
 const profiles = {
   z80pack: {
@@ -64,8 +72,8 @@ const profiles = {
   z80mbc2: {
     id: "z80mbc2",
     label: "Z80-MBC2",
-    driveLabels: ["A: DS0N00", "B: DS0N01", "C: DS0N02", "D: DS0N03", "E: DS0N04", "F: DS0N05", "G: DS0N06"],
-    fileDriveLabels: ["A: DS0N00", "B: DS0N01", "C: DS0N02", "D: DS0N03", "E: DS0N04", "F: DS0N05", "G: DS0N06"],
+    driveLabels: ["A: DS0N00", "B: DS0N01", "C: DS0N02", "D: DS0N03", "E: DS0N04", "F: DS0N05 Work", "G: DS0N06 Scratch"],
+    fileDriveLabels: ["A: DS0N00", "B: DS0N01", "C: DS0N02", "D: DS0N03", "E: DS0N04", "F: DS0N05 Work", "G: DS0N06 Scratch"],
     async defaultDriveImages() {
       return Promise.all([
         loadDiskAsset("../ROM/DS0N00.DSK"),
@@ -88,9 +96,76 @@ const profiles = {
     },
     diskName(driveIndex) {
       return `DS0N0${driveIndex}.DSK`;
-    }
+    },
+    autoPersistDrive(driveIndex) {
+      return driveIndex >= 5;
+    },
+    defaultSelectedDrive: 5
   }
 };
+
+function openLocalDiskDb() {
+  if (!("indexedDB" in globalThis)) return Promise.resolve(undefined);
+
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(LOCAL_DISK_DB, LOCAL_DISK_VERSION);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(LOCAL_DISK_STORE, { keyPath: "key" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function withLocalDiskStore(mode, callback) {
+  const db = await openLocalDiskDb();
+  if (!db) return undefined;
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(LOCAL_DISK_STORE, mode);
+    const store = transaction.objectStore(LOCAL_DISK_STORE);
+    const result = callback(store);
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(result);
+    };
+    transaction.onerror = () => {
+      db.close();
+      reject(transaction.error);
+    };
+  });
+}
+
+function localDiskKey(profileId, driveIndex) {
+  return `${profileId}:${driveIndex}`;
+}
+
+function readStoreRecord(store, key) {
+  return new Promise((resolve, reject) => {
+    const request = store.get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadLocalDisk(profileId, driveIndex) {
+  return withLocalDiskStore("readonly", async (store) => {
+    const record = await readStoreRecord(store, localDiskKey(profileId, driveIndex));
+    return record?.bytes ? new Uint8Array(record.bytes) : undefined;
+  });
+}
+
+async function saveLocalDisk(profileId, driveIndex, bytes) {
+  await withLocalDiskStore("readwrite", (store) => {
+    store.put({ key: localDiskKey(profileId, driveIndex), profileId, driveIndex, bytes: Uint8Array.from(bytes), savedAt: Date.now() });
+  });
+}
+
+async function deleteLocalDisk(profileId, driveIndex) {
+  await withLocalDiskStore("readwrite", (store) => {
+    store.delete(localDiskKey(profileId, driveIndex));
+  });
+}
 
 async function loadDiskAsset(path) {
   const response = await fetch(new URL(path, import.meta.url));
@@ -114,17 +189,31 @@ function resetMachine(driveImages = mountedDisks.map((disk) => disk.toBytes())) 
 }
 
 async function switchProfile(profileId) {
+  clearLocalSaveTimers();
   activeProfile = profiles[profileId];
   machineProfileSelect.value = profileId;
   statusOutput.value = `Loading ${activeProfile.label}`;
   running = false;
+  diskDriveSelect.dataset.preferProfileDefault = "true";
+  fileDriveSelect.dataset.preferProfileDefault = "true";
   setDriveOptions(diskDriveSelect, activeProfile.driveLabels);
   setDriveOptions(fileDriveSelect, activeProfile.fileDriveLabels);
-  resetMachine(await activeProfile.defaultDriveImages());
+  activeBundledDriveImages = await activeProfile.defaultDriveImages();
+  localDiskOverrides = new Set();
+  const driveImages = [];
+  for (let driveIndex = 0; driveIndex < activeBundledDriveImages.length; driveIndex += 1) {
+    const local = await loadLocalDisk(activeProfile.id, driveIndex);
+    driveImages.push(local ?? activeBundledDriveImages[driveIndex]);
+    if (local) localDiskOverrides.add(driveIndex);
+  }
+  resetMachine(driveImages);
+  refreshDriveLabels();
 }
 
 function setDriveOptions(select, labels) {
-  const preferred = Math.min(Number.parseInt(select.value, 10) || 1, labels.length - 1);
+  const preferredSource = select.dataset.preferProfileDefault === "true" ? activeProfile.defaultSelectedDrive : Number.parseInt(select.value, 10);
+  const preferred = Math.min(preferredSource ?? 1, labels.length - 1);
+  delete select.dataset.preferProfileDefault;
   select.replaceChildren(
     ...labels.map((label, index) => {
       const option = document.createElement("option");
@@ -134,6 +223,21 @@ function setDriveOptions(select, labels) {
     })
   );
   select.value = String(preferred);
+  refreshDriveLabels();
+}
+
+function driveLabel(label, driveIndex) {
+  return localDiskOverrides.has(driveIndex) ? `${label} local` : label;
+}
+
+function refreshDriveLabels() {
+  if (!activeProfile) return;
+  for (const [index, label] of activeProfile.driveLabels.entries()) {
+    if (diskDriveSelect.options[index]) diskDriveSelect.options[index].textContent = driveLabel(label, index);
+  }
+  for (const [index, label] of activeProfile.fileDriveLabels.entries()) {
+    if (fileDriveSelect.options[index]) fileDriveSelect.options[index].textContent = driveLabel(label, index);
+  }
 }
 
 function hasDirtyDisks() {
@@ -204,6 +308,43 @@ function selectedFileDisk() {
   return mountedDisks[selectedDiskIndex(fileDriveSelect)];
 }
 
+function selectedDiskLetter(driveIndex) {
+  return String.fromCharCode(65 + driveIndex);
+}
+
+function clearLocalSaveTimers() {
+  for (const timer of localSaveTimers.values()) clearTimeout(timer);
+  localSaveTimers.clear();
+}
+
+async function persistDriveIfUseful(driveIndex, { force = false } = {}) {
+  if (!mountedDisks?.[driveIndex]) return;
+  if (!force && !activeProfile.autoPersistDrive?.(driveIndex)) return;
+  await saveLocalDisk(activeProfile.id, driveIndex, mountedDisks[driveIndex].toBytes());
+  mountedDisks[driveIndex].dirty = false;
+  localDiskOverrides.add(driveIndex);
+  refreshDriveLabels();
+}
+
+function schedulePersistDrive(driveIndex, options) {
+  if (localSaveTimers.has(driveIndex)) return;
+  const timer = setTimeout(() => {
+    localSaveTimers.delete(driveIndex);
+    persistDriveIfUseful(driveIndex, options).catch((error) => {
+      statusOutput.value = "Local save failed";
+      terminal.write(`\nLocal disk save error: ${error.message}\n`);
+    });
+  }, 250);
+  localSaveTimers.set(driveIndex, timer);
+}
+
+function scheduleDirtyDiskPersistence() {
+  if (!mountedDisks || !activeProfile.autoPersistDrive) return;
+  mountedDisks.forEach((disk, driveIndex) => {
+    if (disk.dirty && activeProfile.autoPersistDrive(driveIndex)) schedulePersistDrive(driveIndex);
+  });
+}
+
 function remountMachine() {
   resetMachine(mountedDisks.map((disk) => disk.toBytes()));
 }
@@ -217,6 +358,7 @@ function runSlice() {
     machine.step();
     instructions += 1;
   }
+  scheduleDirtyDiskPersistence();
 
   const output = machine.drainOutput();
   if (output) {
@@ -265,9 +407,46 @@ saveDiskButton.addEventListener("click", () => {
   const disk = selectedDiskImageDisk();
   if (!disk) return;
   const driveIndex = selectedDiskIndex(diskDriveSelect);
-  const driveName = String.fromCharCode(65 + driveIndex);
+  const driveName = selectedDiskLetter(driveIndex);
   downloadBytes(disk.toBytes(), activeProfile.diskName(driveIndex));
   statusOutput.value = disk.dirty ? `Downloaded ${driveName}: dirty disk` : `Downloaded ${driveName}: disk`;
+});
+
+restoreDiskButton.addEventListener("click", async () => {
+  const driveIndex = selectedDiskIndex(diskDriveSelect);
+  if (!activeBundledDriveImages[driveIndex]) return;
+  const timer = localSaveTimers.get(driveIndex);
+  if (timer) clearTimeout(timer);
+  localSaveTimers.delete(driveIndex);
+
+  try {
+    await deleteLocalDisk(activeProfile.id, driveIndex);
+    localDiskOverrides.delete(driveIndex);
+    const driveImages = mountedDisks.map((disk, index) => (index === driveIndex ? activeBundledDriveImages[index] : disk.toBytes()));
+    resetMachine(driveImages);
+    refreshDriveLabels();
+    statusOutput.value = `Restored bundled ${selectedDiskLetter(driveIndex)}:`;
+  } catch (error) {
+    statusOutput.value = "Restore failed";
+    terminal.write(`\nRestore bundled disk error: ${error.message}\n`);
+  }
+});
+
+clearLocalDisksButton.addEventListener("click", async () => {
+  if (!activeProfile || localDiskOverrides.size === 0) return;
+  if (!confirm(`Clear local CP/M disk changes for ${activeProfile.label}?`)) return;
+  clearLocalSaveTimers();
+
+  try {
+    await Promise.all([...localDiskOverrides].map((driveIndex) => deleteLocalDisk(activeProfile.id, driveIndex)));
+    localDiskOverrides.clear();
+    resetMachine(activeBundledDriveImages);
+    refreshDriveLabels();
+    statusOutput.value = "Local CP/M disks cleared";
+  } catch (error) {
+    statusOutput.value = "Clear local failed";
+    terminal.write(`\nClear local disk error: ${error.message}\n`);
+  }
 });
 
 diskFileInput.addEventListener("change", async () => {
@@ -281,8 +460,9 @@ diskFileInput.addEventListener("change", async () => {
     const drive = selectedDiskIndex(diskDriveSelect);
     const driveImages = mountedDisks.map((disk, index) => (index === drive ? bytes : disk.toBytes()));
     resetMachine(driveImages);
+    await persistDriveIfUseful(drive, { force: true });
     refreshFileList();
-    statusOutput.value = `Loaded ${file.name} into ${String.fromCharCode(65 + drive)}:`;
+    statusOutput.value = `Loaded ${file.name} into ${selectedDiskLetter(drive)}: local`;
   } catch (error) {
     statusOutput.value = "Disk rejected";
     terminal.write(`\nDisk load error: ${error.message}\n`);
@@ -306,7 +486,8 @@ hostFileInput.addEventListener("change", async () => {
     currentFileSystem().writeFile(name, new Uint8Array(await file.arrayBuffer()));
     const drive = selectedDiskIndex(fileDriveSelect);
     remountMachine();
-    statusOutput.value = `Imported ${name} to ${String.fromCharCode(65 + drive)}:`;
+    schedulePersistDrive(drive);
+    statusOutput.value = `Imported ${name} to ${selectedDiskLetter(drive)}:${activeProfile.autoPersistDrive?.(drive) ? " local" : ""}`;
   } catch (error) {
     statusOutput.value = "Import rejected";
     terminal.write(`\nFile import error: ${error.message}\n`);
@@ -330,7 +511,9 @@ deleteFileButton.addEventListener("click", () => {
   const name = selectedFileName();
   if (!name || !mountedDisks) return;
   if (currentFileSystem().deleteFile(name)) {
+    const drive = selectedDiskIndex(fileDriveSelect);
     remountMachine();
+    schedulePersistDrive(drive);
     statusOutput.value = `Deleted ${name}`;
   }
 });
@@ -383,7 +566,8 @@ function copyForeignFiles(names) {
     for (const name of names) target.writeFile(name, foreignFileSystem.readFile(name));
     const drive = selectedDiskIndex(fileDriveSelect);
     remountMachine();
-    statusOutput.value = `Copied ${names.length} file${names.length === 1 ? "" : "s"} from ${foreignDiskName} to ${String.fromCharCode(65 + drive)}:`;
+    schedulePersistDrive(drive);
+    statusOutput.value = `Copied ${names.length} file${names.length === 1 ? "" : "s"} from ${foreignDiskName} to ${selectedDiskLetter(drive)}:${activeProfile.autoPersistDrive?.(drive) ? " local" : ""}`;
   } catch (error) {
     statusOutput.value = "Foreign copy failed";
     terminal.write(`\nForeign disk copy error: ${error.message}\n`);

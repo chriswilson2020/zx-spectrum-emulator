@@ -181,6 +181,14 @@ mounts them as A: through G:, and drives `Z80Mbc2Machine`. Both profiles share
 keyboard bridging, disk upload/download, host file import/export, foreign disk
 import controls, and the CP/M filesystem helper.
 
+The CP/M page uses IndexedDB as an optional browser-local disk cache. Bundled
+disk images are still fetched from GitHub Pages as immutable defaults. Local
+records are keyed by machine profile and drive index, and only changed drives
+are stored. The Z80-MBC2 profile automatically persists writes to the labelled
+F: work and G: scratch disks; manually loaded disk images are persisted as
+explicit local overrides for the selected drive. Restore and clear controls
+delete those local overrides and fall back to the bundled disk bytes.
+
 `public/cpm-terminal.js` renders CP/M console output into an 80x24 screen
 buffer. It supports the control behavior needed by full-screen CP/M software
 such as WordStar's Soroc IQ-120/140 profile: cursor addressing, clear screen,
@@ -311,7 +319,9 @@ The z80pack profile starts with three mounted disks:
 The Z80-MBC2 profile starts with seven mounted 8 MB disks:
 
 - A: `ROM/DS0N00.DSK`, the Z80-MBC2 CP/M 2.2 boot disk.
-- B: through G: `ROM/DS0N01.DSK` through `ROM/DS0N06.DSK`.
+- B: through E: `ROM/DS0N01.DSK` through `ROM/DS0N04.DSK`.
+- F: `ROM/DS0N05.DSK`, labelled as a local work disk.
+- G: `ROM/DS0N06.DSK`, labelled as a local scratch disk.
 
 When a user imports or deletes a CP/M file through the file panel, the helper
 edits the selected disk image, then the machine is remounted from the current
@@ -321,8 +331,9 @@ continuing with stale in-memory disk state.
 Whole-disk upload and download operate on the selected drive image for the
 active profile. Loading a disk validates against the active profile's image type
 and remounts the profile's drives. Saving downloads the selected drive's current
-bytes. Automatic IndexedDB persistence is intentionally not in place yet; users
-must download changed disks before leaving the page.
+bytes. Browser-local persistence is a convenience cache only: it never writes to
+GitHub, it is scoped to the user's current browser storage, and downloading a
+disk remains the durable portable backup.
 
 The CP/M filesystem helper repairs old full-extent directory entries at mount
 time. This matters for multi-extent `.COM` files such as WordStar's

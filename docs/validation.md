@@ -65,9 +65,9 @@ fast-loading, ROM-loader interception, standard-speed EAR pulse playback,
 browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw
 floppy geometry, FDC and console ports, CP/M command smoke tests, host-side CP/M
 filesystem import/export, Z80-MBC2 8 MB disk reads, native Z80-MBC2 IOS boot,
-interactive frame-sliced Z80-MBC2 typing, full-extent record-count repair, and
-the screen-buffer terminal behavior needed by WordStar-style full-screen
-applications. The bundled `ROM/48.rom`,
+interactive frame-sliced Z80-MBC2 typing, browser-local CP/M disk persistence
+wiring, full-extent record-count repair, and the screen-buffer terminal behavior
+needed by WordStar-style full-screen applications. The bundled `ROM/48.rom`,
 `ROM/cpm22-1.dsk`, and `ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M
 boot tests run without extra local setup.
 
@@ -144,7 +144,10 @@ companion disk is reachable as C: after a fresh page load. For foreign disk
 imports, load a Z80-MBC2 image such as `DS0N00.DSK`, copy a small `.COM` file
 to B:, switch to `B:` in CP/M, and run it. Also switch the CP/M page to the
 Z80-MBC2 machine profile and verify that it boots to `A>` and can run `DIR` on
-A: and B:.
+A: and B:. For local persistence, import or create a file on F: or G:, reload
+the page, switch back to Z80-MBC2, and confirm that the selected drive is marked
+`local` and still contains the file. Then use `Restore Bundled` or `Clear Local`
+and confirm the local marker disappears.
 
 ### Interactive BASIC Programs
 
