@@ -19,6 +19,9 @@
 - Model the ULA display file and attribute memory. Done for whole-frame
   rendering.
 - Add a browser canvas viewer with run/pause/reset controls. Done.
+- Add visual debugger controls and live machine inspection. Done for pause,
+  frame-step, instruction-step, registers, flags, disassembly, BASIC status,
+  and memory panels.
 - Add modern keyboard translation for normal PC keyboards. Done.
 - Add direct Sinclair BASIC paste loading. Done for tokenized program loading,
   automatic renumbering, `RUN`, and `DEF FN` placeholders.
@@ -30,7 +33,9 @@
 ## Phase 3: Teaching Tools
 
 - Add an assembler-backed code editor.
-- Add register, memory, stack, and disassembly views.
-- Add step/run/breakpoint controls.
+- Add register, memory, stack, and disassembly views. Started with live
+  register, memory, BASIC, and disassembly panels.
+- Add step/run/breakpoint controls. Started with run/pause, frame-step, and
+  instruction-step; breakpoints remain.
 - Add BASIC examples that run through the real ROM.
 - Add guided lessons for Z80 flags, loops, interrupts, and screen memory.

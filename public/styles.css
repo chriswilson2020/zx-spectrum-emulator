@@ -14,6 +14,7 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
+  padding: 0;
   background:
     linear-gradient(120deg, rgba(180, 30, 70, 0.18), transparent 34%),
     linear-gradient(260deg, rgba(20, 160, 145, 0.16), transparent 42%),
@@ -37,23 +38,30 @@ button:focus-visible {
 }
 
 .shell {
-  width: min(1120px, calc(100vw - 32px));
+  width: min(1480px, calc(100vw - 32px));
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
-  gap: 24px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 18vw, 280px);
+  gap: clamp(14px, 2vw, 24px);
+  align-items: start;
 }
 
 .stage {
   display: grid;
-  place-items: center;
+  gap: 18px;
   min-width: 0;
 }
 
+.screen-wrap {
+  display: grid;
+  place-items: center;
+}
+
 #screen {
-  width: min(100%, 960px);
+  width: min(100%, 860px);
+  max-height: min(62vh, 720px);
   image-rendering: pixelated;
   aspect-ratio: 4 / 3;
+  object-fit: contain;
   background: #000;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
 }
@@ -62,6 +70,9 @@ button:focus-visible {
   display: grid;
   gap: 18px;
   align-content: start;
+  min-width: 0;
+  position: sticky;
+  top: 18px;
 }
 
 h1 {
@@ -79,14 +90,6 @@ output {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-}
-
-#typeHello {
-  grid-column: 1;
-}
-
-#audioToggle {
-  grid-column: 2;
 }
 
 .paste-form {
@@ -142,17 +145,239 @@ dd {
   text-align: right;
 }
 
-@media (max-width: 760px) {
+.debugger {
+  display: grid;
+  grid-template-areas:
+    "registers disassembly"
+    "basic memory";
+  grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.4fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.debug-card {
+  min-width: 0;
+  border: 1px solid rgba(241, 241, 232, 0.18);
+  border-radius: 8px;
+  background: rgba(10, 13, 12, 0.76);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.26);
+  padding: 12px;
+}
+
+.debug-card h2 {
+  margin: 0 0 10px;
+  color: #f1f1e8;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.register-grid,
+.basic-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(54px, 1fr));
+  gap: 6px;
+}
+
+.register-cell,
+.basic-cell {
+  min-width: 0;
+  border: 1px solid rgba(241, 241, 232, 0.12);
+  border-radius: 6px;
+  background: #101512;
+  padding: 7px 8px;
+}
+
+.register-cell span,
+.basic-cell span {
+  display: block;
+  color: #aeb5a7;
+  font-size: 10px;
+  line-height: 1.1;
+}
+
+.register-cell strong,
+.basic-cell strong {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #f1f1e8;
+  font: 700 13px/1 "SFMono-Regular", Consolas, monospace;
+}
+
+.flag-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.flag {
+  border: 1px solid rgba(241, 241, 232, 0.16);
+  border-radius: 999px;
+  color: #777d72;
+  font: 700 11px/24px "SFMono-Regular", Consolas, monospace;
+  text-align: center;
+}
+
+.flag.on {
+  border-color: #16c7bd;
+  background: #16c7bd;
+  color: #051615;
+}
+
+.basic-card {
+  grid-area: basic;
+}
+
+.registers-card {
+  grid-area: registers;
+}
+
+.basic-status {
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
+}
+
+.disassembly-card {
+  grid-area: disassembly;
+}
+
+.disassembly {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 12px/1.35 "SFMono-Regular", Consolas, monospace;
+}
+
+.disassembly li {
+  display: grid;
+  grid-template-columns: 48px 78px minmax(0, 1fr);
+  gap: 8px;
+  border-radius: 5px;
+  padding: 4px 6px;
+  color: #d8d8cf;
+}
+
+.disassembly li.current {
+  background: #f3d447;
+  color: #14130c;
+}
+
+.disassembly .addr,
+.disassembly .bytes {
+  color: inherit;
+  opacity: 0.78;
+}
+
+.disassembly .asm {
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.memory-card {
+  grid-area: memory;
+}
+
+.memory-inspector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.memory-inspector h3 {
+  margin: 0 0 5px;
+  color: #aeb5a7;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.memory-inspector pre {
+  margin: 0;
+  overflow: hidden;
+  color: #f1f1e8;
+  font: 11px/1.45 "SFMono-Regular", Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+@media (min-width: 1280px) {
+  .debugger {
+    grid-template-areas:
+      "registers disassembly memory"
+      "basic disassembly memory";
+    grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.1fr) minmax(360px, 1.35fr);
+  }
+}
+
+@media (max-width: 1180px) {
   body {
-    place-items: start;
-    padding-block: 18px;
+    place-items: start center;
+    padding: 14px 0;
   }
 
+  .shell {
+    width: min(100vw - 24px, 1480px);
+    grid-template-columns: minmax(0, 1fr) clamp(210px, 24vw, 260px);
+  }
+
+  #screen {
+    width: min(100%, 760px);
+    max-height: 58vh;
+  }
+
+  .debugger {
+    grid-template-areas:
+      "registers disassembly"
+      "basic memory";
+    grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
+  }
+
+  .register-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
   .shell {
     grid-template-columns: 1fr;
   }
 
   .panel {
     order: -1;
+    position: static;
+  }
+
+  .debugger {
+    grid-template-areas:
+      "registers"
+      "basic"
+      "disassembly"
+      "memory";
+    grid-template-columns: 1fr;
+  }
+
+  .memory-inspector {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    width: min(100vw - 20px, 1480px);
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .register-grid,
+  .basic-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .disassembly li {
+    grid-template-columns: 44px 68px minmax(0, 1fr);
+    gap: 6px;
   }
 }

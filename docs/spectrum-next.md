@@ -108,6 +108,21 @@ events into the keyboard matrix. The viewer also includes run/pause/reset,
 basic machine diagnostics, a Hello World button, a Web Audio beeper toggle, and
 a `Paste BASIC` flow.
 
+## Debugger And Responsive Layout
+
+Status: implemented as the first visual debugger slice. The viewer has
+pause/run, frame-step, and instruction-step controls. It displays live register
+pairs, flags, `PC`, interrupt mode, T-state count, BASIC error/current-line
+state, system variable pointers, a disassembly window around `PC`, and memory
+inspection blocks for `PROG`, `VARS`, `E_LINE`, screen RAM, and system
+variables.
+
+The layout is responsive but keeps the preferred emulator shape: Spectrum screen
+on the left and controls on the right while there is enough room. The screen
+starts scaling down at medium widths to avoid overlap. Debugger cards reflow
+from a three-area desktop layout to two columns, then to a single column on
+narrow screens.
+
 ## Beeper Audio
 
 Status: implemented for a first audible slice. The machine records beeper bit
@@ -136,8 +151,6 @@ an explicit command.
 
 Highest-value next slices:
 
-- Add a small debugger panel: pause, single-step, registers, disassembly, and
-  memory inspection.
 - Add TAP loading so real tape images can enter through the ROM loader path.
 - Improve renderer timing toward scanline accuracy, contention, and floating
   bus behaviour.

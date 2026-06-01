@@ -8,8 +8,29 @@
   </head>
   <body>
     <main class="shell">
-      <section class="stage" aria-label="ZX Spectrum display">
-        <canvas id="screen" width="320" height="240"></canvas>
+      <section class="stage" aria-label="ZX Spectrum display and debugger">
+        <div class="screen-wrap">
+          <canvas id="screen" width="320" height="240"></canvas>
+        </div>
+        <section class="debugger" aria-label="Machine debugger">
+          <div class="debug-card registers-card">
+            <h2>Registers</h2>
+            <div id="registerGrid" class="register-grid"></div>
+            <div id="flagGrid" class="flag-grid" aria-label="CPU flags"></div>
+          </div>
+          <div class="debug-card basic-card">
+            <h2>BASIC</h2>
+            <div id="basicStatus" class="basic-status"></div>
+          </div>
+          <div class="debug-card disassembly-card">
+            <h2>Disassembly</h2>
+            <ol id="disassembly" class="disassembly"></ol>
+          </div>
+          <div class="debug-card memory-card">
+            <h2>Memory</h2>
+            <div id="memoryInspector" class="memory-inspector"></div>
+          </div>
+        </section>
       </section>
       <aside class="panel" aria-label="Machine controls">
         <header>
@@ -18,6 +39,8 @@
         </header>
         <div class="controls">
           <button id="runPause" type="button" aria-label="Pause">Pause</button>
+          <button id="stepFrame" type="button">Frame</button>
+          <button id="stepInstruction" type="button">Step</button>
           <button id="reset" type="button">Reset</button>
           <button id="typeHello" type="button">Type Hello</button>
           <button id="audioToggle" type="button" aria-pressed="false">Sound Off</button>

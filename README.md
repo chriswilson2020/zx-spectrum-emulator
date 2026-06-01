@@ -27,6 +27,9 @@ The first ZX Spectrum 48K machine layer is also in place:
   plus border into a 320x240 RGBA frame.
 - The browser viewer loads a local `ROM/48.rom`, runs the ROM, accepts modern PC
   keyboard input, and can paste/load Sinclair BASIC listings.
+- The viewer includes a visual debugger with pause/frame-step/instruction-step
+  controls, live registers and flags, disassembly around `PC`, BASIC status,
+  and memory inspectors for key Spectrum regions.
 - The BASIC paste path tokenizes the full 48K keyword range, renumbers listings
   that exceed line `9999`, auto-runs numbered listings, and handles ROM-specific
   `DEF FN` parameter placeholders.
@@ -61,6 +64,14 @@ The `Paste BASIC` box accepts normal PC text. Numbered listings are loaded
 directly into BASIC memory and then `RUN` is typed automatically unless the
 paste includes unnumbered commands. Listings with line numbers above the real
 Spectrum editor limit are renumbered before loading.
+
+The debugger is designed for the browser viewport rather than as a fixed-size
+desktop panel. On wide screens the Spectrum display remains in the left pane
+with controls on the right. The canvas starts scaling down before the layout
+becomes cramped, and below tablet widths the controls and debugger stack into a
+single column. The debugger cards use named layout areas so registers, BASIC
+state, disassembly, and memory stay in predictable positions as the page
+reflows.
 
 The long independent Z80 exercisers are available too:
 
@@ -119,6 +130,6 @@ or CP/M warm boot at `0x0000`.
 
 The emulator is being built as both a faithful ZX Spectrum emulator and a
 teaching environment for Z80 assembly and Sinclair BASIC. The immediate next
-engineering milestone is moving from the minimal Spectrum shell to debugger
-ergonomics and more hardware accuracy: richer browser tooling, TAP loading, and
-ULA timing details.
+engineering milestone is moving from the current booting/debuggable Spectrum
+shell toward TAP loading and more hardware accuracy, including ULA timing
+details.
