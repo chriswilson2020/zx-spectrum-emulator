@@ -25,8 +25,8 @@ The first ZX Spectrum 48K machine layer is also in place:
   the browser through Web Audio.
 - A 50 Hz frame loop raises maskable interrupts and renders the ULA display file
   plus border into a 320x240 RGBA frame.
-- The browser viewer loads a local `ROM/48.rom`, runs the ROM, accepts modern PC
-  keyboard input, and can paste/load Sinclair BASIC listings.
+- The browser viewer loads the bundled `ROM/48.rom`, runs the ROM, accepts
+  modern PC keyboard input, and can paste/load Sinclair BASIC listings.
 - The viewer includes a visual debugger with pause/frame-step/instruction-step
   controls, live registers and flags, disassembly around `PC`, BASIC status,
   and memory inspectors for key Spectrum regions.

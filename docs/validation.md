@@ -110,7 +110,7 @@ CRC-based machine-state results.
 ### Interactive BASIC Programs
 
 The `progs/` directory contains interactive Sinclair BASIC validation programs
-for the browser viewer and a local `ROM/48.rom`.
+for the browser viewer and bundled `ROM/48.rom`.
 
 - `progs/shorter_suite.bas` is the quick smoke suite. It covers BASIC paste,
   `INKEY$` pauses, UDG setup with `POKE` and `USR`, colour attributes,
