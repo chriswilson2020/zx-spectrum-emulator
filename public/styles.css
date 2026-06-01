@@ -97,7 +97,8 @@ output {
   gap: 8px;
 }
 
-.paste-form label {
+.paste-form label,
+.tape-panel label {
   color: #c9c9bd;
   font-size: 14px;
 }
@@ -117,6 +118,66 @@ output {
 .paste-form textarea:focus-visible {
   outline: 3px solid #16c7bd;
   outline-offset: 2px;
+}
+
+.tape-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.tape-panel input {
+  width: 100%;
+  color: #c9c9bd;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.tap-list {
+  display: grid;
+  gap: 6px;
+  max-height: 190px;
+  overflow: auto;
+  border: 1px solid rgba(241, 241, 232, 0.16);
+  border-radius: 6px;
+  background: #101512;
+  padding: 6px;
+  color: #aeb5a7;
+  font-size: 12px;
+}
+
+.tap-entry {
+  display: grid;
+  min-height: 0;
+  justify-items: start;
+  gap: 3px;
+  border-color: rgba(241, 241, 232, 0.16);
+  background: transparent;
+  color: #f1f1e8;
+  padding: 8px;
+  text-align: left;
+}
+
+.tap-entry:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.tap-entry.selected {
+  border-color: #16c7bd;
+  background: rgba(22, 199, 189, 0.14);
+}
+
+.tap-entry span,
+.tap-entry strong,
+.tap-entry small {
+  overflow-wrap: anywhere;
+}
+
+.tap-entry span {
+  font-weight: 700;
+}
+
+.tap-entry small {
+  color: #aeb5a7;
 }
 
 dl {

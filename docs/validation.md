@@ -32,7 +32,7 @@ npm run test:zexall
 
 The latest validation pass reported:
 
-- `npm test`: 157 tests passing
+- `npm test`: 168 tests passing
 - `npm run coverage:opcodes`: 100% for base, CB, ED, DD, FD, DDCB, and FDCB
 - `npm run test:singlestep`: 1,604,000 vectors, 0 failures
 - `npm run test:zexdoc`: `Tests complete`
@@ -52,8 +52,9 @@ editing the CPU or the Spectrum machine layer.
 The current unit suite covers the Z80 core, CP/M exerciser harness, `Spectrum48`
 ROM/RAM/ports/frame/video behaviour, modern keyboard translation, the BASIC
 tokenizer/loader, Web Audio beeper sample generation, and debugger helper
-formatting/disassembly/status reads. ROM-level BASIC tests require a local
-`ROM/48.rom`, which is not committed.
+formatting/disassembly/status reads, and TAP/TZX parsing, fast-loading,
+ROM-loader interception, and standard-speed EAR pulse playback. ROM-level
+BASIC tests require a local `ROM/48.rom`, which is not committed.
 
 ### Opcode Coverage
 

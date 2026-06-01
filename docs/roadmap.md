@@ -26,9 +26,12 @@
 - Add direct Sinclair BASIC paste loading. Done for tokenized program loading,
   automatic renumbering, `RUN`, and `DEF FN` placeholders.
 - Add beeper output. Done for a first Web Audio buffer-based implementation.
-- Add TAP loading through the ROM.
+- Add TAP/TZX loading. Done for parsed TAP files, standard-speed TZX data
+  blocks, fast-loading BASIC/CODE header-data pairs, and ROM byte-load
+  interception, plus standard-speed EAR pulse playback.
 - Add contention timing after the basic frame loop works.
-- Load/save TZX after TAP.
+- Add fuller TZX support after the standard-speed block path: turbo blocks,
+  pure-data blocks, and tougher custom loaders.
 
 ## Phase 3: Teaching Tools
 

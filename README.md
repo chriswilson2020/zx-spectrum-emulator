@@ -30,6 +30,9 @@ The first ZX Spectrum 48K machine layer is also in place:
 - The viewer includes a visual debugger with pause/frame-step/instruction-step
   controls, live registers and flags, disassembly around `PC`, BASIC status,
   and memory inspectors for key Spectrum regions.
+- `.tap` files and standard-speed `.tzx` blocks can be parsed in the browser,
+  inspected as tape blocks, and fast-loaded for BASIC program and CODE
+  header/data pairs.
 - The BASIC paste path tokenizes the full 48K keyword range, renumbers listings
   that exceed line `9999`, auto-runs numbered listings, and handles ROM-specific
   `DEF FN` parameter placeholders.
@@ -64,6 +67,23 @@ The `Paste BASIC` box accepts normal PC text. Numbered listings are loaded
 directly into BASIC memory and then `RUN` is typed automatically unless the
 paste includes unnumbered commands. Listings with line numbers above the real
 Spectrum editor limit are renumbered before loading.
+
+The `Load TAP` panel accepts `.tap` and `.tzx` files. TAP containers and
+standard-speed TZX data blocks are parsed into header/data blocks, showing block
+name, type, length, checksum status, and whether the entry can be loaded by the
+current fast-load path. Parsed files are also mounted as a virtual tape for the
+Spectrum ROM loader. BASIC program entries are copied directly to the ROM BASIC
+program area and auto-start with `RUN <line>` when the header contains an
+auto-start line; later ROM `LOAD "" CODE` calls made by that loader are
+satisfied from the mounted blocks in order. CODE entries can also be copied
+directly to the start address from the header. When a loader drops into tape
+polling instead of the ROM byte-loader entry point, standard-speed tape blocks
+are played as EAR pulses on port `0xfe`. Array blocks, turbo/pure-data TZX
+blocks, and more exact custom-loader timing are later work.
+
+During pulse playback, flashing border colours are expected: that is the loader
+polling the tape input. Large standard-speed blocks load at cassette speed, so a
+50K-ish block can take around two minutes to finish.
 
 The debugger is designed for the browser viewport rather than as a fixed-size
 desktop panel. On wide screens the Spectrum display remains in the left pane
@@ -131,5 +151,5 @@ or CP/M warm boot at `0x0000`.
 The emulator is being built as both a faithful ZX Spectrum emulator and a
 teaching environment for Z80 assembly and Sinclair BASIC. The immediate next
 engineering milestone is moving from the current booting/debuggable Spectrum
-shell toward TAP loading and more hardware accuracy, including ULA timing
-details.
+shell toward richer tape handling and more hardware accuracy, including ULA
+timing details.
