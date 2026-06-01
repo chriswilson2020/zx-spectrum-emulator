@@ -560,6 +560,21 @@ dd {
   }
 }
 
+.spectrum-page-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(14px, 2vw, 22px);
+  align-items: center;
+  justify-items: center;
+  min-height: 100vh;
+  padding: clamp(14px, 2.4vw, 28px);
+  overflow-x: hidden;
+}
+
+.spectrum-page-body .shell {
+  width: min(1540px, 100%);
+}
+
 .selector-body,
 .cpm-page-body {
   display: block;
@@ -713,6 +728,37 @@ dd {
   margin-left: 4px;
   background: #5dff8b;
   box-shadow: 0 0 12px rgba(93, 255, 139, 0.85);
+}
+
+.site-contact-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  min-height: 68px;
+  border: 1px solid rgba(93, 255, 139, 0.18);
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(180deg, rgba(93, 255, 139, 0.035) 0 1px, transparent 1px 4px),
+    rgba(6, 13, 9, 0.78);
+  color: #bbc4b7;
+  font: 700 13px/1.2 "SFMono-Regular", Consolas, monospace;
+  text-transform: uppercase;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.cpm-page-body .site-contact-footer {
+  width: min(980px, 100%);
+  margin-top: clamp(14px, 2vw, 22px);
+}
+
+.site-contact-footer img {
+  width: min(194px, 52vw);
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 10px rgba(93, 255, 139, 0.56));
 }
 
 .machine-nav {
@@ -876,6 +922,12 @@ dd {
 
   .machine-link strong {
     font-size: 20px;
+  }
+
+  .site-contact-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
   }
 
   .cpm-controls {

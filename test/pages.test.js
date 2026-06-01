@@ -14,10 +14,18 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(index, /href="\.\/spectrum\.html"/);
   assert.match(index, /href="\.\/cpm\.html"/);
   assert.match(index, /src="\.\/public\/assets\/machine-selector-banner\.png"/);
+  assert.match(index, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/public\/styles\.css"/);
   assert.match(spectrum, /src="\.\/public\/app\.js"/);
+  assert.match(spectrum, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(cpm, /href="\.\/public\/styles\.css"/);
   assert.match(cpm, /src="\.\/public\/cpm-app\.js(?:\?[^"]+)?"/);
+  assert.match(cpm, /src="\.\/public\/assets\/contact-email\.png"/);
+  for (const html of [index, spectrum, cpm]) {
+    assert.match(html, /class="site-contact-footer"/);
+    assert.doesNotMatch(html, new RegExp(`z80${"\\."}world`));
+    assert.doesNotMatch(html, new RegExp(`chris${"@"}`));
+  }
   assert.doesNotMatch(index, /href="\/public\//);
   assert.doesNotMatch(index, /src="\/public\//);
   assert.doesNotMatch(spectrum, /href="\/public\//);
@@ -50,6 +58,7 @@ test("machine selector exposes Spectrum and CP/M routes", async () => {
   assert.match(index, /ZX Spectrum 48K/);
   assert.match(index, /CP\/M 2\.2/);
   assert.match(index, /machine-selector-banner\.png/);
+  assert.match(index, /contact-email\.png/);
 });
 
 test("CP/M page exposes a live terminal entry point", async () => {
@@ -118,6 +127,7 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/public/cpm-session.js"), true);
   assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
   assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
+  assert.equal(existsSync("dist/public/assets/contact-email.png"), true);
   assert.equal(existsSync("dist/src/spectrum48.js"), true);
   assert.equal(existsSync("dist/src/z80mbc2.js"), true);
   assert.equal(existsSync("dist/ROM/48.rom"), true);
