@@ -110,18 +110,18 @@ a `Paste BASIC` flow.
 
 ## Debugger And Responsive Layout
 
-Status: implemented as the first visual debugger slice. The viewer has
-pause/run, frame-step, and instruction-step controls. It displays live register
-pairs, flags, `PC`, interrupt mode, T-state count, BASIC error/current-line
-state, system variable pointers, a disassembly window around `PC`, and memory
-inspection blocks for `PROG`, `VARS`, `E_LINE`, screen RAM, and system
-variables.
+Status: implemented as a compact workbench UI. The viewer has pause/run,
+frame-step, and instruction-step controls in a persistent right-side console.
+BASIC, Tape, Snapshots, and Debug tools are grouped into tabs so loading and
+debugging workflows do not all compete for vertical space at once.
 
-The layout is responsive but keeps the preferred emulator shape: Spectrum screen
-on the left and controls on the right while there is enough room. The screen
-starts scaling down at medium widths to avoid overlap. Debugger cards reflow
-from a three-area desktop layout to two columns, then to a single column on
-narrow screens.
+Detailed live machine inspection is in the collapsible Debug Workbench below
+the display. It shows register pairs, flags, `PC`, interrupt mode, T-state
+count, BASIC error/current-line state, system variable pointers, a disassembly
+window around `PC`, and memory inspection blocks for `PROG`, `VARS`, `E_LINE`,
+screen RAM, and system variables. The layout keeps the Spectrum screen on the
+left and controls on the right while there is enough room, then stacks into a
+single column on narrow screens.
 
 ## Beeper Audio
 

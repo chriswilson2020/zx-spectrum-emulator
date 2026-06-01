@@ -1,8 +1,17 @@
 :root {
   color-scheme: dark;
   font-family: "Inter", "Avenir Next", system-ui, sans-serif;
-  background: #151515;
-  color: #f1f1e8;
+  --bg: #141514;
+  --panel: #101512;
+  --panel-strong: #0b0f0e;
+  --line: rgba(241, 241, 232, 0.16);
+  --line-strong: rgba(241, 241, 232, 0.28);
+  --text: #f1f1e8;
+  --muted: #aeb5a7;
+  --accent: #16c7bd;
+  --yellow: #f3d447;
+  background: var(--bg);
+  color: var(--text);
 }
 
 * {
@@ -17,15 +26,18 @@ body {
   padding: 0;
   overscroll-behavior: none;
   background:
-    linear-gradient(120deg, rgba(180, 30, 70, 0.18), transparent 34%),
-    linear-gradient(260deg, rgba(20, 160, 145, 0.16), transparent 42%),
-    #151515;
+    linear-gradient(90deg, rgba(31, 32, 30, 0.92), rgba(17, 22, 20, 0.94)),
+    var(--bg);
+}
+
+[hidden] {
+  display: none !important;
 }
 
 button {
   border: 1px solid #6d6d62;
   border-radius: 6px;
-  background: #f1f1e8;
+  background: var(--text);
   color: #151515;
   cursor: pointer;
   font: inherit;
@@ -39,9 +51,9 @@ button:focus-visible {
 }
 
 .shell {
-  width: min(1480px, calc(100vw - 32px));
+  width: min(1540px, calc(100vw - 32px));
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(220px, 18vw, 280px);
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 24vw, 360px);
   gap: clamp(14px, 2vw, 24px);
   align-items: start;
 }
@@ -58,8 +70,8 @@ button:focus-visible {
 }
 
 #screen {
-  width: min(100%, 860px);
-  max-height: min(62vh, 720px);
+  width: min(100%, 900px);
+  max-height: min(68vh, 740px);
   image-rendering: pixelated;
   aspect-ratio: 4 / 3;
   object-fit: contain;
@@ -68,17 +80,30 @@ button:focus-visible {
 }
 
 .panel {
-  display: grid;
-  gap: 18px;
-  align-content: start;
-  min-width: 0;
   position: sticky;
   top: 18px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 15, 13, 0.76);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.32);
+  padding: 14px;
+}
+
+.panel::before {
+  content: "";
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1d4ed8 0 25%, #c026d3 25% 50%, #dc2626 50% 75%, #f3d447 75%);
 }
 
 h1 {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0 0 6px;
+  font-size: 22px;
   line-height: 1.1;
 }
 
@@ -90,12 +115,39 @@ output {
 .controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
+.tool-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  padding: 4px;
+}
+
+.tool-tabs button {
+  min-height: 34px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tool-tabs button[aria-selected="true"] {
+  border-color: rgba(22, 199, 189, 0.42);
+  background: rgba(22, 199, 189, 0.16);
+  color: var(--text);
+}
+
+.tool-panel,
 .paste-form {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .paste-form label,
@@ -108,12 +160,12 @@ output {
 
 .paste-form textarea {
   width: 100%;
-  min-height: 112px;
+  min-height: 134px;
   resize: vertical;
-  border: 1px solid #6d6d62;
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
-  background: #101512;
-  color: #f1f1e8;
+  background: var(--panel);
+  color: var(--text);
   font: 13px/1.35 "SFMono-Regular", Consolas, monospace;
   padding: 10px;
 }
@@ -138,16 +190,28 @@ output {
   font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
 }
 
+.tape-panel input::file-selector-button,
+.basic-file-panel input::file-selector-button,
+.snapshot-panel input::file-selector-button {
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: #d9d8cc;
+  color: #151515;
+  font: 700 11px/1.2 "Inter", "Avenir Next", system-ui, sans-serif;
+  margin-right: 8px;
+  padding: 5px 8px;
+}
+
 .tap-list {
   display: grid;
   gap: 6px;
-  max-height: 190px;
+  max-height: min(34vh, 260px);
   overflow: auto;
-  border: 1px solid rgba(241, 241, 232, 0.16);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: #101512;
+  background: var(--panel);
   padding: 6px;
-  color: #aeb5a7;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -189,7 +253,7 @@ output {
 
 dl {
   display: grid;
-  gap: 10px;
+  gap: 0;
   margin: 0;
 }
 
@@ -197,7 +261,7 @@ dl div {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid rgba(241, 241, 232, 0.16);
+  border-bottom: 1px solid var(--line);
   padding-block: 8px;
 }
 
@@ -213,6 +277,37 @@ dd {
   text-align: right;
 }
 
+.debug-drawer {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 13, 12, 0.52);
+}
+
+.debug-drawer summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px 14px;
+  list-style: none;
+}
+
+.debug-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.debug-drawer summary span {
+  font-weight: 800;
+}
+
+.debug-drawer summary strong {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
 .debugger {
   display: grid;
   grid-template-areas:
@@ -221,11 +316,12 @@ dd {
   grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.4fr);
   gap: 12px;
   align-items: start;
+  padding: 0 12px 12px;
 }
 
 .debug-card {
   min-width: 0;
-  border: 1px solid rgba(241, 241, 232, 0.18);
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(10, 13, 12, 0.76);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.26);
@@ -234,7 +330,7 @@ dd {
 
 .debug-card h2 {
   margin: 0 0 10px;
-  color: #f1f1e8;
+  color: var(--text);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0;
@@ -252,14 +348,14 @@ dd {
   min-width: 0;
   border: 1px solid rgba(241, 241, 232, 0.12);
   border-radius: 6px;
-  background: #101512;
+  background: var(--panel);
   padding: 7px 8px;
 }
 
 .register-cell span,
 .basic-cell span {
   display: block;
-  color: #aeb5a7;
+  color: var(--muted);
   font-size: 10px;
   line-height: 1.1;
 }
@@ -269,7 +365,7 @@ dd {
   display: block;
   margin-top: 4px;
   overflow-wrap: anywhere;
-  color: #f1f1e8;
+  color: var(--text);
   font: 700 13px/1 "SFMono-Regular", Consolas, monospace;
 }
 
@@ -281,7 +377,7 @@ dd {
 }
 
 .flag {
-  border: 1px solid rgba(241, 241, 232, 0.16);
+  border: 1px solid var(--line);
   border-radius: 999px;
   color: #777d72;
   font: 700 11px/24px "SFMono-Regular", Consolas, monospace;
@@ -289,8 +385,8 @@ dd {
 }
 
 .flag.on {
-  border-color: #16c7bd;
-  background: #16c7bd;
+  border-color: var(--accent);
+  background: var(--accent);
   color: #051615;
 }
 
@@ -329,7 +425,7 @@ dd {
 }
 
 .disassembly li.current {
-  background: #f3d447;
+  background: var(--yellow);
   color: #14130c;
 }
 
@@ -356,7 +452,7 @@ dd {
 
 .memory-inspector h3 {
   margin: 0 0 5px;
-  color: #aeb5a7;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 700;
 }
@@ -364,7 +460,7 @@ dd {
 .memory-inspector pre {
   margin: 0;
   overflow: hidden;
-  color: #f1f1e8;
+  color: var(--text);
   font: 11px/1.45 "SFMono-Regular", Consolas, monospace;
   white-space: pre-wrap;
 }
@@ -386,7 +482,7 @@ dd {
 
   .shell {
     width: min(100vw - 24px, 1480px);
-    grid-template-columns: minmax(0, 1fr) clamp(210px, 24vw, 260px);
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 28vw, 340px);
   }
 
   #screen {
@@ -414,6 +510,10 @@ dd {
   .panel {
     order: -1;
     position: static;
+  }
+
+  .tool-tabs {
+    grid-template-columns: repeat(4, minmax(64px, 1fr));
   }
 
   .debugger {

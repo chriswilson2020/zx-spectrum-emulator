@@ -152,11 +152,14 @@ of showing a misleading mnemonic.
 
 The viewer uses CSS grid with responsive breakpoints. The preferred layout keeps
 the Spectrum display and debugger in the left pane with machine controls in a
-right rail. The canvas has a viewport-aware maximum size so it scales down
-before colliding with the controls. At medium widths, debugger cards reflow into
-two columns using named grid areas; at narrow widths, controls and debugger
-cards stack into one column. This keeps the emulator usable in full-screen,
-split-screen, and laptop-width browser windows.
+right rail. The rail is treated as a compact machine console: immediate run,
+step, reset, and sound controls remain visible, while BASIC, Tape, Snapshots,
+and Debug tools are grouped behind a tabbed switcher. The heavier debugger cards
+sit in a collapsible Debug Workbench below the display so normal play keeps the
+screen dominant, but register, BASIC, disassembly, and memory panels are still
+one click away. The canvas has a viewport-aware maximum size so it scales down
+before colliding with the controls, and narrow widths stack the console and
+workbench into one column.
 
 ## Spectrum Runtime
 

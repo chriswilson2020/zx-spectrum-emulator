@@ -42,6 +42,8 @@ const tapList = document.querySelector("#tapList");
 const tapLoadButton = document.querySelector("#tapLoad");
 const snapshotFileInput = document.querySelector("#snapshotFile");
 const snapshotSaveButton = document.querySelector("#snapshotSave");
+const toolTabButtons = document.querySelectorAll("[data-tool-tab]");
+const toolPanels = document.querySelectorAll("[data-tool-panel]");
 const registerGrid = document.querySelector("#registerGrid");
 const flagGrid = document.querySelector("#flagGrid");
 const basicStatusPanel = document.querySelector("#basicStatus");
@@ -209,6 +211,19 @@ function downloadBytes(bytes, filename, type = "application/octet-stream") {
   link.download = filename;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function selectToolPanel(name) {
+  for (const button of toolTabButtons) {
+    const selected = button.dataset.toolTab === name;
+    button.setAttribute("aria-selected", String(selected));
+  }
+
+  for (const panel of toolPanels) {
+    const selected = panel.dataset.toolPanel === name;
+    panel.hidden = !selected;
+    panel.classList.toggle("active", selected);
+  }
 }
 
 function renderTapList() {
@@ -430,6 +445,12 @@ audioToggleButton.addEventListener("click", async () => {
     statusOutput.value = error.message;
   }
 });
+
+for (const button of toolTabButtons) {
+  button.addEventListener("click", () => {
+    selectToolPanel(button.dataset.toolTab);
+  });
+}
 
 tapFileInput.addEventListener("change", async () => {
   const file = tapFileInput.files?.[0];

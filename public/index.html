@@ -12,25 +12,31 @@
         <div class="screen-wrap">
           <canvas id="screen" width="320" height="240"></canvas>
         </div>
-        <section class="debugger" aria-label="Machine debugger">
-          <div class="debug-card registers-card">
-            <h2>Registers</h2>
-            <div id="registerGrid" class="register-grid"></div>
-            <div id="flagGrid" class="flag-grid" aria-label="CPU flags"></div>
-          </div>
-          <div class="debug-card basic-card">
-            <h2>BASIC</h2>
-            <div id="basicStatus" class="basic-status"></div>
-          </div>
-          <div class="debug-card disassembly-card">
-            <h2>Disassembly</h2>
-            <ol id="disassembly" class="disassembly"></ol>
-          </div>
-          <div class="debug-card memory-card">
-            <h2>Memory</h2>
-            <div id="memoryInspector" class="memory-inspector"></div>
-          </div>
-        </section>
+        <details class="debug-drawer">
+          <summary>
+            <span>Debug Workbench</span>
+            <strong>Registers, BASIC, disassembly, memory</strong>
+          </summary>
+          <section class="debugger" aria-label="Machine debugger">
+            <div class="debug-card registers-card">
+              <h2>Registers</h2>
+              <div id="registerGrid" class="register-grid"></div>
+              <div id="flagGrid" class="flag-grid" aria-label="CPU flags"></div>
+            </div>
+            <div class="debug-card basic-card">
+              <h2>BASIC</h2>
+              <div id="basicStatus" class="basic-status"></div>
+            </div>
+            <div class="debug-card disassembly-card">
+              <h2>Disassembly</h2>
+              <ol id="disassembly" class="disassembly"></ol>
+            </div>
+            <div class="debug-card memory-card">
+              <h2>Memory</h2>
+              <div id="memoryInspector" class="memory-inspector"></div>
+            </div>
+          </section>
+        </details>
       </section>
       <aside class="panel" aria-label="Machine controls">
         <header>
@@ -45,54 +51,68 @@
           <button id="typeHello" type="button">Type Hello</button>
           <button id="audioToggle" type="button" aria-pressed="false">Sound Off</button>
         </div>
-        <form id="pasteForm" class="paste-form">
-          <label for="pasteText">Paste BASIC</label>
-          <textarea id="pasteText" rows="5" spellcheck="false">10 PRINT "HELLO"
+        <nav class="tool-tabs" role="tablist" aria-label="Tools">
+          <button id="basicTab" type="button" role="tab" aria-selected="true" aria-controls="basicPanel" data-tool-tab="basic">BASIC</button>
+          <button id="tapeTab" type="button" role="tab" aria-selected="false" aria-controls="tapePanel" data-tool-tab="tape">Tape</button>
+          <button id="snapshotsTab" type="button" role="tab" aria-selected="false" aria-controls="snapshotsPanel" data-tool-tab="snapshots">Snapshots</button>
+          <button id="debugTab" type="button" role="tab" aria-selected="false" aria-controls="debugPanel" data-tool-tab="debug">Debug</button>
+        </nav>
+        <section id="basicPanel" class="tool-panel active" role="tabpanel" aria-labelledby="basicTab" data-tool-panel="basic">
+          <form id="pasteForm" class="paste-form">
+            <label for="pasteText">Paste BASIC</label>
+            <textarea id="pasteText" rows="5" spellcheck="false">10 PRINT "HELLO"
 RUN</textarea>
-          <button type="submit">Type Pasted Text</button>
-        </form>
-        <section class="basic-file-panel" aria-label="BASIC source files">
-          <label for="basicFile">BASIC Source</label>
-          <input id="basicFile" type="file" accept=".bas,.txt,text/plain">
-          <button id="basicExport" type="button">Export BASIC</button>
+            <button type="submit">Type Pasted Text</button>
+          </form>
+          <div class="basic-file-panel" aria-label="BASIC source files">
+            <label for="basicFile">BASIC Source</label>
+            <input id="basicFile" type="file" accept=".bas,.txt,text/plain">
+            <button id="basicExport" type="button">Export BASIC</button>
+          </div>
         </section>
-        <section class="tape-panel" aria-label="TAP loader">
-          <label for="tapFile">Load TAP</label>
-          <input id="tapFile" type="file" accept=".tap,.tzx">
-          <div id="tapList" class="tap-list" aria-live="polite"></div>
-          <button id="tapLoad" type="button" disabled>Load Selected Block</button>
+        <section id="tapePanel" class="tool-panel" role="tabpanel" aria-labelledby="tapeTab" data-tool-panel="tape" hidden>
+          <div class="tape-panel" aria-label="TAP loader">
+            <label for="tapFile">Load TAP/TZX</label>
+            <input id="tapFile" type="file" accept=".tap,.tzx">
+            <div id="tapList" class="tap-list" aria-live="polite"></div>
+            <button id="tapLoad" type="button" disabled>Load Selected Block</button>
+          </div>
         </section>
-        <section class="snapshot-panel" aria-label="Snapshot loader">
-          <label for="snapshotFile">Snapshots</label>
-          <input id="snapshotFile" type="file" accept=".z80">
-          <button id="snapshotSave" type="button">Save Z80 Snapshot</button>
+        <section id="snapshotsPanel" class="tool-panel" role="tabpanel" aria-labelledby="snapshotsTab" data-tool-panel="snapshots" hidden>
+          <div class="snapshot-panel" aria-label="Snapshot loader">
+            <label for="snapshotFile">Load Snapshot</label>
+            <input id="snapshotFile" type="file" accept=".z80">
+            <button id="snapshotSave" type="button">Save Z80 Snapshot</button>
+          </div>
         </section>
-        <dl>
-          <div>
-            <dt>Frame</dt>
-            <dd id="frame">0</dd>
-          </div>
-          <div>
-            <dt>PC</dt>
-            <dd id="pc">0000</dd>
-          </div>
-          <div>
-            <dt>Border</dt>
-            <dd id="border">0</dd>
-          </div>
-          <div>
-            <dt>Key</dt>
-            <dd id="lastKey">-</dd>
-          </div>
-          <div>
-            <dt>Mapped</dt>
-            <dd id="mappedKeys">-</dd>
-          </div>
-          <div>
-            <dt>Held</dt>
-            <dd id="heldKeys">-</dd>
-          </div>
-        </dl>
+        <section id="debugPanel" class="tool-panel" role="tabpanel" aria-labelledby="debugTab" data-tool-panel="debug" hidden>
+          <dl class="telemetry">
+            <div>
+              <dt>Frame</dt>
+              <dd id="frame">0</dd>
+            </div>
+            <div>
+              <dt>PC</dt>
+              <dd id="pc">0000</dd>
+            </div>
+            <div>
+              <dt>Border</dt>
+              <dd id="border">0</dd>
+            </div>
+            <div>
+              <dt>Key</dt>
+              <dd id="lastKey">-</dd>
+            </div>
+            <div>
+              <dt>Mapped</dt>
+              <dd id="mappedKeys">-</dd>
+            </div>
+            <div>
+              <dt>Held</dt>
+              <dd id="heldKeys">-</dd>
+            </div>
+          </dl>
+        </section>
       </aside>
     </main>
     <script type="module" src="./public/app.js"></script>

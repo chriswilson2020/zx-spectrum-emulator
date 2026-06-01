@@ -16,6 +16,21 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(app, /new URL\("\.\.\/ROM\/48\.rom", import\.meta\.url\)/);
 });
 
+test("viewer groups secondary tools into tabs and keeps debugger collapsible", async () => {
+  const index = await readFile("public/index.html", "utf8");
+
+  assert.match(index, /role="tablist"/);
+  assert.match(index, /data-tool-tab="basic"/);
+  assert.match(index, /data-tool-tab="tape"/);
+  assert.match(index, /data-tool-tab="snapshots"/);
+  assert.match(index, /data-tool-tab="debug"/);
+  assert.match(index, /id="basicPanel"/);
+  assert.match(index, /id="tapePanel"/);
+  assert.match(index, /id="snapshotsPanel"/);
+  assert.match(index, /id="debugPanel"/);
+  assert.match(index, /<details class="debug-drawer"/);
+});
+
 test("build:pages creates a static dist tree for GitHub Pages", async () => {
   await rm("dist", { recursive: true, force: true });
 

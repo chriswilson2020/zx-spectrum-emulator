@@ -126,11 +126,11 @@ changes land on `main` or when the workflow is run manually. In GitHub, set
 
 The debugger is designed for the browser viewport rather than as a fixed-size
 desktop panel. On wide screens the Spectrum display remains in the left pane
-with controls on the right. The canvas starts scaling down before the layout
-becomes cramped, and below tablet widths the controls and debugger stack into a
-single column. The debugger cards use named layout areas so registers, BASIC
-state, disassembly, and memory stay in predictable positions as the page
-reflows.
+with a compact machine console on the right. Secondary tools are grouped into
+tabs for BASIC, Tape, Snapshots, and Debug, while the detailed register,
+disassembly, BASIC, and memory views live in a collapsible Debug Workbench below
+the display. The canvas starts scaling down before the layout becomes cramped,
+and below tablet widths the console and workbench stack into a single column.
 
 The long independent Z80 exercisers are available too:
 
