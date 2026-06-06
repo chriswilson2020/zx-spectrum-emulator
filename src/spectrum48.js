@@ -62,6 +62,10 @@ export class Spectrum48 {
   static FRAME_WIDTH = Spectrum48.SCREEN_WIDTH + Spectrum48.BORDER_LEFT + Spectrum48.BORDER_RIGHT;
   static FRAME_HEIGHT = Spectrum48.SCREEN_HEIGHT + Spectrum48.BORDER_TOP + Spectrum48.BORDER_BOTTOM;
   static T_STATES_PER_FRAME = 69888;
+  static T_STATES_PER_LINE = 224;
+  static SCANLINES_PER_FRAME = 312;
+  static DISPLAY_FIRST_LINE = 64;
+  static DISPLAY_FIRST_COLUMN = 128;
 
   static fromRomFile(path) {
     const readFileSync = globalThis.process?.getBuiltinModule?.("fs")?.readFileSync;
@@ -339,6 +343,22 @@ export class Spectrum48 {
 
   screenByteAddress(xByte, y) {
     return 0x4000 | ((y & 0xc0) << 5) | ((y & 0x07) << 8) | ((y & 0x38) << 2) | xByte;
+  }
+
+  getRasterPosition() {
+    const tStateInFrame = ((this.cpu.tStates % Spectrum48.T_STATES_PER_FRAME) + Spectrum48.T_STATES_PER_FRAME) % Spectrum48.T_STATES_PER_FRAME;
+    const line = Math.floor(tStateInFrame / Spectrum48.T_STATES_PER_LINE);
+    const column = tStateInFrame % Spectrum48.T_STATES_PER_LINE;
+    const displayLine = line - Spectrum48.DISPLAY_FIRST_LINE;
+    const displayColumn = column - Spectrum48.DISPLAY_FIRST_COLUMN;
+    return {
+      tStateInFrame,
+      line,
+      column,
+      displayLine,
+      displayColumn,
+      inDisplay: displayLine >= 0 && displayLine < Spectrum48.SCREEN_HEIGHT && displayColumn >= 0 && displayColumn < Spectrum48.SCREEN_WIDTH
+    };
   }
 
   step() {

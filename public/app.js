@@ -20,10 +20,15 @@ import { loadTapEntry, parseTapeFile, tapEntries } from "./tape.js";
 
 const canvas = document.querySelector("#screen");
 const context = canvas.getContext("2d");
+const rasterOverlay = document.querySelector("#rasterOverlay");
+const rasterContext = rasterOverlay.getContext("2d");
 const statusOutput = document.querySelector("#status");
 const frameOutput = document.querySelector("#frame");
 const pcOutput = document.querySelector("#pc");
 const borderOutput = document.querySelector("#border");
+const rasterLineOutput = document.querySelector("#rasterLine");
+const rasterColumnOutput = document.querySelector("#rasterColumn");
+const rasterTStateOutput = document.querySelector("#rasterTState");
 const lastKeyOutput = document.querySelector("#lastKey");
 const mappedKeysOutput = document.querySelector("#mappedKeys");
 const heldKeysOutput = document.querySelector("#heldKeys");
@@ -33,6 +38,8 @@ const stepInstructionButton = document.querySelector("#stepInstruction");
 const resetButton = document.querySelector("#reset");
 const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
+const immediateScreenInput = document.querySelector("#immediateScreen");
+const showRasterOverlayInput = document.querySelector("#showRasterOverlay");
 const pasteForm = document.querySelector("#pasteForm");
 const pasteTextInput = document.querySelector("#pasteText");
 const basicFileInput = document.querySelector("#basicFile");
@@ -116,6 +123,47 @@ function runFrames(count) {
   for (let frame = 0; frame < count; frame += 1) {
     runMachineFrame();
   }
+}
+
+function drawSpectrumScreen() {
+  const frame = machine.renderFrameRgba({ flashOn });
+  const imageData = new ImageData(frame, Spectrum48.FRAME_WIDTH, Spectrum48.FRAME_HEIGHT);
+  context.putImageData(imageData, 0, 0);
+  drawRasterOverlay();
+}
+
+function drawRasterOverlay() {
+  rasterContext.clearRect(0, 0, rasterOverlay.width, rasterOverlay.height);
+  if (!showRasterOverlayInput.checked || !machine) return;
+
+  const raster = machine.getRasterPosition();
+  rasterContext.save();
+  rasterContext.strokeStyle = "rgba(243, 212, 71, 0.95)";
+  rasterContext.fillStyle = "rgba(243, 212, 71, 0.95)";
+  rasterContext.lineWidth = 1;
+  rasterContext.shadowColor = "rgba(243, 212, 71, 0.85)";
+  rasterContext.shadowBlur = 5;
+  rasterContext.beginPath();
+  rasterContext.moveTo(0, raster.line + 0.5);
+  rasterContext.lineTo(Spectrum48.FRAME_WIDTH, raster.line + 0.5);
+  rasterContext.stroke();
+  rasterContext.beginPath();
+  rasterContext.arc(raster.column, raster.line, 3, 0, Math.PI * 2);
+  rasterContext.fill();
+  rasterContext.restore();
+}
+
+function updateRasterTelemetry() {
+  const raster = machine.getRasterPosition();
+  rasterLineOutput.textContent = String(raster.line);
+  rasterColumnOutput.textContent = String(raster.column);
+  rasterTStateOutput.textContent = String(raster.tStateInFrame);
+}
+
+function refreshDebugDisplay() {
+  drawSpectrumScreen();
+  updateDebugger();
+  updateRasterTelemetry();
 }
 
 function tapSpectrumKeys(keys, holdFrames = 4, gapFrames = 4) {
@@ -265,13 +313,11 @@ function draw() {
     pumpAudio();
   }
 
-  const frame = machine.renderFrameRgba({ flashOn });
-  const imageData = new ImageData(frame, Spectrum48.FRAME_WIDTH, Spectrum48.FRAME_HEIGHT);
-  context.putImageData(imageData, 0, 0);
-
+  drawSpectrumScreen();
   frameOutput.textContent = String(machine.frame);
   pcOutput.textContent = formatWord(machine.cpu.PC);
   borderOutput.textContent = String(machine.borderColor);
+  updateRasterTelemetry();
   lastKeyOutput.textContent = lastModernKey;
   mappedKeysOutput.textContent = lastMappedKeys.length ? lastMappedKeys.join(" + ") : "-";
   heldKeysOutput.textContent = machine.getPressedKeys().join(" + ") || "-";
@@ -411,7 +457,8 @@ stepFrameButton.addEventListener("click", () => {
   runPauseButton.textContent = "Run";
   runPauseButton.setAttribute("aria-label", "Run");
   runMachineFrame();
-  updateDebugger();
+  if (immediateScreenInput.checked) refreshDebugDisplay();
+  else updateDebugger();
   statusOutput.value = "Stepped one frame";
 });
 
@@ -420,12 +467,14 @@ stepInstructionButton.addEventListener("click", () => {
   runPauseButton.textContent = "Run";
   runPauseButton.setAttribute("aria-label", "Run");
   stepInstruction();
-  updateDebugger();
+  if (immediateScreenInput.checked) refreshDebugDisplay();
+  else updateDebugger();
   statusOutput.value = "Stepped one instruction";
 });
 
 resetButton.addEventListener("click", () => {
   resetMachine();
+  refreshDebugDisplay();
 });
 
 typeHelloButton.addEventListener("click", () => {
@@ -451,6 +500,8 @@ for (const button of toolTabButtons) {
     selectToolPanel(button.dataset.toolTab);
   });
 }
+
+showRasterOverlayInput.addEventListener("change", drawRasterOverlay);
 
 tapFileInput.addEventListener("change", async () => {
   const file = tapFileInput.files?.[0];
@@ -508,7 +559,7 @@ snapshotFileInput.addEventListener("change", async () => {
     renderTapList();
     audio?.reset(machine.cpu.tStates);
     statusOutput.value = `Loaded ${snapshot.format} snapshot ${file.name}`;
-    updateDebugger();
+    refreshDebugDisplay();
   } catch (error) {
     statusOutput.value = error.message;
   } finally {
@@ -537,7 +588,7 @@ basicFileInput.addEventListener("change", async () => {
     }
     pasteTextInput.value = text;
     statusOutput.value = `Loaded BASIC source ${file.name}`;
-    updateDebugger();
+    refreshDebugDisplay();
   } catch (error) {
     statusOutput.value = error.message;
   } finally {

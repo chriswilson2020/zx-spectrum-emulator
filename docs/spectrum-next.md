@@ -119,9 +119,13 @@ Detailed live machine inspection is in the collapsible Debug Workbench below
 the display. It shows register pairs, flags, `PC`, interrupt mode, T-state
 count, BASIC error/current-line state, system variable pointers, a disassembly
 window around `PC`, and memory inspection blocks for `PROG`, `VARS`, `E_LINE`,
-screen RAM, and system variables. The layout keeps the Spectrum screen on the
-left and controls on the right while there is enough room, then stacks into a
-single column on narrow screens.
+screen RAM, and system variables. The Debug tab also reports the current raster
+line, t-state column, and frame-relative t-state. An optional raster overlay can
+draw the current beam line/dot over the emulated frame, and the immediate-screen
+option redraws the canvas directly after frame or instruction stepping so screen
+memory writes are visible without waiting for the next animation callback. The
+layout keeps the Spectrum screen on the left and controls on the right while
+there is enough room, then stacks into a single column on narrow screens.
 
 ## Beeper Audio
 

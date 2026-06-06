@@ -31,7 +31,8 @@ The first ZX Spectrum 48K machine layer is in place:
   modern PC keyboard input, and can paste/load Sinclair BASIC listings.
 - The viewer includes a visual debugger with pause/frame-step/instruction-step
   controls, live registers and flags, disassembly around `PC`, BASIC status,
-  and memory inspectors for key Spectrum regions.
+  memory inspectors for key Spectrum regions, raster line/t-state readouts, an
+  optional raster overlay, and immediate screen redraws while stepping.
 - `.tap` files and standard-speed `.tzx` blocks can be parsed in the browser,
   inspected as tape blocks, and fast-loaded for BASIC program and CODE
   header/data pairs.

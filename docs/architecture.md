@@ -287,6 +287,14 @@ disassembly window around `PC`, BASIC status (`ERR_NR`, current line, and
 sub-statement), and memory inspections for `PROG`, `VARS`, `E_LINE`, screen
 memory at `0x4000`, and system variables around `0x5c00`.
 
+`Spectrum48.getRasterPosition()` maps the CPU's frame-relative t-state to a
+UI-level raster position using a 224 T-state scanline and 312-line frame model.
+The Spectrum browser app displays that line/column/t-state in the Debug tab and
+can draw a non-mutating overlay on a transparent canvas stacked above the
+emulated frame. When immediate screen redraw is enabled, step controls call the
+same frame renderer used by the animation loop before returning from the click
+handler, making screen RAM changes visible while single-stepping.
+
 The disassembler is intentionally partial and conservative. It renders common
 base Z80 instructions and control flow mnemonics that are useful when watching
 the ROM. Unknown or less common opcode forms fall back to byte output instead

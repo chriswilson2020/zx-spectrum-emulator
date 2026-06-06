@@ -75,18 +75,28 @@ button:focus-visible {
 }
 
 .screen-wrap {
+  position: relative;
   display: grid;
   place-items: center;
 }
 
-#screen {
+#screen,
+#rasterOverlay {
+  grid-area: 1 / 1;
   width: min(100%, 900px);
   max-height: min(68vh, 740px);
   image-rendering: pixelated;
   aspect-ratio: 4 / 3;
   object-fit: contain;
+}
+
+#screen {
   background: #000;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.46);
+}
+
+#rasterOverlay {
+  pointer-events: none;
 }
 
 .panel {
@@ -285,6 +295,25 @@ dd {
   max-width: 130px;
   overflow-wrap: anywhere;
   text-align: right;
+}
+
+.debug-options {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.debug-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c9c9bd;
+  font-size: 13px;
+}
+
+.debug-options input {
+  accent-color: var(--accent);
 }
 
 .debug-drawer {

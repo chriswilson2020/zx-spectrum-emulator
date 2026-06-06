@@ -12,6 +12,7 @@
       <section class="stage" aria-label="ZX Spectrum display and debugger">
         <div class="screen-wrap">
           <canvas id="screen" width="320" height="240"></canvas>
+          <canvas id="rasterOverlay" width="320" height="240" aria-hidden="true"></canvas>
         </div>
         <details class="debug-drawer">
           <summary>
@@ -101,6 +102,14 @@ RUN</textarea>
               <dd id="border">0</dd>
             </div>
             <div>
+              <dt>Raster</dt>
+              <dd><span id="rasterLine">0</span>:<span id="rasterColumn">0</span></dd>
+            </div>
+            <div>
+              <dt>T-state</dt>
+              <dd id="rasterTState">0</dd>
+            </div>
+            <div>
               <dt>Key</dt>
               <dd id="lastKey">-</dd>
             </div>
@@ -113,6 +122,16 @@ RUN</textarea>
               <dd id="heldKeys">-</dd>
             </div>
           </dl>
+          <div class="debug-options">
+            <label>
+              <input id="immediateScreen" type="checkbox" checked>
+              <span>Immediate screen while stepping</span>
+            </label>
+            <label>
+              <input id="showRasterOverlay" type="checkbox">
+              <span>Raster overlay</span>
+            </label>
+          </div>
         </section>
       </aside>
     </main>

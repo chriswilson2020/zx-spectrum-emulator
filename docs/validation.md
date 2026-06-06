@@ -57,9 +57,9 @@ are intentionally readable and targeted. They are the first line of defence when
 editing the CPU or the Spectrum machine layer.
 
 The current unit suite covers the Z80 core, CP/M exerciser harness, `Spectrum48`
-ROM/RAM/ports/frame/video behaviour, modern keyboard translation, the BASIC
-tokenizer/loader/detokenizer/export path, Web Audio beeper sample generation,
-and debugger helper formatting/disassembly/status reads, TAP/TZX parsing,
+ROM/RAM/ports/frame/video/raster behaviour, modern keyboard translation, the
+BASIC tokenizer/loader/detokenizer/export path, Web Audio beeper sample
+generation, and debugger helper formatting/disassembly/status reads, TAP/TZX parsing,
 fast-loading, ROM-loader interception, standard-speed EAR pulse playback,
 `.z80` snapshot save/load, GitHub Pages packaging, and the tabbed/collapsible
 browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw

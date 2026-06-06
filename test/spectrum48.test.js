@@ -204,6 +204,39 @@ test("runFrame asserts the interrupt before executing frame CPU work", () => {
   assert.equal(machine.cpu.pendingInterrupt, false);
 });
 
+test("reports raster position from frame t-states", () => {
+  const machine = new Spectrum48({ rom: makeRom() });
+
+  assert.deepEqual(machine.getRasterPosition(), {
+    tStateInFrame: 0,
+    line: 0,
+    column: 0,
+    displayLine: -64,
+    displayColumn: -128,
+    inDisplay: false
+  });
+
+  machine.cpu.tStates = (64 * Spectrum48.T_STATES_PER_LINE) + 128;
+  assert.deepEqual(machine.getRasterPosition(), {
+    tStateInFrame: 14464,
+    line: 64,
+    column: 128,
+    displayLine: 0,
+    displayColumn: 0,
+    inDisplay: true
+  });
+
+  machine.cpu.tStates = Spectrum48.T_STATES_PER_FRAME + (255 * Spectrum48.T_STATES_PER_LINE) + 223;
+  assert.deepEqual(machine.getRasterPosition(), {
+    tStateInFrame: 57343,
+    line: 255,
+    column: 223,
+    displayLine: 191,
+    displayColumn: 95,
+    inDisplay: true
+  });
+});
+
 test("renders display bytes and attributes to an RGBA buffer", () => {
   const machine = new Spectrum48({ rom: makeRom() });
   machine.write8(0x4000, 0x80);

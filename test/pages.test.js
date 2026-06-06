@@ -38,6 +38,7 @@ test("browser entry points use project-page-safe relative paths", async () => {
 
 test("viewer groups secondary tools into tabs and keeps debugger collapsible", async () => {
   const index = await readFile("public/spectrum.html", "utf8");
+  const app = await readFile("public/app.js", "utf8");
 
   assert.match(index, /role="tablist"/);
   assert.match(index, /data-tool-tab="basic"/);
@@ -48,7 +49,15 @@ test("viewer groups secondary tools into tabs and keeps debugger collapsible", a
   assert.match(index, /id="tapePanel"/);
   assert.match(index, /id="snapshotsPanel"/);
   assert.match(index, /id="debugPanel"/);
+  assert.match(index, /id="rasterLine"/);
+  assert.match(index, /id="rasterColumn"/);
+  assert.match(index, /id="rasterTState"/);
+  assert.match(index, /id="immediateScreen"/);
+  assert.match(index, /id="rasterOverlay"/);
   assert.match(index, /<details class="debug-drawer"/);
+  assert.match(app, /drawSpectrumScreen/);
+  assert.match(app, /drawRasterOverlay/);
+  assert.match(app, /machine\.getRasterPosition\(\)/);
 });
 
 test("machine selector exposes Spectrum and CP/M routes", async () => {
