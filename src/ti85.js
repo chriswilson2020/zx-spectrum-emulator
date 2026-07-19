@@ -1,4 +1,5 @@
 import { Z80 } from "./z80.js";
+import { TI85_KEY_ROWS } from "./ti85-keys.js";
 
 const ROM_SIZE = 0x20000;
 const ROM_PAGE_SIZE = 0x4000;
@@ -11,17 +12,6 @@ const TIMER_T_STATES = Math.round(CPU_CLOCK_HZ / TIMER_HZ);
 const LCD_BYTES_PER_ROW = 16;
 const LCD_BACKGROUND = [174, 205, 176, 255];
 const LCD_FOREGROUND = [47, 65, 58, 255];
-
-const KEY_ROWS = [
-  ["DOWN", "ENTER", "(-)", ".", "0", undefined, "F5"],
-  ["LEFT", "+", "3", "2", "1", "STO", "F4"],
-  ["RIGHT", "-", "6", "5", "4", ",", "F3"],
-  ["UP", "*", "9", "8", "7", "X^2", "F2"],
-  [undefined, "/", ")", "(", "EE", "LN", "F1"],
-  [undefined, "^", "TAN", "COS", "SIN", "LOG", "2ND"],
-  [undefined, "CLEAR", "CUSTOM", "PRGM", "STAT", "GRAPH", "EXIT"],
-  [undefined, undefined, undefined, "DEL", "X-VAR", "ALPHA", "MORE"]
-];
 
 const KEY_ALIASES = new Map([
   ["ENTRY", "ENTER"],
@@ -36,7 +26,7 @@ const KEY_ALIASES = new Map([
 ]);
 
 const KEY_POSITIONS = new Map(
-  KEY_ROWS.flatMap((row, rowIndex) =>
+  TI85_KEY_ROWS.flatMap((row, rowIndex) =>
     row.flatMap((key, bit) => key ? [[key, { row: rowIndex, mask: 1 << bit }]] : [])
   )
 );
@@ -267,9 +257,9 @@ export class Ti85Machine {
 
   getPressedKeys() {
     const pressed = [];
-    for (let row = 0; row < KEY_ROWS.length; row += 1) {
-      for (let bit = 0; bit < KEY_ROWS[row].length; bit += 1) {
-        if ((this.keyRows[row] & (1 << bit)) !== 0) pressed.push(KEY_ROWS[row][bit] ?? `ROW${row}BIT${bit}`);
+    for (let row = 0; row < TI85_KEY_ROWS.length; row += 1) {
+      for (let bit = 0; bit < TI85_KEY_ROWS[row].length; bit += 1) {
+        if ((this.keyRows[row] & (1 << bit)) !== 0) pressed.push(TI85_KEY_ROWS[row][bit] ?? `ROW${row}BIT${bit}`);
       }
     }
     if (this.onPressed) pressed.push("ON");
@@ -356,7 +346,7 @@ export class Ti85Machine {
         matrix: Array.from(this.keyRows, (value, row) => ({
           row,
           value,
-          keys: KEY_ROWS[row].filter((key, bit) => key && (value & (1 << bit)) !== 0)
+          keys: TI85_KEY_ROWS[row].filter((key, bit) => key && (value & (1 << bit)) !== 0)
         }))
       },
       interrupts: {

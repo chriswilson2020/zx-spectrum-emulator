@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Ti85Machine } from "../src/ti85.js";
+import { hasBundledTi85Rom } from "./helpers/ti85-rom-harness.js";
 
 function makeRom(pages = {}) {
   const rom = new Uint8Array(0x20000);
@@ -266,7 +267,9 @@ test("reports compact debug state for the TI-85 machine", () => {
   assert.equal(state.display.height, 64);
 });
 
-test("bundled TI-85 ROM boots far enough to produce nonblank LCD output", () => {
+const testWithBundledRom = hasBundledTi85Rom() ? test : test.skip;
+
+testWithBundledRom("bundled TI-85 ROM boots far enough to produce nonblank LCD output", () => {
   const machine = Ti85Machine.fromRomFile("ROM/TI85.ROM");
 
   for (let count = 0; count < 20 && !machine.halted; count += 1) {

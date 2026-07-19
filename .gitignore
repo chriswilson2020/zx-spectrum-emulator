@@ -4,4 +4,5 @@ npm-debug.log*
 dist/
 vendor/SingleStepTests-z80/
 !ROM/48.rom
+ROM/TI85.ROM
 .superpowers/

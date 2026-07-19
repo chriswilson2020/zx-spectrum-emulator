@@ -102,6 +102,7 @@ test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async 
 test("TI-85 page exposes a live calculator LCD viewer entry point", async () => {
   const ti85 = await readFile("public/ti85.html", "utf8");
   const app = await readFile("public/ti85-app.js", "utf8");
+  const keys = await readFile("src/ti85-keys.js", "utf8");
   const expectedTi85Keys = [
     "DOWN", "ENTER", "(-)", ".", "0", "F5",
     "LEFT", "+", "3", "2", "1", "STO", "F4",
@@ -132,14 +133,17 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(ti85, /class="debug-card ti85-keyboard-card"/);
   assert.match(ti85, /class="debug-card ti85-display-card"/);
   assert.match(app, /Ti85Machine/);
+  assert.match(app, /Use your own 128K TI-85 ROM file/);
+  assert.match(app, /USE YOUR OWN/);
+  assert.match(app, /TI-85 ROM FILE/);
   assert.match(app, /TI85_KEY_LAYOUT/);
   assert.match(app, /data-ti85-key/);
   assert.match(app, /bindTi85KeyButton/);
   assert.match(app, /button\.id = "ti85On"/);
   for (const key of expectedTi85Keys) {
-    assert.match(app, new RegExp(`key: "${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+    assert.match(keys, new RegExp(`key: "${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
   }
-  assert.equal(app.match(/\bkey: "/g)?.length, expectedTi85Keys.length);
+  assert.equal(keys.match(/\bkey: "/g)?.length, expectedTi85Keys.length);
   assert.match(app, /drawTi85Screen/);
   assert.match(app, /renderLcdRgba/);
   assert.match(app, /machine\.pressKey\(key\)/);
@@ -286,11 +290,12 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/src/spectrum48.js"), true);
   assert.equal(existsSync("dist/src/trs80-model3.js"), true);
   assert.equal(existsSync("dist/src/ti85.js"), true);
+  assert.equal(existsSync("dist/src/ti85-keys.js"), true);
   assert.equal(existsSync("dist/src/z80mbc2.js"), true);
   assert.equal(existsSync("dist/ROM/48.rom"), true);
   assert.equal(existsSync("dist/ROM/cpm22-1.dsk"), true);
   assert.equal(existsSync("dist/ROM/cpm22-2.dsk"), true);
   assert.equal(existsSync("dist/ROM/DS0N00.DSK"), true);
   assert.equal(existsSync("dist/ROM/DS0N06.DSK"), true);
-  assert.equal(existsSync("dist/ROM/TI85.ROM"), true);
+  assert.equal(existsSync("dist/ROM/TI85.ROM"), existsSync("ROM/TI85.ROM"));
 });

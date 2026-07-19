@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { Ti85RomHarness } from "./helpers/ti85-rom-harness.js";
+import { Ti85RomHarness, hasBundledTi85Rom } from "./helpers/ti85-rom-harness.js";
 
 const POWER_ON_SIGNATURE = {
   lcdEnabled: true,
@@ -82,7 +82,9 @@ const WORKFLOWS = [
   }
 ];
 
-test("TI-85 ROM powers on to a stable home display signature", () => {
+const testWithBundledRom = hasBundledTi85Rom() ? test : test.skip;
+
+testWithBundledRom("TI-85 ROM powers on to a stable home display signature", () => {
   const harness = Ti85RomHarness.fromBundledRom();
 
   harness.powerOn();
@@ -91,7 +93,7 @@ test("TI-85 ROM powers on to a stable home display signature", () => {
 });
 
 for (const workflow of WORKFLOWS) {
-  test(`TI-85 ROM workflow: ${workflow.name}`, () => {
+  testWithBundledRom(`TI-85 ROM workflow: ${workflow.name}`, () => {
     const harness = Ti85RomHarness.fromBundledRom();
 
     harness.powerOn();

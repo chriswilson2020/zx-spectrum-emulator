@@ -1,9 +1,14 @@
+import { existsSync } from "node:fs";
 import { Ti85Machine } from "../../src/ti85.js";
 
-const DEFAULT_ROM_PATH = "ROM/TI85.ROM";
+const DEFAULT_ROM_PATH = process.env.TI85_ROM_PATH || "ROM/TI85.ROM";
 const TAP_HOLD_FRAMES = 3;
 const TAP_GAP_FRAMES = 5;
 const FINAL_SETTLE_FRAMES = 20;
+
+export function hasBundledTi85Rom() {
+  return existsSync(DEFAULT_ROM_PATH);
+}
 
 export class Ti85RomHarness {
   static fromBundledRom() {
