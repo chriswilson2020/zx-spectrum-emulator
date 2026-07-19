@@ -125,6 +125,9 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(ti85, /id="ti85KeyboardState"/);
   assert.match(ti85, /id="ti85DisplayState"/);
   assert.match(ti85, /id="ti85MemoryInspector"/);
+  assert.match(ti85, /class="debug-card ti85-machine-card"/);
+  assert.match(ti85, /class="debug-card ti85-keyboard-card"/);
+  assert.match(ti85, /class="debug-card ti85-display-card"/);
   assert.match(app, /Ti85Machine/);
   assert.match(app, /TI85_KEY_LAYOUT/);
   assert.match(app, /data-ti85-key/);
@@ -141,6 +144,9 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(app, /machine\.getDebugState\(\)/);
   assert.match(app, /disassembleWindow/);
   assert.match(app, /readMemoryRows/);
+  const styles = await readFile("public/styles.css", "utf8");
+  assert.match(styles, /\.ti85-debug-drawer\s*{[^}]*width:\s*min\(1180px,\s*calc\(100vw - 36px\)\)/s);
+  assert.match(styles, /\.ti85-debugger\s*{[^}]*grid-template-areas:/s);
 });
 
 test("TRS-80 page exposes a live Model III viewer entry point", async () => {

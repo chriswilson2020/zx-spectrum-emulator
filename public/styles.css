@@ -1246,7 +1246,7 @@ dd {
 }
 
 .ti85-shell {
-  width: min(980px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;
   gap: 16px;
@@ -1255,6 +1255,7 @@ dd {
 .ti85-frame {
   display: grid;
   gap: 14px;
+  justify-self: center;
   width: min(520px, 100%);
   margin: 0 auto;
   border: 1px solid rgba(184, 198, 189, 0.2);
@@ -1461,8 +1462,32 @@ dd {
   padding: 7px 10px;
 }
 
+.ti85-debug-drawer {
+  justify-self: center;
+  width: min(1180px, calc(100vw - 36px));
+  margin-top: 0;
+  border-color: rgba(174, 205, 176, 0.24);
+  background: rgba(9, 13, 12, 0.72);
+}
+
 .ti85-debugger {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "registers disassembly memory"
+    "machine disassembly memory"
+    "keyboard display memory";
+  grid-template-columns: minmax(250px, 0.85fr) minmax(320px, 1.1fr) minmax(330px, 1fr);
+}
+
+.ti85-machine-card {
+  grid-area: machine;
+}
+
+.ti85-keyboard-card {
+  grid-area: keyboard;
+}
+
+.ti85-display-card {
+  grid-area: display;
 }
 
 @media (max-width: 780px) {
@@ -1523,6 +1548,13 @@ dd {
 
   .ti85-debugger {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "registers"
+      "disassembly"
+      "machine"
+      "keyboard"
+      "display"
+      "memory";
   }
 
   .ti85-frame h1 {

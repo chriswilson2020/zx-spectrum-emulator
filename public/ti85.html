@@ -35,40 +35,40 @@
             <input id="ti85RomFile" type="file" accept=".rom,.bin,application/octet-stream">
           </label>
         </div>
-        <details id="ti85DebugDrawer" class="debug-drawer ti85-debug-drawer">
-          <summary>
-            <span>Debug Drawer</span>
-            <strong>Registers, display, memory, keyboard</strong>
-          </summary>
-          <section class="debugger ti85-debugger" aria-label="TI-85 machine debugger">
-            <div class="debug-card registers-card">
-              <h2>Registers</h2>
-              <div id="ti85RegisterGrid" class="register-grid"></div>
-              <div id="ti85FlagGrid" class="flag-grid" aria-label="CPU flags"></div>
-            </div>
-            <div class="debug-card disassembly-card">
-              <h2>Disassembly</h2>
-              <ol id="ti85Disassembly" class="disassembly"></ol>
-            </div>
-            <div class="debug-card">
-              <h2>Machine</h2>
-              <div id="ti85MachineState" class="basic-status"></div>
-            </div>
-            <div class="debug-card">
-              <h2>Keyboard</h2>
-              <div id="ti85KeyboardState" class="basic-status"></div>
-            </div>
-            <div class="debug-card">
-              <h2>Display</h2>
-              <div id="ti85DisplayState" class="basic-status"></div>
-            </div>
-            <div class="debug-card memory-card">
-              <h2>Memory</h2>
-              <div id="ti85MemoryInspector" class="memory-inspector"></div>
-            </div>
-          </section>
-        </details>
       </section>
+      <details id="ti85DebugDrawer" class="debug-drawer ti85-debug-drawer">
+        <summary>
+          <span>Debug Drawer</span>
+          <strong>Registers, display, memory, keyboard</strong>
+        </summary>
+        <section class="debugger ti85-debugger" aria-label="TI-85 machine debugger">
+          <div class="debug-card registers-card">
+            <h2>Registers</h2>
+            <div id="ti85RegisterGrid" class="register-grid"></div>
+            <div id="ti85FlagGrid" class="flag-grid" aria-label="CPU flags"></div>
+          </div>
+          <div class="debug-card disassembly-card">
+            <h2>Disassembly</h2>
+            <ol id="ti85Disassembly" class="disassembly"></ol>
+          </div>
+          <div class="debug-card ti85-machine-card">
+            <h2>Machine</h2>
+            <div id="ti85MachineState" class="basic-status"></div>
+          </div>
+          <div class="debug-card ti85-keyboard-card">
+            <h2>Keyboard</h2>
+            <div id="ti85KeyboardState" class="basic-status"></div>
+          </div>
+          <div class="debug-card ti85-display-card">
+            <h2>Display</h2>
+            <div id="ti85DisplayState" class="basic-status"></div>
+          </div>
+          <div class="debug-card memory-card">
+            <h2>Memory</h2>
+            <div id="ti85MemoryInspector" class="memory-inspector"></div>
+          </div>
+        </section>
+      </details>
     </main>
     <footer class="site-contact-footer">
       <span>Contact</span>
