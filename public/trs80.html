@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TRS-80 Model III</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./public/styles.css">
+  </head>
+  <body class="trs80-page-body">
+    <main class="trs80-shell">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./spectrum.html">ZX Spectrum</a>
+        <a href="./cpm.html">CP/M</a>
+      </nav>
+      <section class="trs80-frame" aria-label="TRS-80 Model III viewer">
+        <header>
+          <p>TRS-80 Model III</p>
+          <h1>Model III</h1>
+          <output id="trs80Status">Loading ROM</output>
+        </header>
+        <pre id="trs80Screen" class="trs80-screen-view" tabindex="0" aria-label="TRS-80 text display" aria-live="polite"></pre>
+        <details id="trs80DebugDrawer" class="debug-drawer trs80-debug-drawer">
+          <summary>
+            <span>Debug Drawer</span>
+            <strong>Registers, disassembly, keyboard, display</strong>
+          </summary>
+          <section class="debugger trs80-debugger" aria-label="TRS-80 machine debugger">
+            <div class="debug-card registers-card">
+              <h2>Registers</h2>
+              <div id="trs80RegisterGrid" class="register-grid"></div>
+              <div id="trs80FlagGrid" class="flag-grid" aria-label="CPU flags"></div>
+            </div>
+            <div class="debug-card disassembly-card">
+              <h2>Disassembly</h2>
+              <ol id="trs80Disassembly" class="disassembly"></ol>
+            </div>
+            <div class="debug-card trs80-keyboard-card">
+              <h2>Keyboard</h2>
+              <div id="trs80KeyboardState" class="basic-status"></div>
+            </div>
+            <div class="debug-card trs80-display-card">
+              <h2>Display</h2>
+              <div id="trs80DisplayState" class="basic-status"></div>
+            </div>
+          </section>
+        </details>
+        <div class="trs80-controls">
+          <button id="trs80RunPause" type="button" aria-label="Pause" disabled>Pause</button>
+          <button id="trs80StepFrame" type="button" disabled>Frame</button>
+          <button id="trs80StepInstruction" type="button" disabled>Step</button>
+          <button id="trs80Reset" type="button" disabled>Reset</button>
+          <label class="trs80-rom-control">
+            <span>ROM</span>
+            <input id="trs80RomFile" type="file" accept=".rom,.bin,application/octet-stream">
+          </label>
+        </div>
+      </section>
+    </main>
+    <footer class="site-contact-footer">
+      <span>Contact</span>
+      <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
+    </footer>
+    <script type="module" src="./public/trs80-app.js"></script>
+  </body>
+</html>

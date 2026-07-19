@@ -47,6 +47,23 @@ The machine exposes `pressKey` and `releaseKey` for Spectrum key names. The
 keyboard matrix is active-low and is read through the same port path the ROM
 uses.
 
+### `src/trs80-model3.js`
+
+`Trs80Model3Machine` is the first TRS-80 family machine layer around the CPU. It
+is not a Spectrum mode and is not part of the CP/M machine profiles. It owns:
+
+- A copied 14K Model III ROM image at `0x0000-0x37ff`.
+- Memory-mapped keyboard rows at `0x3800-0x3bff`.
+- 1K of text video RAM at `0x3c00-0x3fff`, exposed as a 64x16 character display.
+- 48K RAM at `0x4000-0xffff`.
+- A `Z80` instance wired to the Model III memory map and neutral I/O callbacks.
+- A frame counter, frame-sized CPU runner, key state helpers, text rendering, and
+  compact debug state.
+
+The initial scope targets the Model III only. Model I compatibility, Model 4
+native/banked behavior, cassette loading, disk controllers, and browser UI work
+are follow-up layers.
+
 ### `src/cpm22.js`
 
 `Cpm22Machine` is a second machine layer around the CPU. It is not a Spectrum

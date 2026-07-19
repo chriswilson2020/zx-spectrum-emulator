@@ -8,11 +8,14 @@ test("browser entry points use project-page-safe relative paths", async () => {
   const index = await readFile("public/index.html", "utf8");
   const spectrum = await readFile("public/spectrum.html", "utf8");
   const cpm = await readFile("public/cpm.html", "utf8");
+  const trs80 = await readFile("public/trs80.html", "utf8");
   const app = await readFile("public/app.js", "utf8");
+  const trs80App = await readFile("public/trs80-app.js", "utf8");
 
   assert.match(index, /href="\.\/public\/styles\.css"/);
   assert.match(index, /href="\.\/spectrum\.html"/);
   assert.match(index, /href="\.\/cpm\.html"/);
+  assert.match(index, /href="\.\/trs80\.html"/);
   assert.match(index, /src="\.\/public\/assets\/machine-selector-banner\.png"/);
   assert.match(index, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/public\/styles\.css"/);
@@ -21,7 +24,10 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(cpm, /href="\.\/public\/styles\.css"/);
   assert.match(cpm, /src="\.\/public\/cpm-app\.js(?:\?[^"]+)?"/);
   assert.match(cpm, /src="\.\/public\/assets\/contact-email\.png"/);
-  for (const html of [index, spectrum, cpm]) {
+  assert.match(trs80, /href="\.\/public\/styles\.css"/);
+  assert.match(trs80, /src="\.\/public\/trs80-app\.js"/);
+  assert.match(trs80, /src="\.\/public\/assets\/contact-email\.png"/);
+  for (const html of [index, spectrum, cpm, trs80]) {
     assert.match(html, /class="site-contact-footer"/);
     assert.doesNotMatch(html, new RegExp(`z80${"\\."}world`));
     assert.doesNotMatch(html, new RegExp(`chris${"@"}`));
@@ -32,8 +38,12 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.doesNotMatch(spectrum, /src="\/public\//);
   assert.doesNotMatch(cpm, /href="\/public\//);
   assert.doesNotMatch(cpm, /src="\/public\//);
+  assert.doesNotMatch(trs80, /href="\/public\//);
+  assert.doesNotMatch(trs80, /src="\/public\//);
   assert.doesNotMatch(app, /from "\/(public|src)\//);
+  assert.doesNotMatch(trs80App, /from "\/(public|src)\//);
   assert.match(app, /new URL\("\.\.\/ROM\/48\.rom", import\.meta\.url\)/);
+  assert.match(trs80App, /new URL\("\.\.\/ROM\/Model3-RevC-2EF8\.bin", import\.meta\.url\)/);
 });
 
 test("viewer groups secondary tools into tabs and keeps debugger collapsible", async () => {
@@ -60,14 +70,38 @@ test("viewer groups secondary tools into tabs and keeps debugger collapsible", a
   assert.match(app, /machine\.getRasterPosition\(\)/);
 });
 
-test("machine selector exposes Spectrum and CP/M routes", async () => {
+test("machine selector exposes Spectrum, CP/M, and TRS-80 routes", async () => {
   const index = await readFile("public/index.html", "utf8");
 
   assert.match(index, /Z80 Machine Lab/);
   assert.match(index, /ZX Spectrum 48K/);
   assert.match(index, /CP\/M 2\.2/);
+  assert.match(index, /TRS-80 Model III/);
   assert.match(index, /machine-selector-banner\.png/);
   assert.match(index, /contact-email\.png/);
+});
+
+test("TRS-80 page exposes a live Model III viewer entry point", async () => {
+  const trs80 = await readFile("public/trs80.html", "utf8");
+  const app = await readFile("public/trs80-app.js", "utf8");
+
+  assert.match(trs80, /TRS-80 Model III/);
+  assert.match(trs80, /id="trs80Screen"/);
+  assert.match(trs80, /id="trs80Status"/);
+  assert.match(trs80, /id="trs80RomFile"/);
+  assert.match(trs80, /id="trs80RunPause"/);
+  assert.match(trs80, /id="trs80StepFrame"/);
+  assert.match(trs80, /id="trs80StepInstruction"/);
+  assert.match(trs80, /id="trs80Reset"/);
+  assert.match(trs80, /id="trs80RegisterGrid"/);
+  assert.match(trs80, /id="trs80FlagGrid"/);
+  assert.match(trs80, /id="trs80Disassembly"/);
+  assert.match(trs80, /id="trs80KeyboardState"/);
+  assert.match(app, /Trs80Model3Machine/);
+  assert.match(app, /renderTextDisplay/);
+  assert.match(app, /keyEventToTrs80Key/);
+  assert.match(app, /machine\.getDebugState\(\)/);
+  assert.match(app, /disassembleWindow/);
 });
 
 test("CP/M page exposes a live terminal entry point", async () => {
@@ -140,13 +174,16 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/index.html"), true);
   assert.equal(existsSync("dist/spectrum.html"), true);
   assert.equal(existsSync("dist/cpm.html"), true);
+  assert.equal(existsSync("dist/trs80.html"), true);
   assert.equal(existsSync("dist/public/app.js"), true);
   assert.equal(existsSync("dist/public/cpm-app.js"), true);
+  assert.equal(existsSync("dist/public/trs80-app.js"), true);
   assert.equal(existsSync("dist/public/cpm-session.js"), true);
   assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
   assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
   assert.equal(existsSync("dist/public/assets/contact-email.png"), true);
   assert.equal(existsSync("dist/src/spectrum48.js"), true);
+  assert.equal(existsSync("dist/src/trs80-model3.js"), true);
   assert.equal(existsSync("dist/src/z80mbc2.js"), true);
   assert.equal(existsSync("dist/ROM/48.rom"), true);
   assert.equal(existsSync("dist/ROM/cpm22-1.dsk"), true);

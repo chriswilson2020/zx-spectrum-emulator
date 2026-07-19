@@ -516,6 +516,26 @@ dd {
   white-space: pre-wrap;
 }
 
+.trs80-debug-drawer {
+  border-color: rgba(255, 202, 106, 0.24);
+  background: rgba(18, 13, 5, 0.5);
+}
+
+.trs80-debugger {
+  grid-template-areas:
+    "registers disassembly"
+    "keyboard display";
+  grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.2fr);
+}
+
+.trs80-keyboard-card {
+  grid-area: keyboard;
+}
+
+.trs80-display-card {
+  grid-area: display;
+}
+
 .memory-inspector {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -584,6 +604,13 @@ dd {
     grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
   }
 
+  .trs80-debugger {
+    grid-template-areas:
+      "registers disassembly"
+      "keyboard display";
+    grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
+  }
+
   .register-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -619,6 +646,15 @@ dd {
       "io"
       "console"
       "trace";
+    grid-template-columns: 1fr;
+  }
+
+  .trs80-debugger {
+    grid-template-areas:
+      "registers"
+      "disassembly"
+      "keyboard"
+      "display";
     grid-template-columns: 1fr;
   }
 
@@ -663,7 +699,8 @@ dd {
 }
 
 .selector-body,
-.cpm-page-body {
+.cpm-page-body,
+.trs80-page-body {
   display: block;
   min-height: 100vh;
   padding: clamp(14px, 2.4vw, 28px);
@@ -737,7 +774,7 @@ dd {
 
 .machine-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(12px, 2vw, 18px);
 }
 
@@ -817,6 +854,12 @@ dd {
   box-shadow: 0 0 12px rgba(93, 255, 139, 0.85);
 }
 
+.trs80-screen {
+  color: #ffca6a;
+  font: 700 13px/1 "SFMono-Regular", Consolas, monospace;
+  text-shadow: 0 0 12px rgba(255, 202, 106, 0.82);
+}
+
 .site-contact-footer {
   display: flex;
   align-items: center;
@@ -838,6 +881,11 @@ dd {
 
 .cpm-page-body .site-contact-footer {
   width: min(980px, 100%);
+  margin-top: clamp(14px, 2vw, 22px);
+}
+
+.trs80-page-body .site-contact-footer {
+  width: min(1100px, 100%);
   margin-top: clamp(14px, 2vw, 22px);
 }
 
@@ -870,6 +918,11 @@ dd {
   margin: 0 auto;
 }
 
+.trs80-shell {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
 .cpm-terminal-frame {
   display: grid;
   gap: 16px;
@@ -880,24 +933,42 @@ dd {
   padding: clamp(14px, 2vw, 22px);
 }
 
-.cpm-terminal-frame header {
+.trs80-frame {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(255, 202, 106, 0.3);
+  border-radius: 8px;
+  background: rgba(13, 11, 8, 0.94);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+  padding: clamp(14px, 2vw, 22px);
+}
+
+.cpm-terminal-frame header,
+.trs80-frame header {
   display: grid;
   gap: 2px;
 }
 
-.cpm-terminal-frame p {
+.cpm-terminal-frame p,
+.trs80-frame p {
   margin: 0;
   color: #5dff8b;
   font: 700 13px/1.2 "SFMono-Regular", Consolas, monospace;
   text-transform: uppercase;
 }
 
-.cpm-terminal-frame h1 {
+.trs80-frame p {
+  color: #ffca6a;
+}
+
+.cpm-terminal-frame h1,
+.trs80-frame h1 {
   margin: 0;
   font-size: 28px;
 }
 
-.cpm-terminal-frame output {
+.cpm-terminal-frame output,
+.trs80-frame output {
   color: #bbc4b7;
   font: 13px/1.3 "SFMono-Regular", Consolas, monospace;
 }
@@ -923,20 +994,65 @@ dd {
   outline-offset: 3px;
 }
 
-.cpm-controls {
+.trs80-screen-view {
+  min-height: min(58vh, 500px);
+  margin: 0;
+  overflow: auto;
+  border: 1px solid rgba(255, 202, 106, 0.26);
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(180deg, rgba(255, 202, 106, 0.045) 0 1px, transparent 1px 4px),
+    #100b03;
+  color: #ffd17b;
+  font: clamp(12px, 1.7vw, 18px)/1.45 "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0;
+  padding: clamp(12px, 2vw, 18px);
+  white-space: pre;
+  text-shadow: 0 0 12px rgba(255, 202, 106, 0.38);
+}
+
+.trs80-screen-view:focus-visible {
+  outline: 3px solid #16c7bd;
+  outline-offset: 3px;
+}
+
+.cpm-controls,
+.trs80-controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
-.cpm-profile-control {
+.cpm-profile-control,
+.trs80-rom-control {
   display: grid;
   gap: 4px;
   color: #bbc4b7;
   font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
 }
 
-.cpm-controls button:disabled {
+.trs80-rom-control {
+  grid-column: span 4;
+}
+
+.trs80-rom-control input {
+  width: 100%;
+  color: #bbc4b7;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.trs80-rom-control input::file-selector-button {
+  border: 1px solid rgba(255, 202, 106, 0.34);
+  border-radius: 5px;
+  background: #ffd17b;
+  color: #15100a;
+  font: 700 11px/1.2 "Inter", "Avenir Next", system-ui, sans-serif;
+  margin-right: 8px;
+  padding: 5px 8px;
+}
+
+.cpm-controls button:disabled,
+.trs80-controls button:disabled {
   cursor: not-allowed;
   opacity: 0.52;
 }
@@ -1017,8 +1133,13 @@ dd {
     padding: 12px;
   }
 
-  .cpm-controls {
+  .cpm-controls,
+  .trs80-controls {
     grid-template-columns: 1fr;
+  }
+
+  .trs80-rom-control {
+    grid-column: auto;
   }
 
   .cpm-file-controls {

@@ -17,7 +17,7 @@ const contentTypes = new Map([
 
 function resolveRequestPath(url) {
   const pathname = new URL(url, `http://localhost:${port}`).pathname;
-  const htmlEntryPoints = new Set(["/index.html", "/spectrum.html", "/cpm.html"]);
+  const htmlEntryPoints = new Set(["/index.html", "/spectrum.html", "/cpm.html", "/trs80.html"]);
   const requested = pathname === "/" ? "/public/index.html" : htmlEntryPoints.has(pathname) ? `/public${pathname}` : pathname;
   const resolved = resolve(root, normalize(`.${requested}`));
   if (!resolved.startsWith(root)) return null;
