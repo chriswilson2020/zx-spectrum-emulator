@@ -62,7 +62,10 @@ BASIC tokenizer/loader/detokenizer/export path, Web Audio beeper sample
 generation, and debugger helper formatting/disassembly/status reads, TAP/TZX parsing,
 fast-loading, ROM-loader interception, standard-speed EAR pulse playback,
 `.z80` snapshot save/load, GitHub Pages packaging, and the tabbed/collapsible
-browser layout. It also covers the bootable CP/M 2.2 machine layer, z80pack raw
+browser layout. It also covers the TI-85-like machine layer, optional-ROM
+browser fallback, calculator key matrix handling, LCD rendering helpers, and
+golden workflow tests when a local compatible ROM is available. It also covers
+the bootable CP/M 2.2 machine layer, z80pack raw
 floppy geometry, FDC and console ports, CP/M command smoke tests, host-side CP/M
 filesystem import/export, Z80-MBC2 8 MB disk reads, native Z80-MBC2 IOS boot,
 interactive frame-sliced Z80-MBC2 typing, browser-local CP/M disk persistence
@@ -70,7 +73,8 @@ wiring, compact CP/M debug-state APIs, compressed CP/M session ZIP round-trips,
 full-extent record-count repair, and the screen-buffer terminal behavior needed
 by WordStar-style full-screen applications. The bundled `ROM/48.rom`,
 `ROM/cpm22-1.dsk`, and `ROM/DS0N00.DSK` let ROM-level Spectrum tests and CP/M
-boot tests run without extra local setup.
+boot tests run without extra local setup. `ROM/TI85.ROM` is optional; tests that
+require the private calculator ROM skip cleanly when it is absent.
 
 The `.z80` snapshot path has also been checked interactively with real snapshot
 files: loading external `.z80` files resumes the saved machine state, and a

@@ -68,10 +68,10 @@ follow-up layers.
 
 ### `src/ti85.js`
 
-`Ti85Machine` is a headless TI-85 calculator machine layer around the shared Z80
+`Ti85Machine` is a TI-85-like calculator machine layer around the shared Z80
 core. It is separate from the ZX Spectrum, TRS-80, and CP/M profiles. It owns:
 
-- A copied 128K TI-85 ROM image.
+- A caller-supplied 128K compatible ROM image.
 - 32K RAM at `0x8000-0xffff`.
 - Fixed ROM at `0x0000-0x3fff` and banked ROM at `0x4000-0x7fff`.
 - TI-85 ports `0x00-0x07` for LCD base/contrast/power state, keypad scanning,
@@ -80,11 +80,12 @@ core. It is separate from the ZX Spectrum, TRS-80, and CP/M profiles. It owns:
 - A 6 MHz frame runner, 256 Hz timer interrupt scheduling, 128x64 LCD bitmap and
   RGBA render helpers, and compact debug state.
 
-The first compatibility milestone is intentionally headless: the bundled
-`ROM/TI85.ROM` boots into its off/HALT state, a held `ON` press wakes it, and
-the LCD renderer observes nonblank output. Browser faceplate rendering, click
-hit regions, keyboard shortcuts, session save/load, and link cable protocol are
-follow-up UI slices.
+The browser page attempts to fetch optional `ROM/TI85.ROM`. If it is absent, the
+page still renders the original calculator-style UI and shows a notice asking
+the user to supply their own legally obtained ROM. With a compatible ROM, a held
+`ON` press wakes the calculator and the LCD renderer observes RAM-backed output.
+The clickable faceplate maps screen hits to the keypad matrix; link cable
+protocol remains a follow-up slice.
 
 ### `src/cpm22.js`
 
@@ -191,8 +192,8 @@ older images that incorrectly used `00` for full extents.
 
 The browser apps are intentionally thin. `public/index.html` is the machine
 selector. `public/spectrum.html` hosts the Spectrum viewer, `public/cpm.html`
-hosts the CP/M terminal, and `public/trs80.html` hosts the TRS-80 Model III
-viewer.
+hosts the CP/M terminal, `public/trs80.html` hosts the TRS-80 Model III viewer,
+and `public/ti85.html` hosts the TI-85-like calculator faceplate.
 
 `public/app.js` owns the Spectrum page loop, loads `ROM/48.rom`, drives
 `Spectrum48`, renders the frame buffer to canvas, and bridges browser controls

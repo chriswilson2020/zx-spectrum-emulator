@@ -67,3 +67,14 @@ replacing these ROM/disk assets.
 The host-side CP/M file import/export code currently targets the z80pack CP/M
 2.2 floppy geometry and the Z80-MBC2 CP/M 2.2 8 MB geometry. It is not a
 general CP/M disk-format library.
+
+## Optional TI-85 ROM
+
+`ROM/TI85.ROM` is intentionally optional and is not redistributed by this
+project. The TI-85-like browser page still loads when the file is absent and
+shows a notice asking the user to provide their own legally obtained TI-85 ROM
+file before booting the compatible calculator machine.
+
+Texas Instruments and TI-85 are referenced only to describe compatibility. The
+emulator UI, machine layer, tests, and page assets are original project code and
+do not include TI logos, product artwork, TI source code, or TI ROM contents.

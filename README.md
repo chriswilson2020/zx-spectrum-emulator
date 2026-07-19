@@ -1,11 +1,13 @@
 # Z80 Machine Lab
 
-A faithful Zilog Z80 emulator with three browser-hosted machine layers:
+A faithful Zilog Z80 emulator with four browser-hosted machine layers:
 
 - a ZX Spectrum 48K emulator for teaching Z80 assembly and Sinclair BASIC.
 - a bootable CP/M 2.2 machine using z80pack-compatible disk and console I/O.
 - a TRS-80 Model III-compatible machine layer for ROM BASIC and cassette
   software experiments.
+- a TI-85-like calculator machine layer with a clickable faceplate, RAM LCD
+  rendering, and optional user-supplied ROM loading.
 
 ## Current Status
 
@@ -94,6 +96,21 @@ The TRS-80 Model III layer is separate from both Spectrum and CP/M:
 - Model III disk support, Model I compatibility, and Model 4 profiles remain
   future layers.
 
+The TI-85-like calculator layer is also separate from Spectrum, CP/M, and
+TRS-80:
+
+- `Ti85Machine` maps fixed and banked ROM, 32K RAM, keypad matrix ports, ON-key
+  interrupt state, LCD control ports, and the RAM-backed 128x64 monochrome LCD.
+- The browser page has an original calculator-style faceplate with clickable
+  keys, responsive desktop/mobile sizing, a compact debug drawer, and golden
+  workflow tests for representative calculator input paths.
+- `ROM/TI85.ROM` is optional. When it is not present, the page still loads and
+  explains that the user must provide their own legally obtained TI-85 ROM file
+  before the compatible machine can boot.
+- Texas Instruments and TI-85 are referenced only to describe compatibility.
+  The demo is independent, unaffiliated, and uses original emulator/UI code and
+  assets rather than TI logos, product artwork, source code, or ROM contents.
+
 See [CPU Status](docs/cpu-status.md), [Validation](docs/validation.md),
 [Architecture](docs/architecture.md), and the
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for details and caveats.
@@ -125,6 +142,7 @@ machine selector with links to:
 - `spectrum.html` for the ZX Spectrum 48K app.
 - `cpm.html` for the CP/M 2.2 terminal app.
 - `trs80.html` for the TRS-80 Model III app.
+- `ti85.html` for the TI-85-like calculator app.
 
 The Spectrum viewer loads the 48K ROM, runs the headless machine, draws the
 320x240 border/display frame, and passes browser key events into the Spectrum
@@ -202,6 +220,13 @@ raw mounted CAS bytes available as cassette input pulses for ROM-loader paths.
 `Save Session` downloads a JSON snapshot of the TRS-80 machine state, and
 `Load Session` restores it locally in the browser.
 
+The TI-85-like page attempts to load `ROM/TI85.ROM` if that file exists. That
+ROM is not required for the static app to load and is not redistributed by this
+project; without it, the page shows an in-app notice asking the user to supply a
+legally obtained TI-85 ROM file. With a compatible ROM loaded, the calculator
+faceplate sends screen clicks through the keypad matrix and the LCD canvas is
+rendered from the machine's RAM-backed display buffer.
+
 ## GitHub Pages Demo
 
 The browser app is static and can be published with GitHub Pages. The app uses
@@ -219,7 +244,9 @@ npm run build:pages
 ```
 
 This writes `dist/` with `index.html`, `spectrum.html`, `cpm.html`,
-`trs80.html`, `public/`, `src/`, and `ROM/` when the ROM directory is present.
+`trs80.html`, `ti85.html`, `public/`, `src/`, and `ROM/` when the ROM directory
+is present. Optional private ROM files such as `ROM/TI85.ROM` are not required
+for the Pages build; the TI-85-like page handles their absence in the browser.
 The workflow in
 `.github/workflows/pages.yml` runs the unit suite, builds `dist/`, uploads it as
 a Pages artifact, and deploys it when changes land on `main` or when the
@@ -257,8 +284,8 @@ npm run test:singlestep
 - [CPU Status](docs/cpu-status.md): what the CPU core supports and what remains.
 - [Validation](docs/validation.md): validation commands, harnesses, and known
   passing results.
-- [Architecture](docs/architecture.md): CPU, memory, I/O, interrupts, and test
-  harness structure.
+- [Architecture](docs/architecture.md): CPU, memory, I/O, interrupts, machine
+  layers including the TI-85-like calculator, and test harness structure.
 - [Spectrum Next Steps](docs/spectrum-next.md): plan for the ZX Spectrum 48K
   machine layer and current Spectrum status.
 - [CP/M Browser Guide](docs/cpm22-browser-guide.md): using the browser CP/M
@@ -298,7 +325,8 @@ or CP/M warm boot at `0x0000`.
 
 The emulator is being built as a small lab for Z80 machines: a faithful ZX
 Spectrum emulator, a browser-bootable CP/M machine, a TRS-80 Model III machine,
-and a teaching environment for Z80 assembly, Sinclair BASIC, ROM BASIC, and
-classic 8-bit workflows. The immediate next engineering milestones are richer
-Spectrum tape/hardware accuracy, TRS-80 display/cassette polish, and later
-TRS-80 disk support.
+and a TI-85-like calculator target, plus a teaching environment for Z80
+assembly, Sinclair BASIC, ROM BASIC, calculator workflows, and classic 8-bit
+systems. The immediate next engineering milestones are richer Spectrum
+tape/hardware accuracy, TRS-80 display/cassette polish, TI-85 compatibility
+tests, and later TRS-80 disk support.
