@@ -1,9 +1,11 @@
 # Z80 Machine Lab
 
-A faithful Zilog Z80 emulator with two browser-hosted machine layers:
+A faithful Zilog Z80 emulator with three browser-hosted machine layers:
 
 - a ZX Spectrum 48K emulator for teaching Z80 assembly and Sinclair BASIC.
 - a bootable CP/M 2.2 machine using z80pack-compatible disk and console I/O.
+- a TRS-80 Model III-compatible machine layer for ROM BASIC and cassette
+  software experiments.
 
 ## Current Status
 
@@ -73,6 +75,25 @@ The CP/M 2.2 page is also bootable and can switch hardware profiles:
   cursor addressing, screen clear, erase-to-end-of-line, scrolling, tabs, and
   control-byte filtering.
 
+The TRS-80 Model III layer is separate from both Spectrum and CP/M:
+
+- `Trs80Model3Machine` maps a 14K Model III ROM at `0x0000-0x37ff`,
+  memory-mapped keyboard rows at `0x3800-0x3bff`, 1K of 64x16 text video RAM at
+  `0x3c00-0x3fff`, and 48K RAM at `0x4000-0xffff`.
+- The browser page loads the bundled Model III ROM, accepts plain text typing
+  and paste as simulated key taps, and includes quick startup prompt buttons for
+  `H`, `L`, and Enter.
+- `.cas` support covers Level II BASIC programs and TRS-80 `SYSTEM`
+  machine-code tapes. BASIC entries are relocated into the ROM BASIC program
+  area; SYSTEM entries are loaded into their recorded addresses and jump to the
+  tape entry point.
+- `Save Session` and `Load Session` use a local JSON file containing CPU state,
+  RAM, video RAM, keyboard state, frame count, and cassette cursor metadata.
+- The compact debug drawer shows live registers, flags, disassembly, keyboard
+  state, display state, frame count, and cassette playback state.
+- Model III disk support, Model I compatibility, and Model 4 profiles remain
+  future layers.
+
 See [CPU Status](docs/cpu-status.md), [Validation](docs/validation.md),
 [Architecture](docs/architecture.md), and the
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for details and caveats.
@@ -103,6 +124,7 @@ machine selector with links to:
 
 - `spectrum.html` for the ZX Spectrum 48K app.
 - `cpm.html` for the CP/M 2.2 terminal app.
+- `trs80.html` for the TRS-80 Model III app.
 
 The Spectrum viewer loads the 48K ROM, runs the headless machine, draws the
 320x240 border/display frame, and passes browser key events into the Spectrum
@@ -169,6 +191,17 @@ disassembly at `PC`, z80pack FDC or Z80-MBC2 IOS disk state, console queue
 counts, and a placeholder for later BIOS/BDOS call tracing. See
 [CP/M Browser Guide](docs/cpm22-browser-guide.md) for the exact workflow.
 
+The TRS-80 page boots the bundled Model III ROM and starts at the cassette
+speed prompt. Use `H`, `L`, and Enter to reach `READY`, or paste plain text into
+the Type box to simulate normal key taps into ROM BASIC. The cassette panel can
+mount `.cas` files. Level II BASIC tapes show as `BASIC` entries and can be
+fast-loaded into BASIC RAM. Machine-code tapes show as `SYSTEM` entries and can
+be fast-loaded to their recorded addresses with `Load SYSTEM`, which also sets
+the CPU `PC` to the cassette entry point. The Play and Stop buttons keep the
+raw mounted CAS bytes available as cassette input pulses for ROM-loader paths.
+`Save Session` downloads a JSON snapshot of the TRS-80 machine state, and
+`Load Session` restores it locally in the browser.
+
 ## GitHub Pages Demo
 
 The browser app is static and can be published with GitHub Pages. The app uses
@@ -185,8 +218,9 @@ Build the deployable static tree locally with:
 npm run build:pages
 ```
 
-This writes `dist/` with `index.html`, `spectrum.html`, `cpm.html`, `public/`,
-`src/`, and `ROM/` when the ROM directory is present. The workflow in
+This writes `dist/` with `index.html`, `spectrum.html`, `cpm.html`,
+`trs80.html`, `public/`, `src/`, and `ROM/` when the ROM directory is present.
+The workflow in
 `.github/workflows/pages.yml` runs the unit suite, builds `dist/`, uploads it as
 a Pages artifact, and deploys it when changes land on `main` or when the
 workflow is run manually. In GitHub, set
@@ -231,6 +265,8 @@ npm run test:singlestep
   machine, disk workflow, file import/export, and WordStar setup.
 - [CP/M 2.2 Machine Plan](docs/cpm22-bootable-machine-plan.md): design notes
   and implementation status for the bootable CP/M target.
+- [TRS-80 Model III Design](docs/superpowers/specs/2026-07-19-trs80-model3-machine-layer-design.md):
+  design notes and current boundaries for the TRS-80 machine layer.
 - [Opcode Coverage](docs/opcode-coverage.md): decoder coverage probe notes.
 - [Roadmap](docs/roadmap.md): high-level project phases.
 
@@ -261,7 +297,8 @@ or CP/M warm boot at `0x0000`.
 ## Goal
 
 The emulator is being built as a small lab for Z80 machines: a faithful ZX
-Spectrum emulator, a browser-bootable CP/M machine, and a teaching environment
-for Z80 assembly, Sinclair BASIC, and classic 8-bit workflows. The immediate
-next engineering milestones are richer Spectrum tape/hardware accuracy and
-polishing the CP/M disk persistence and application workflow.
+Spectrum emulator, a browser-bootable CP/M machine, a TRS-80 Model III machine,
+and a teaching environment for Z80 assembly, Sinclair BASIC, ROM BASIC, and
+classic 8-bit workflows. The immediate next engineering milestones are richer
+Spectrum tape/hardware accuracy, TRS-80 display/cassette polish, and later
+TRS-80 disk support.

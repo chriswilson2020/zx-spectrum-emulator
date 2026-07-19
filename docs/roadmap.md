@@ -66,3 +66,24 @@
   WordStar's Soroc IQ-120/140 profile.
 - Add IndexedDB working-disk persistence and named saved disks. Future work.
 - See [CP/M 2.2 Bootable Machine Plan](cpm22-bootable-machine-plan.md).
+
+## Phase 5: TRS-80 Model III Machine
+
+- Add a separate TRS-80 family machine layer beside `Spectrum48` and CP/M,
+  sharing the Z80 CPU core but not Spectrum or CP/M hardware behavior. Done for
+  Model III.
+- Add the Model III ROM, keyboard, video RAM, RAM, and frame loop memory map.
+  Done.
+- Add a browser Model III page with run/pause, frame-step, instruction-step,
+  reset, startup prompt helpers, and plain-text typing into ROM BASIC. Done.
+- Add TRS-80 cassette support. Done for Level II BASIC CAS fast-load, SYSTEM
+  machine-code CAS fast-load, checksum validation, and raw CAS pulse playback.
+- Add portable TRS-80 session save/restore. Done for CPU state, RAM, video RAM,
+  keyboard state, frame count, and cassette cursor metadata.
+- Improve TRS-80 text rendering with proper glyph bitmaps, inverse video, and a
+  CRT-style 64x16 canvas option.
+- Add Model III disk controller and `.dsk` boot support.
+- Add Model I compatibility after the shared Model III text, keyboard, and
+  cassette pieces are solid.
+- Add Model 4 compatibility later, starting with Model III compatibility mode
+  before native/banked behavior.

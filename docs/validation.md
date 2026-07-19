@@ -138,6 +138,14 @@ from the BDOS-intercept exerciser harness:
   filtering.
 - `z80mbc2.test.js` checks native Z80-MBC2 disk sectors, IOS disk protocol,
   compact debug state, boot, drive switching, and browser-style typing.
+- `trs80-model3.test.js` checks Model III ROM/RAM/keyboard/video mapping, frame
+  stepping, debug state, session save/restore, and bundled-ROM startup prompt
+  handling through `READY`.
+- `trs80-keyboard.test.js` checks browser key mapping, plain-text typing, and
+  shifted punctuation chords for TRS-80 ROM BASIC input.
+- `trs80-cassette.test.js` checks Level II BASIC CAS parsing/fast-load,
+  TRS-80 SYSTEM CAS parsing/fast-load, corrupt SYSTEM checksum rejection, BASIC
+  relocation, and cassette pulse playback.
 
 Manual browser smoke tests are still useful for full application workflows. The
 most important current manual path is loading a WordStar disk as B:, running
@@ -154,6 +162,16 @@ and confirm the local marker disappears. For session files, save a CP/M session
 while the terminal is on a recognizable screen, reload the page, use `Load
 Session`, and confirm the same profile, terminal contents, selected drive, and
 disk directory return.
+
+For TRS-80 browser work, load `trs80.html`, answer the ROM startup prompts with
+`H`, `L`, and Enter, and confirm the screen reaches `READY`. Use the Type box to
+enter `PRINT "HELLO"` and confirm the ROM echoes and runs it. Mount a small
+Level II BASIC `.cas` file and confirm the cassette list shows a `BASIC` entry
+with `Load BASIC` enabled. Mount a SYSTEM `.cas` file such as `ELIZA.CAS` and
+confirm the list shows `SYSTEM ELIZA`, the button changes to `Load SYSTEM`, and
+the status reports the loaded address and entry point after loading. Save a
+TRS-80 session, reload the page, use `Load Session`, and confirm the display,
+CPU state, frame count, and cassette cursor return.
 
 ### Interactive BASIC Programs
 

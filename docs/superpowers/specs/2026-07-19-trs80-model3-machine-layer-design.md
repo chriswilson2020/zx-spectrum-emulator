@@ -8,11 +8,27 @@ compatibility.
 
 ## Scope
 
-This slice creates a headless `Trs80Model3Machine` with ROM/RAM mapping,
+The first slice created a headless `Trs80Model3Machine` with ROM/RAM mapping,
 memory-mapped keyboard rows, memory-mapped 64x16 text video, CPU ownership,
-frame-sized execution, and compact debug state. It does not add a browser page,
-cassette loading, floppy disk emulation, Model I compatibility mode, Model II,
-or Model 4 native/banked behavior.
+frame-sized execution, and compact debug state. Later slices added a browser
+page, plain-text typing, Level II BASIC and SYSTEM CAS loading, cassette pulse
+playback, and portable session save/restore. Floppy disk emulation, Model I
+compatibility mode, Model II, and Model 4 native/banked behavior remain outside
+the current scope.
+
+## Current Status
+
+- `public/trs80.html` and `public/trs80-app.js` provide a browser Model III
+  viewer with run/pause, frame-step, instruction-step, reset, ROM upload,
+  plain-text typing, startup prompt helpers, cassette controls, session
+  save/load, and a compact debug drawer.
+- `src/trs80-cassette.js` parses Level II BASIC CAS files and TRS-80 SYSTEM
+  machine-code CAS files. BASIC entries are relocated into ROM BASIC RAM.
+  SYSTEM entries are loaded to their encoded addresses and start by setting
+  `PC` to the tape entry point.
+- `saveState()` and `restoreState()` preserve RAM, video RAM, CPU state,
+  keyboard rows, halted state, frame count, and cassette cursor metadata in a
+  local JSON session file.
 
 ## Architecture
 
@@ -55,6 +71,11 @@ active-high row byte, with zero meaning no key is pressed.
   keyboard state.
 - `pressKey(key)`, `releaseKey(key)`, `getPressedKeys()`: update and inspect
   keyboard matrix state.
+- `setCassetteBlocks(blocks)`, `clearCassette()`, `startCassettePlayback()`,
+  `stopCassettePlayback()`, `setCassetteCursor(index)`: mount and drive parsed
+  cassette data.
+- `saveState()`, `restoreState(state)`: round-trip portable Model III session
+  state.
 - `renderTextDisplay()`: return the 16 screen rows as 64-character strings.
 - `getDebugState()`: return CPU, halt, frame, keyboard, and display state.
 
@@ -63,13 +84,15 @@ active-high row byte, with zero meaning no key is pressed.
 Tests cover ROM size validation, memory map behavior, ignored ROM/keyboard
 writes, video memory writes, 16-bit reads and writes across the map, CPU
 instruction fetch through the machine, frame execution, interrupt request,
-keyboard matrix reads, pressed-key diagnostics, text display rendering, and
-debug state shape.
+keyboard matrix reads, pressed-key diagnostics, text display rendering, debug
+state shape, session save/restore, browser typing, startup prompts, BASIC CAS
+loading, SYSTEM CAS loading, corrupt SYSTEM checksums, and cassette pulse
+playback.
 
 ## Follow-Ups
 
-- Add a browser page after the headless layer is stable.
-- Add cassette loading and timing as the first software-loading path.
+- Improve TRS-80 text rendering with proper glyph bitmaps, inverse video, and a
+  CRT-style canvas option.
 - Add floppy controller support only when DOS boot becomes the next goal.
 - Add Model I as a follow-up profile once shared text/keyboard/cassette pieces
   are proven.

@@ -59,10 +59,12 @@ is not a Spectrum mode and is not part of the CP/M machine profiles. It owns:
 - A `Z80` instance wired to the Model III memory map and neutral I/O callbacks.
 - A frame counter, frame-sized CPU runner, key state helpers, text rendering, and
   compact debug state.
+- Cassette mounting/playback state plus `saveState()` and `restoreState()` for
+  portable browser sessions.
 
-The initial scope targets the Model III only. Model I compatibility, Model 4
-native/banked behavior, cassette loading, disk controllers, and browser UI work
-are follow-up layers.
+The current scope targets the Model III only. Model I compatibility, Model 4
+native/banked behavior, disk controllers, and fuller CRT/glyph accuracy are
+follow-up layers.
 
 ### `src/cpm22.js`
 
@@ -168,8 +170,9 @@ older images that incorrectly used `00` for full extents.
 ### `public/`
 
 The browser apps are intentionally thin. `public/index.html` is the machine
-selector. `public/spectrum.html` hosts the Spectrum viewer and `public/cpm.html`
-hosts the CP/M terminal.
+selector. `public/spectrum.html` hosts the Spectrum viewer, `public/cpm.html`
+hosts the CP/M terminal, and `public/trs80.html` hosts the TRS-80 Model III
+viewer.
 
 `public/app.js` owns the Spectrum page loop, loads `ROM/48.rom`, drives
 `Spectrum48`, renders the frame buffer to canvas, and bridges browser controls
@@ -223,6 +226,27 @@ one `drives/<letter>.dsk` entry per mounted drive. The machine state is restored
 through `Z80.setState()` plus the active CP/M machine layer's `restoreState()`,
 so a loaded session resumes the same profile, CPU registers, RAM, terminal
 screen, selected controls, and disk bytes entirely on the client.
+
+`public/trs80-app.js` owns the TRS-80 page loop, loads the bundled
+`ROM/Model3-RevC-2EF8.bin`, drives `Trs80Model3Machine`, renders the 64x16 text
+display, and bridges browser keyboard events into the memory-mapped TRS-80
+keyboard matrix. `public/trs80-keyboard.js` converts plain text into simulated
+key taps; unlike the Spectrum path, it does not tokenize BASIC because TRS-80
+ROM BASIC receives ordinary characters.
+
+`public/trs80-cassette.js` re-exports the shared TRS-80 cassette helpers from
+`src/trs80-cassette.js`. The parser supports Level II BASIC CAS files with the
+`A5 D3 D3 D3` header and TRS-80 SYSTEM machine-code CAS files with the `A5 55`
+header, `3C` load records, and `78` entry-point record. BASIC fast-load copies a
+relocated program into the ROM BASIC text area. SYSTEM fast-load copies each
+record to its encoded address and sets `PC` to the entry point. Raw CAS bytes
+can also be played as cassette input pulses for ROM-loader paths.
+
+The TRS-80 page saves portable session JSON files directly in the browser. A
+session contains the format/version/profile marker, CPU registers and interrupt
+state, RAM, video RAM, keyboard rows, halted state, frame count, and cassette
+cursor metadata. `restoreState()` validates the marker and array sizes before
+mutating the live machine.
 
 `public/cpm-terminal.js` renders CP/M console output into an 80x24 screen
 buffer. It supports the control behavior needed by full-screen CP/M software
