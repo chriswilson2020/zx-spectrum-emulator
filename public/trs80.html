@@ -66,6 +66,16 @@
             <button id="trs80Enter" type="button" disabled>Enter</button>
           </div>
         </section>
+        <section class="trs80-cassette-panel" aria-label="TRS-80 cassette loader">
+          <label for="trs80CasFile">Cassette</label>
+          <input id="trs80CasFile" type="file" accept=".cas,application/octet-stream">
+          <div id="trs80CasList" class="tap-list" aria-live="polite">No cassette mounted</div>
+          <div class="trs80-cassette-controls">
+            <button id="trs80CasLoad" type="button" disabled>Load BASIC</button>
+            <button id="trs80CasPlay" type="button" disabled>Play</button>
+            <button id="trs80CasStop" type="button" disabled>Stop</button>
+          </div>
+        </section>
       </section>
     </main>
     <footer class="site-contact-footer">

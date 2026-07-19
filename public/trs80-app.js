@@ -1,5 +1,6 @@
 import { Trs80Model3Machine } from "../src/trs80-model3.js";
 import { disassembleWindow, hexByte, hexWord } from "./debugger.js";
+import { loadTrs80CasEntry, parseCas, trs80CasEntries } from "./trs80-cassette.js";
 import { Trs80KeyLatch, Trs80TextTyper, keyEventToTrs80Key } from "./trs80-keyboard.js";
 
 const screenElement = document.querySelector("#trs80Screen");
@@ -14,6 +15,11 @@ const typeButton = document.querySelector("#trs80TypeButton");
 const startupHButton = document.querySelector("#trs80StartupH");
 const startupLButton = document.querySelector("#trs80StartupL");
 const enterButton = document.querySelector("#trs80Enter");
+const casFileInput = document.querySelector("#trs80CasFile");
+const casList = document.querySelector("#trs80CasList");
+const casLoadButton = document.querySelector("#trs80CasLoad");
+const casPlayButton = document.querySelector("#trs80CasPlay");
+const casStopButton = document.querySelector("#trs80CasStop");
 const registerGrid = document.querySelector("#trs80RegisterGrid");
 const flagGrid = document.querySelector("#trs80FlagGrid");
 const disassemblyList = document.querySelector("#trs80Disassembly");
@@ -25,6 +31,8 @@ let keyLatch;
 let textTyper;
 let running = false;
 let animationFrame = 0;
+let currentCasEntries = [];
+let selectedCasEntryIndex = -1;
 const DEFAULT_ROM_URL = new URL("../ROM/Model3-RevC-2EF8.bin", import.meta.url);
 
 const FLAG_BITS = [
@@ -47,6 +55,7 @@ function setControlsEnabled(enabled) {
   startupHButton.disabled = !enabled;
   startupLButton.disabled = !enabled;
   enterButton.disabled = !enabled;
+  updateCassetteControls();
 }
 
 async function loadDefaultRom() {
@@ -65,6 +74,7 @@ function mountRom(bytes, message) {
     machine = new Trs80Model3Machine({ rom: bytes });
     keyLatch = new Trs80KeyLatch(machine);
     textTyper = new Trs80TextTyper(keyLatch);
+    machine.setCassetteBlocks(currentCasEntries.map((entry) => entry.block));
     running = true;
     runPauseButton.textContent = "Pause";
     runPauseButton.setAttribute("aria-label", "Pause");
@@ -101,6 +111,7 @@ function render() {
   }
 
   screenElement.textContent = machine.renderTextDisplay().join("\n");
+  updateCassetteControls();
   updateDebugDrawer();
 }
 
@@ -157,7 +168,9 @@ function updateDebugDrawer() {
   displayState.replaceChildren(
     makeCell("Frame", String(state.frame)),
     makeCell("Size", `${state.display.columns}x${state.display.rows}`),
-    makeCell("Video", hexWord(state.display.videoStart))
+    makeCell("Video", hexWord(state.display.videoStart)),
+    makeCell("CAS", `${state.cassette.cursor}/${state.cassette.blocks}`),
+    makeCell("Tape", state.cassette.playing ? "play" : "-")
   );
 }
 
@@ -232,6 +245,27 @@ romFileInput.addEventListener("change", async () => {
   mountRom(new Uint8Array(await file.arrayBuffer()), `${file.name} loaded`);
 });
 
+casFileInput.addEventListener("change", async () => {
+  const file = casFileInput.files?.[0];
+  if (!file) return;
+  try {
+    const blocks = parseCas(new Uint8Array(await file.arrayBuffer()));
+    currentCasEntries = trs80CasEntries(blocks);
+    selectedCasEntryIndex = currentCasEntries.findIndex((entry) => entry.loadable);
+    machine?.setCassetteBlocks(blocks);
+    renderCasList();
+    statusOutput.value = `Mounted ${file.name}: ${currentCasEntries.length} CAS block${currentCasEntries.length === 1 ? "" : "s"}`;
+  } catch (error) {
+    currentCasEntries = [];
+    selectedCasEntryIndex = -1;
+    machine?.clearCassette();
+    renderCasList();
+    statusOutput.value = `CAS load failed: ${error.message}`;
+  }
+  updateCassetteControls();
+  render();
+});
+
 typeButton.addEventListener("click", () => {
   if (!textTyper) return;
   textTyper.enqueue(typeText.value);
@@ -245,6 +279,39 @@ startupHButton.addEventListener("click", () => queueText("H"));
 startupLButton.addEventListener("click", () => queueText("L"));
 enterButton.addEventListener("click", () => queueText("\n"));
 
+casLoadButton.addEventListener("click", () => {
+  if (!machine) return;
+  const entry = currentCasEntries[selectedCasEntryIndex];
+  if (!entry?.loadable) return;
+  try {
+    const result = loadTrs80CasEntry(machine, entry);
+    machine.setCassetteCursor(selectedCasEntryIndex + 1);
+    statusOutput.value = `Loaded CAS BASIC ${result.name || "(unnamed)"} (${result.lineCount} line${result.lineCount === 1 ? "" : "s"})`;
+    render();
+    screenElement.focus();
+  } catch (error) {
+    statusOutput.value = `CAS BASIC load failed: ${error.message}`;
+  }
+});
+
+casPlayButton.addEventListener("click", () => {
+  if (!machine) return;
+  machine.startCassettePlayback({ startIndex: Math.max(0, selectedCasEntryIndex) });
+  running = true;
+  runPauseButton.textContent = "Pause";
+  runPauseButton.setAttribute("aria-label", "Pause");
+  statusOutput.value = "Cassette playing";
+  updateCassetteControls();
+  screenElement.focus();
+});
+
+casStopButton.addEventListener("click", () => {
+  machine?.stopCassettePlayback();
+  statusOutput.value = "Cassette stopped";
+  updateCassetteControls();
+  render();
+});
+
 function queueText(text) {
   if (!textTyper) return;
   textTyper.enqueue(text);
@@ -252,6 +319,35 @@ function queueText(text) {
   runPauseButton.textContent = "Pause";
   runPauseButton.setAttribute("aria-label", "Pause");
   screenElement.focus();
+}
+
+function renderCasList() {
+  if (currentCasEntries.length === 0) {
+    casList.textContent = "No cassette mounted";
+    return;
+  }
+
+  casList.replaceChildren(...currentCasEntries.map((entry, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = index === selectedCasEntryIndex ? "selected" : "";
+    button.disabled = !entry.loadable;
+    button.textContent = `${entry.kind} ${entry.name || "(unnamed)"} ${entry.lineCount} line${entry.lineCount === 1 ? "" : "s"}`;
+    button.addEventListener("click", () => {
+      selectedCasEntryIndex = index;
+      renderCasList();
+      updateCassetteControls();
+    });
+    return button;
+  }));
+}
+
+function updateCassetteControls() {
+  const hasMachine = Boolean(machine);
+  const hasSelection = selectedCasEntryIndex >= 0 && currentCasEntries[selectedCasEntryIndex]?.loadable;
+  casLoadButton.disabled = !hasMachine || !hasSelection;
+  casPlayButton.disabled = !hasMachine || currentCasEntries.length === 0;
+  casStopButton.disabled = !hasMachine || !machine?.cassettePlaying;
 }
 
 screenElement.addEventListener("keydown", (event) => setKeyFromEvent(event, true));
@@ -264,6 +360,7 @@ window.addEventListener("blur", () => {
 });
 
 renderUnavailableScreen();
+renderCasList();
 loadDefaultRom();
 animationFrame = requestAnimationFrame(tick);
 

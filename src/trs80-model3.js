@@ -1,4 +1,5 @@
 import { Z80 } from "./z80.js";
+import { buildCasPulseSequence } from "./trs80-cassette.js";
 
 const ROM_SIZE = 0x3800;
 const KEYBOARD_START = 0x3800;
@@ -7,6 +8,10 @@ const VIDEO_START = 0x3c00;
 const VIDEO_SIZE = 0x0400;
 const RAM_START = 0x4000;
 const RAM_SIZE = 0xc000;
+const T_STATES_PER_SECOND = 2_027_520;
+const T_STATES_PER_MS = T_STATES_PER_SECOND / 1000;
+const CASSETTE_HALF_WAVE_T_STATES = Math.round(T_STATES_PER_SECOND / 3000);
+const CASSETTE_INPUT_PORT = 0xff;
 
 const KEY_ROWS = [
   ["@", "A", "B", "C", "D", "E", "F", "G"],
@@ -34,6 +39,7 @@ export class Trs80Model3Machine {
   static SCREEN_COLUMNS = 64;
   static SCREEN_ROWS = 16;
   static T_STATES_PER_FRAME = 67584;
+  static CASSETTE_HALF_WAVE_T_STATES = CASSETTE_HALF_WAVE_T_STATES;
 
   static fromRomFile(path) {
     const readFileSync = globalThis.process?.getBuiltinModule?.("fs")?.readFileSync;
@@ -50,11 +56,20 @@ export class Trs80Model3Machine {
     this.videoRam = new Uint8Array(VIDEO_SIZE);
     this.ram = new Uint8Array(RAM_SIZE);
     this.keyboardRows = new Uint8Array(8);
+    this.cassetteBlocks = [];
+    this.cassetteCursor = 0;
+    this.cassettePulseDurations = new Uint32Array();
+    this.cassettePulseToggles = new Uint8Array();
+    this.cassettePulseIndex = 0;
+    this.cassetteNextPulseTState = 0;
+    this.cassettePlaybackEndCursor = 0;
+    this.cassetteInputLevel = false;
+    this.cassettePlaying = false;
     this.frame = 0;
     this.halted = false;
     this.cpu = new Z80(this, {
-      read: () => 0xff,
-      write: () => {}
+      read: (port) => this.readPort(port),
+      write: (port, value) => this.writePort(port, value)
     });
   }
 
@@ -86,6 +101,76 @@ export class Trs80Model3Machine {
   write16(address, value) {
     this.write8(address, value);
     this.write8(address + 1, value >> 8);
+  }
+
+  readPort(port) {
+    if ((port & 0xff) === CASSETTE_INPUT_PORT) return this.readCassetteInputBit() | 0x7f;
+    return 0xff;
+  }
+
+  writePort() {}
+
+  setCassetteBlocks(blocks, { cursor = 0 } = {}) {
+    this.cassetteBlocks = blocks.map((block, index) => ({
+      ...block,
+      index: block.index ?? index,
+      raw: Uint8Array.from(block.raw ?? []),
+      program: Uint8Array.from(block.program ?? [])
+    }));
+    this.cassetteCursor = Math.max(0, Math.min(cursor, this.cassetteBlocks.length));
+    this.stopCassettePlayback();
+  }
+
+  setCassetteCursor(cursor) {
+    this.cassetteCursor = Math.max(0, Math.min(cursor, this.cassetteBlocks.length));
+  }
+
+  clearCassette() {
+    this.cassetteBlocks = [];
+    this.cassetteCursor = 0;
+    this.stopCassettePlayback();
+  }
+
+  startCassettePlayback({ startIndex = this.cassetteCursor, initialSilenceMs = 250 } = {}) {
+    const sequence = buildCasPulseSequence(this.cassetteBlocks.slice(startIndex), {
+      halfWaveTStates: CASSETTE_HALF_WAVE_T_STATES,
+      initialSilenceTStates: Math.round(initialSilenceMs * T_STATES_PER_MS)
+    });
+    this.cassettePulseDurations = sequence.durations;
+    this.cassettePulseToggles = sequence.toggles;
+    this.cassettePulseIndex = 0;
+    this.cassetteInputLevel = false;
+    this.cassettePlaying = this.cassettePulseDurations.length > 0;
+    this.cassettePlaybackEndCursor = this.cassetteBlocks.length;
+    this.cassetteNextPulseTState = this.cpu.tStates + (this.cassettePulseDurations[0] ?? 0);
+  }
+
+  stopCassettePlayback() {
+    this.cassettePulseDurations = new Uint32Array();
+    this.cassettePulseToggles = new Uint8Array();
+    this.cassettePulseIndex = 0;
+    this.cassetteNextPulseTState = 0;
+    this.cassettePlaybackEndCursor = this.cassetteCursor;
+    this.cassetteInputLevel = false;
+    this.cassettePlaying = false;
+  }
+
+  readCassetteInputBit() {
+    this.advanceCassettePlayback();
+    return this.cassetteInputLevel ? 0x80 : 0x00;
+  }
+
+  advanceCassettePlayback() {
+    while (this.cassettePlaying && this.cpu.tStates >= this.cassetteNextPulseTState) {
+      if (this.cassettePulseToggles[this.cassettePulseIndex]) this.cassetteInputLevel = !this.cassetteInputLevel;
+      this.cassettePulseIndex += 1;
+      if (this.cassettePulseIndex >= this.cassettePulseDurations.length) {
+        this.cassetteCursor = this.cassettePlaybackEndCursor;
+        this.stopCassettePlayback();
+        return;
+      }
+      this.cassetteNextPulseTState += this.cassettePulseDurations[this.cassettePulseIndex];
+    }
   }
 
   readKeyboardAddress(address) {
@@ -180,6 +265,12 @@ export class Trs80Model3Machine {
       frame: this.frame,
       keyboard: {
         pressedKeys: this.getPressedKeys()
+      },
+      cassette: {
+        blocks: this.cassetteBlocks.length,
+        cursor: this.cassetteCursor,
+        playing: this.cassettePlaying,
+        inputLevel: this.cassetteInputLevel
       },
       display: {
         columns: Trs80Model3Machine.SCREEN_COLUMNS,

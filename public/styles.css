@@ -1069,14 +1069,16 @@ dd {
   padding: 5px 8px;
 }
 
-.trs80-type-panel {
+.trs80-type-panel,
+.trs80-cassette-panel {
   display: grid;
   gap: 10px;
   border-top: 1px solid rgba(255, 202, 106, 0.22);
   padding-top: 14px;
 }
 
-.trs80-type-panel label {
+.trs80-type-panel label,
+.trs80-cassette-panel label {
   color: #bbc4b7;
   font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
 }
@@ -1101,6 +1103,27 @@ dd {
 .trs80-type-controls {
   display: grid;
   grid-template-columns: 2fr repeat(3, minmax(54px, 1fr));
+  gap: 10px;
+}
+
+.trs80-cassette-panel input {
+  color: #ffd17b;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.trs80-cassette-panel input::file-selector-button {
+  margin-right: 10px;
+  border: 1px solid rgba(255, 202, 106, 0.32);
+  border-radius: 6px;
+  background: #1a1206;
+  color: #ffd17b;
+  font: inherit;
+  padding: 7px 10px;
+}
+
+.trs80-cassette-controls {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
   gap: 10px;
 }
 
@@ -1197,6 +1220,10 @@ dd {
 
   .trs80-type-controls {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .trs80-cassette-controls {
+    grid-template-columns: 1fr;
   }
 
   .cpm-file-controls {
