@@ -211,6 +211,47 @@ test("reports compact debug state for the TRS-80 Model III machine", () => {
   });
 });
 
+test("saves and restores TRS-80 Model III machine state", () => {
+  const machine = new Trs80Model3Machine({
+    rom: makeRom({
+      0x0000: 0x3e,
+      0x0001: 0x42
+    })
+  });
+  machine.step();
+  machine.write8(0x3c00, 0x48);
+  machine.write8(0x4000, 0x99);
+  machine.pressKey("A");
+  machine.pressKey("ENTER");
+  machine.runFrame();
+
+  const state = machine.saveState();
+  const restored = new Trs80Model3Machine({ rom: makeRom() });
+  restored.write8(0x3c00, 0x20);
+  restored.write8(0x4000, 0x20);
+  restored.restoreState(state);
+
+  assert.equal(state.format, "z80lab-trs80-session");
+  assert.equal(state.profile, "trs80-model3");
+  assert.equal(restored.cpu.A, state.cpu.registers.A);
+  assert.equal(restored.cpu.PC, state.cpu.registers.PC);
+  assert.equal(restored.read8(0x3c00), 0x48);
+  assert.equal(restored.read8(0x4000), 0x99);
+  assert.deepEqual(restored.getPressedKeys(), ["A", "ENTER"]);
+  assert.equal(restored.frame, 1);
+});
+
+test("rejects incompatible TRS-80 session state", () => {
+  const machine = new Trs80Model3Machine({ rom: makeRom() });
+
+  assert.throws(() => machine.restoreState({ format: "z80lab-cpm-session", profile: "trs80-model3" }), /Unsupported TRS-80 session format/);
+  assert.throws(() => machine.restoreState({ format: "z80lab-trs80-session", version: 99, profile: "trs80-model3" }), /Unsupported TRS-80 session version/);
+  assert.throws(
+    () => machine.restoreState({ format: "z80lab-trs80-session", version: 1, profile: "trs80-model1", ram: [], videoRam: [], keyboardRows: [] }),
+    /Unsupported TRS-80 profile/
+  );
+});
+
 test("bundled Model III ROM accepts ENTER at the cassette prompt", () => {
   const machine = Trs80Model3Machine.fromRomFile("ROM/Model3-RevC-2EF8.bin");
 

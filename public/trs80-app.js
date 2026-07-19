@@ -10,6 +10,9 @@ const runPauseButton = document.querySelector("#trs80RunPause");
 const stepFrameButton = document.querySelector("#trs80StepFrame");
 const stepInstructionButton = document.querySelector("#trs80StepInstruction");
 const resetButton = document.querySelector("#trs80Reset");
+const saveSessionButton = document.querySelector("#trs80SaveSession");
+const loadSessionButton = document.querySelector("#trs80LoadSession");
+const sessionFileInput = document.querySelector("#trs80SessionFile");
 const typeText = document.querySelector("#trs80TypeText");
 const typeButton = document.querySelector("#trs80TypeButton");
 const startupHButton = document.querySelector("#trs80StartupH");
@@ -51,6 +54,8 @@ function setControlsEnabled(enabled) {
   stepFrameButton.disabled = !enabled;
   stepInstructionButton.disabled = !enabled;
   resetButton.disabled = !enabled;
+  saveSessionButton.disabled = !enabled;
+  loadSessionButton.disabled = !enabled;
   typeButton.disabled = !enabled;
   startupHButton.disabled = !enabled;
   startupLButton.disabled = !enabled;
@@ -245,6 +250,37 @@ romFileInput.addEventListener("change", async () => {
   mountRom(new Uint8Array(await file.arrayBuffer()), `${file.name} loaded`);
 });
 
+saveSessionButton.addEventListener("click", () => {
+  if (!machine) return;
+  downloadBytes(JSON.stringify(machine.saveState()), "trs80-model3-session.json", "application/json");
+  statusOutput.value = "Saved TRS-80 session";
+});
+
+loadSessionButton.addEventListener("click", () => {
+  sessionFileInput.click();
+});
+
+sessionFileInput.addEventListener("change", async () => {
+  const file = sessionFileInput.files?.[0];
+  if (!file || !machine) return;
+
+  try {
+    machine.restoreState(JSON.parse(await file.text()));
+    keyLatch = new Trs80KeyLatch(machine);
+    textTyper = new Trs80TextTyper(keyLatch);
+    running = !machine.halted;
+    runPauseButton.textContent = running ? "Pause" : "Run";
+    runPauseButton.setAttribute("aria-label", running ? "Pause" : "Run");
+    statusOutput.value = `Loaded TRS-80 session ${file.name}`;
+    render();
+    screenElement.focus();
+  } catch (error) {
+    statusOutput.value = `Session load failed: ${error.message}`;
+  } finally {
+    sessionFileInput.value = "";
+  }
+});
+
 casFileInput.addEventListener("change", async () => {
   const file = casFileInput.files?.[0];
   if (!file) return;
@@ -286,11 +322,18 @@ casLoadButton.addEventListener("click", () => {
   try {
     const result = loadTrs80CasEntry(machine, entry);
     machine.setCassetteCursor(selectedCasEntryIndex + 1);
-    statusOutput.value = `Loaded CAS BASIC ${result.name || "(unnamed)"} (${result.lineCount} line${result.lineCount === 1 ? "" : "s"})`;
+    if (result.kind === "SYSTEM") {
+      running = true;
+      runPauseButton.textContent = "Pause";
+      runPauseButton.setAttribute("aria-label", "Pause");
+      statusOutput.value = `Loaded CAS SYSTEM ${result.name || "(unnamed)"} at ${hexWord(result.start)}, entry ${hexWord(result.entryPoint)}`;
+    } else {
+      statusOutput.value = `Loaded CAS BASIC ${result.name || "(unnamed)"} (${result.lineCount} line${result.lineCount === 1 ? "" : "s"})`;
+    }
     render();
     screenElement.focus();
   } catch (error) {
-    statusOutput.value = `CAS BASIC load failed: ${error.message}`;
+    statusOutput.value = `CAS load failed: ${error.message}`;
   }
 });
 
@@ -332,7 +375,7 @@ function renderCasList() {
     button.type = "button";
     button.className = index === selectedCasEntryIndex ? "selected" : "";
     button.disabled = !entry.loadable;
-    button.textContent = `${entry.kind} ${entry.name || "(unnamed)"} ${entry.lineCount} line${entry.lineCount === 1 ? "" : "s"}`;
+    button.textContent = casEntryLabel(entry);
     button.addEventListener("click", () => {
       selectedCasEntryIndex = index;
       renderCasList();
@@ -345,9 +388,31 @@ function renderCasList() {
 function updateCassetteControls() {
   const hasMachine = Boolean(machine);
   const hasSelection = selectedCasEntryIndex >= 0 && currentCasEntries[selectedCasEntryIndex]?.loadable;
+  const selectedEntry = currentCasEntries[selectedCasEntryIndex];
+  casLoadButton.textContent = selectedEntry?.kind === "SYSTEM"
+    ? "Load SYSTEM"
+    : selectedEntry?.kind === "BASIC"
+      ? "Load BASIC"
+      : "Load CAS";
   casLoadButton.disabled = !hasMachine || !hasSelection;
   casPlayButton.disabled = !hasMachine || currentCasEntries.length === 0;
   casStopButton.disabled = !hasMachine || !machine?.cassettePlaying;
+}
+
+function casEntryLabel(entry) {
+  if (entry.kind === "SYSTEM") {
+    return `${entry.kind} ${entry.name || "(unnamed)"} ${entry.recordCount} record${entry.recordCount === 1 ? "" : "s"} entry ${hexWord(entry.entryPoint)}`;
+  }
+  return `${entry.kind} ${entry.name || "(unnamed)"} ${entry.lineCount} line${entry.lineCount === 1 ? "" : "s"}`;
+}
+
+function downloadBytes(bytes, filename, type = "application/octet-stream") {
+  const blob = new Blob([bytes], { type });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 screenElement.addEventListener("keydown", (event) => setKeyFromEvent(event, true));

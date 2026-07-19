@@ -104,6 +104,9 @@ test("TRS-80 page exposes a live Model III viewer entry point", async () => {
   assert.match(trs80, /id="trs80CasLoad"/);
   assert.match(trs80, /id="trs80CasPlay"/);
   assert.match(trs80, /id="trs80CasStop"/);
+  assert.match(trs80, /id="trs80SaveSession"/);
+  assert.match(trs80, /id="trs80LoadSession"/);
+  assert.match(trs80, /id="trs80SessionFile"/);
   assert.match(trs80, /id="trs80RegisterGrid"/);
   assert.match(trs80, /id="trs80FlagGrid"/);
   assert.match(trs80, /id="trs80Disassembly"/);
@@ -111,6 +114,8 @@ test("TRS-80 page exposes a live Model III viewer entry point", async () => {
   assert.match(app, /Trs80Model3Machine/);
   assert.match(app, /parseCas/);
   assert.match(app, /loadTrs80CasEntry/);
+  assert.match(app, /machine\.saveState\(\)/);
+  assert.match(app, /machine\.restoreState/);
   assert.match(app, /Trs80TextTyper/);
   assert.match(app, /textTyper\.enqueue/);
   assert.match(app, /renderTextDisplay/);

@@ -12,6 +12,8 @@ const T_STATES_PER_SECOND = 2_027_520;
 const T_STATES_PER_MS = T_STATES_PER_SECOND / 1000;
 const CASSETTE_HALF_WAVE_T_STATES = Math.round(T_STATES_PER_SECOND / 3000);
 const CASSETTE_INPUT_PORT = 0xff;
+const SESSION_FORMAT = "z80lab-trs80-session";
+const SESSION_VERSION = 1;
 
 const KEY_ROWS = [
   ["@", "A", "B", "C", "D", "E", "F", "G"],
@@ -278,5 +280,45 @@ export class Trs80Model3Machine {
         videoStart: VIDEO_START
       }
     };
+  }
+
+  saveState() {
+    return {
+      format: SESSION_FORMAT,
+      version: SESSION_VERSION,
+      profile: "trs80-model3",
+      cpu: this.cpu.getState(),
+      halted: this.halted,
+      frame: this.frame,
+      ram: [...this.ram],
+      videoRam: [...this.videoRam],
+      keyboardRows: [...this.keyboardRows],
+      cassette: {
+        cursor: this.cassetteCursor,
+        blocks: this.cassetteBlocks.length,
+        playing: false
+      }
+    };
+  }
+
+  restoreState(state) {
+    if (state?.format !== SESSION_FORMAT) throw new Error("Unsupported TRS-80 session format");
+    if (state.version !== SESSION_VERSION) throw new Error("Unsupported TRS-80 session version");
+    if (state.profile !== "trs80-model3") throw new Error(`Unsupported TRS-80 profile: ${state.profile ?? "(missing)"}`);
+    if (!Array.isArray(state.ram) || state.ram.length !== RAM_SIZE) throw new Error("TRS-80 session RAM image has the wrong size");
+    if (!Array.isArray(state.videoRam) || state.videoRam.length !== VIDEO_SIZE) throw new Error("TRS-80 session video RAM image has the wrong size");
+    if (!Array.isArray(state.keyboardRows) || state.keyboardRows.length !== this.keyboardRows.length) {
+      throw new Error("TRS-80 session keyboard state has the wrong size");
+    }
+
+    this.cpu.setState(state.cpu ?? {});
+    this.halted = Boolean(state.halted);
+    this.cpu.halted = this.halted;
+    this.frame = Math.max(0, state.frame ?? 0);
+    this.ram.set(state.ram.map((value) => value & 0xff));
+    this.videoRam.set(state.videoRam.map((value) => value & 0xff));
+    this.keyboardRows.set(state.keyboardRows.map((value) => value & 0xff));
+    this.cassetteCursor = Math.max(0, Math.min(state.cassette?.cursor ?? 0, this.cassetteBlocks.length));
+    this.stopCassettePlayback();
   }
 }

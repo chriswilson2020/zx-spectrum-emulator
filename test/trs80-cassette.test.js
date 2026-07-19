@@ -41,6 +41,32 @@ function makeBasicCas({ name = "H", leaderBytes = 256 } = {}) {
   ]);
 }
 
+function makeSystemCas({
+  name = "SYSAPP",
+  loadAddress = 0x5000,
+  entryPoint = 0x5010,
+  data = [0x3e, 0x2a, 0x32, 0x00, 0x44],
+  leaderBytes = 256
+} = {}) {
+  const nameBytes = name.padEnd(6, " ").slice(0, 6).split("").map((char) => char.charCodeAt(0));
+  const addressBytes = [loadAddress & 0xff, loadAddress >> 8];
+  const checksum = [...addressBytes, ...data].reduce((sum, byte) => (sum + byte) & 0xff, 0);
+  return new Uint8Array([
+    ...new Array(leaderBytes).fill(0x00),
+    0xa5,
+    0x55,
+    ...nameBytes,
+    0x3c,
+    data.length,
+    ...addressBytes,
+    ...data,
+    checksum,
+    0x78,
+    entryPoint & 0xff,
+    entryPoint >> 8
+  ]);
+}
+
 function makeBlockCasHeader() {
   const headerPayload = [
     ..."BARKEEP ".split("").map((char) => char.charCodeAt(0)),
@@ -91,6 +117,21 @@ test("rejects block-structured CAS files with a helpful diagnostic", () => {
   );
 });
 
+test("parses SYSTEM CAS files", () => {
+  const blocks = parseCas(makeSystemCas());
+  const entries = trs80CasEntries(blocks);
+
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].kind, "SYSTEM");
+  assert.equal(blocks[0].name, "SYSAPP");
+  assert.equal(blocks[0].entryPoint, 0x5010);
+  assert.equal(blocks[0].records.length, 1);
+  assert.equal(blocks[0].records[0].address, 0x5000);
+  assert.deepEqual([...blocks[0].records[0].data], [0x3e, 0x2a, 0x32, 0x00, 0x44]);
+  assert.equal(blocks[0].checksumValid, true);
+  assert.equal(entries[0].loadable, true);
+});
+
 test("fast-loads BASIC CAS entries into Model III BASIC RAM", () => {
   const entry = trs80CasEntries(parseCas(makeBasicCas({ name: "H" })))[0];
   const machine = makeReadyMachine();
@@ -106,6 +147,34 @@ test("fast-loads BASIC CAS entries into Model III BASIC RAM", () => {
     basicProgramRecords()
   );
   assert.equal(machine.read16(VARTAB), BASIC_START + basicProgramRecords().length);
+});
+
+test("fast-loads SYSTEM CAS entries and jumps to the entry point", () => {
+  const entry = trs80CasEntries(parseCas(makeSystemCas()))[0];
+  const machine = makeReadyMachine();
+
+  const result = loadTrs80CasEntry(machine, entry);
+
+  assert.equal(result.kind, "SYSTEM");
+  assert.equal(result.name, "SYSAPP");
+  assert.equal(result.start, 0x5000);
+  assert.equal(result.end, 0x5005);
+  assert.equal(result.entryPoint, 0x5010);
+  assert.equal(machine.cpu.PC, 0x5010);
+  assert.deepEqual(
+    Array.from({ length: 5 }, (_, offset) => machine.read8(0x5000 + offset)),
+    [0x3e, 0x2a, 0x32, 0x00, 0x44]
+  );
+});
+
+test("rejects corrupt SYSTEM CAS entries when fast-loading", () => {
+  const cas = makeSystemCas();
+  cas[cas.length - 4] ^= 0xff;
+  const entry = trs80CasEntries(parseCas(cas))[0];
+  const machine = makeReadyMachine();
+
+  assert.equal(entry.loadable, false);
+  assert.throws(() => loadTrs80CasEntry(machine, entry), /SYSTEM.*corrupt/i);
 });
 
 test("relocates BASIC line links when TXTTAB changes", () => {

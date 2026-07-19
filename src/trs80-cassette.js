@@ -1,5 +1,8 @@
 const BASIC_SYNC = 0xa5;
 const BASIC_HEADER = [0xd3, 0xd3, 0xd3];
+const SYSTEM_HEADER = 0x55;
+const SYSTEM_DATA_RECORD = 0x3c;
+const SYSTEM_END_RECORD = 0x78;
 const TXTTAB = 0x40a4;
 const VARTAB = 0x40f9;
 const ARYTAB = 0x40fb;
@@ -18,6 +21,10 @@ export function parseCas(input) {
 
     if (matchesAt(bytes, syncOffset + 1, BASIC_HEADER)) {
       const block = parseBasicCasBlock(bytes, syncOffset, blocks.length);
+      blocks.push(block);
+      offset = block.endOffset;
+    } else if (bytes[syncOffset + 1] === SYSTEM_HEADER) {
+      const block = parseSystemCasBlock(bytes, syncOffset, blocks.length);
       blocks.push(block);
       offset = block.endOffset;
     } else {
@@ -42,13 +49,17 @@ export function trs80CasEntries(blocks) {
     kind: block.kind,
     name: block.name,
     lineCount: block.lineCount,
-    loadable: block.kind === "BASIC" && block.checksumValid
+    recordCount: block.records?.length ?? 0,
+    entryPoint: block.entryPoint,
+    loadable: (block.kind === "BASIC" || block.kind === "SYSTEM") && block.checksumValid
   }));
 }
 
 export function loadTrs80CasEntry(machine, entry) {
   const block = entry?.block ?? entry;
-  if (!block || block.kind !== "BASIC") throw new Error("TRS-80 CAS entry is not a BASIC program");
+  if (!block) throw new Error("TRS-80 CAS entry is missing");
+  if (block.kind === "SYSTEM") return loadSystemCasBlock(machine, block);
+  if (block.kind !== "BASIC") throw new Error("TRS-80 CAS entry is not a supported program");
   if (block.checksumValid === false) throw new Error(`TRS-80 CAS BASIC ${block.name || "(unnamed)"} is corrupt`);
 
   const start = machine.read16(TXTTAB) || DEFAULT_BASIC_START;
@@ -69,6 +80,35 @@ export function loadTrs80CasEntry(machine, entry) {
     end,
     length: relocated.length,
     lineCount: block.lineCount
+  };
+}
+
+function loadSystemCasBlock(machine, block) {
+  if (block.checksumValid === false) throw new Error(`TRS-80 CAS SYSTEM ${block.name || "(unnamed)"} is corrupt`);
+
+  let start = 0xffff;
+  let end = 0x0000;
+  let length = 0;
+  for (const record of block.records) {
+    start = Math.min(start, record.address);
+    end = Math.max(end, record.address + record.data.length);
+    length += record.data.length;
+    for (let offset = 0; offset < record.data.length; offset += 1) {
+      machine.write8(record.address + offset, record.data[offset]);
+    }
+  }
+  machine.cpu.PC = block.entryPoint & 0xffff;
+  machine.halted = false;
+  machine.cpu.halted = false;
+
+  return {
+    kind: "SYSTEM",
+    name: block.name,
+    start,
+    end,
+    length,
+    recordCount: block.records.length,
+    entryPoint: block.entryPoint
   };
 }
 
@@ -126,6 +166,72 @@ function parseBasicCasBlock(bytes, syncOffset, index) {
     lineCount: countBasicLines(program),
     checksumValid: true
   };
+}
+
+function parseSystemCasBlock(bytes, syncOffset, index) {
+  const nameOffset = syncOffset + 2;
+  const recordOffset = nameOffset + 6;
+  if (recordOffset >= bytes.length) throw new Error("Truncated TRS-80 SYSTEM CAS header");
+
+  const records = [];
+  let checksumValid = true;
+  let cursor = recordOffset;
+  while (cursor < bytes.length) {
+    const tag = bytes[cursor];
+    if (tag === SYSTEM_DATA_RECORD) {
+      if (cursor + 5 > bytes.length) throw new Error("Truncated TRS-80 SYSTEM CAS data record");
+      const lengthByte = bytes[cursor + 1];
+      const length = lengthByte === 0 ? 256 : lengthByte;
+      const address = wordAt(bytes, cursor + 2);
+      const dataOffset = cursor + 4;
+      const checksumOffset = dataOffset + length;
+      if (checksumOffset >= bytes.length) throw new Error("Truncated TRS-80 SYSTEM CAS data payload");
+
+      const data = bytes.slice(dataOffset, checksumOffset);
+      const checksum = bytes[checksumOffset];
+      const computedChecksum = systemRecordChecksum(address, data);
+      records.push({
+        address,
+        length,
+        data,
+        checksum,
+        checksumValid: checksum === computedChecksum
+      });
+      checksumValid = checksumValid && checksum === computedChecksum;
+      cursor = checksumOffset + 1;
+      continue;
+    }
+
+    if (tag === SYSTEM_END_RECORD) {
+      if (cursor + 3 > bytes.length) throw new Error("Truncated TRS-80 SYSTEM CAS entry record");
+      const entryPoint = wordAt(bytes, cursor + 1);
+      const endOffset = cursor + 3;
+      return {
+        index,
+        kind: "SYSTEM",
+        source: "CAS",
+        name: asciiName(bytes.slice(nameOffset, nameOffset + 6)),
+        startOffset: syncOffset,
+        dataOffset: recordOffset,
+        endOffset,
+        raw: bytes.slice(syncOffset, endOffset),
+        records,
+        length: records.reduce((total, record) => total + record.data.length, 0),
+        entryPoint,
+        checksumValid
+      };
+    }
+
+    throw new Error(`Unsupported TRS-80 SYSTEM CAS record ${hexByte(tag)} at offset ${cursor}`);
+  }
+
+  throw new Error("Truncated TRS-80 SYSTEM CAS file");
+}
+
+function systemRecordChecksum(address, data) {
+  let checksum = ((address & 0xff) + (address >> 8)) & 0xff;
+  for (const byte of data) checksum = (checksum + byte) & 0xff;
+  return checksum;
 }
 
 function findBasicProgramEnd(bytes, offset) {
@@ -188,6 +294,10 @@ function matchesAt(bytes, offset, pattern) {
 
 function wordAt(bytes, offset) {
   return bytes[offset] | (bytes[offset + 1] << 8);
+}
+
+function hexByte(value) {
+  return `$${(value & 0xff).toString(16).padStart(2, "0").toUpperCase()}`;
 }
 
 function detectBlockStructuredCas(bytes) {

@@ -1034,10 +1034,15 @@ dd {
   outline-offset: 3px;
 }
 
-.cpm-controls,
-.trs80-controls {
+.cpm-controls {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.trs80-controls {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1050,7 +1055,7 @@ dd {
 }
 
 .trs80-rom-control {
-  grid-column: span 4;
+  grid-column: span 6;
 }
 
 .trs80-rom-control input {

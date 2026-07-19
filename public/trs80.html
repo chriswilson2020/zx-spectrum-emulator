@@ -51,6 +51,9 @@
           <button id="trs80StepFrame" type="button" disabled>Frame</button>
           <button id="trs80StepInstruction" type="button" disabled>Step</button>
           <button id="trs80Reset" type="button" disabled>Reset</button>
+          <button id="trs80SaveSession" type="button" disabled>Save Session</button>
+          <button id="trs80LoadSession" type="button" disabled>Load Session</button>
+          <input id="trs80SessionFile" class="visually-hidden" type="file" accept=".json,application/json" tabindex="-1" aria-hidden="true">
           <label class="trs80-rom-control">
             <span>ROM</span>
             <input id="trs80RomFile" type="file" accept=".rom,.bin,application/octet-stream">
@@ -71,7 +74,7 @@
           <input id="trs80CasFile" type="file" accept=".cas,application/octet-stream">
           <div id="trs80CasList" class="tap-list" aria-live="polite">No cassette mounted</div>
           <div class="trs80-cassette-controls">
-            <button id="trs80CasLoad" type="button" disabled>Load BASIC</button>
+            <button id="trs80CasLoad" type="button" disabled>Load CAS</button>
             <button id="trs80CasPlay" type="button" disabled>Play</button>
             <button id="trs80CasStop" type="button" disabled>Stop</button>
           </div>
