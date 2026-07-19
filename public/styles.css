@@ -1586,6 +1586,19 @@ dd {
   grid-area: display;
 }
 
+.ti85-legal-note {
+  justify-self: center;
+  width: min(1180px, calc(100vw - 36px));
+  margin: 0;
+  border: 1px solid rgba(174, 205, 176, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 10, 10, 0.62);
+  color: #b8c6bd;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 @media (max-width: 780px) {
   .selector-hero {
     min-height: 520px;

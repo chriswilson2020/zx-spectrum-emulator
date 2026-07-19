@@ -114,7 +114,12 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
     "DEL", "X-VAR", "ALPHA", "MORE", "ON"
   ];
 
-  assert.match(ti85, /TI-85/);
+  assert.match(ti85, /Texas Instruments-like/);
+  assert.match(ti85, /TI-85-like/);
+  assert.match(ti85, /referenced only to describe calculator compatibility/);
+  assert.match(ti85, /not affiliated with or endorsed by Texas Instruments/);
+  assert.match(ti85, /original code and assets/);
+  assert.match(ti85, /legally obtained TI-85 ROM file/);
   assert.match(ti85, /id="ti85Screen"/);
   assert.match(ti85, /id="ti85Status"/);
   assert.match(ti85, /id="ti85RomFile"/);

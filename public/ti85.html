@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TI-85</title>
+    <title>TI-85-like</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="./public/styles.css">
   </head>
@@ -15,16 +15,16 @@
         <a href="./cpm.html">CP/M</a>
         <a href="./trs80.html">TRS-80</a>
       </nav>
-      <section class="ti85-frame" aria-label="TI-85 viewer">
+      <section class="ti85-frame" aria-label="TI-85-like viewer">
         <header>
-          <p>Texas Instruments</p>
-          <h1>TI-85</h1>
+          <p>Texas Instruments-like</p>
+          <h1>TI-85-like</h1>
           <output id="ti85Status">Loading ROM</output>
         </header>
         <div class="ti85-lcd-bezel">
-          <canvas id="ti85Screen" width="128" height="64" tabindex="0" aria-label="TI-85 LCD display"></canvas>
+          <canvas id="ti85Screen" width="128" height="64" tabindex="0" aria-label="TI-85-like LCD display"></canvas>
         </div>
-        <section id="ti85Keypad" class="ti85-keypad" aria-label="TI-85 keypad"></section>
+        <section id="ti85Keypad" class="ti85-keypad" aria-label="TI-85-like keypad"></section>
         <div class="ti85-controls">
           <button id="ti85RunPause" type="button" aria-label="Pause" disabled>Pause</button>
           <button id="ti85StepFrame" type="button" disabled>Frame</button>
@@ -69,6 +69,12 @@
           </div>
         </section>
       </details>
+      <p class="ti85-legal-note">
+        Texas Instruments and TI-85 are referenced only to describe calculator compatibility.
+        This independent demo is not affiliated with or endorsed by Texas Instruments. The
+        emulator UI and implementation use original code and assets, not TI logos, product
+        artwork, or source code. Use your own legally obtained TI-85 ROM file.
+      </p>
     </main>
     <footer class="site-contact-footer">
       <span>Contact</span>
