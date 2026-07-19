@@ -9,13 +9,16 @@ test("browser entry points use project-page-safe relative paths", async () => {
   const spectrum = await readFile("public/spectrum.html", "utf8");
   const cpm = await readFile("public/cpm.html", "utf8");
   const trs80 = await readFile("public/trs80.html", "utf8");
+  const ti85 = await readFile("public/ti85.html", "utf8");
   const app = await readFile("public/app.js", "utf8");
   const trs80App = await readFile("public/trs80-app.js", "utf8");
+  const ti85App = await readFile("public/ti85-app.js", "utf8");
 
   assert.match(index, /href="\.\/public\/styles\.css"/);
   assert.match(index, /href="\.\/spectrum\.html"/);
   assert.match(index, /href="\.\/cpm\.html"/);
   assert.match(index, /href="\.\/trs80\.html"/);
+  assert.match(index, /href="\.\/ti85\.html"/);
   assert.match(index, /src="\.\/public\/assets\/machine-selector-banner\.png"/);
   assert.match(index, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/public\/styles\.css"/);
@@ -27,7 +30,10 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(trs80, /href="\.\/public\/styles\.css"/);
   assert.match(trs80, /src="\.\/public\/trs80-app\.js"/);
   assert.match(trs80, /src="\.\/public\/assets\/contact-email\.png"/);
-  for (const html of [index, spectrum, cpm, trs80]) {
+  assert.match(ti85, /href="\.\/public\/styles\.css"/);
+  assert.match(ti85, /src="\.\/public\/ti85-app\.js"/);
+  assert.match(ti85, /src="\.\/public\/assets\/contact-email\.png"/);
+  for (const html of [index, spectrum, cpm, trs80, ti85]) {
     assert.match(html, /class="site-contact-footer"/);
     assert.doesNotMatch(html, new RegExp(`z80${"\\."}world`));
     assert.doesNotMatch(html, new RegExp(`chris${"@"}`));
@@ -40,10 +46,16 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.doesNotMatch(cpm, /src="\/public\//);
   assert.doesNotMatch(trs80, /href="\/public\//);
   assert.doesNotMatch(trs80, /src="\/public\//);
+  assert.doesNotMatch(ti85, /href="\/public\//);
+  assert.doesNotMatch(ti85, /src="\/public\//);
   assert.doesNotMatch(app, /from "\/(public|src)\//);
   assert.doesNotMatch(trs80App, /from "\/(public|src)\//);
+  assert.doesNotMatch(ti85App, /from "\/(public|src)\//);
   assert.match(app, /new URL\("\.\.\/ROM\/48\.rom", import\.meta\.url\)/);
   assert.match(trs80App, /new URL\("\.\.\/ROM\/Model3-RevC-2EF8\.bin", import\.meta\.url\)/);
+  assert.match(ti85App, /new URL\("\.\.\/ROM\/TI85\.ROM", import\.meta\.url\)/);
+  const devServer = await readFile("scripts/dev-server.js", "utf8");
+  assert.match(devServer, /"\/ti85\.html"/);
 });
 
 test("viewer groups secondary tools into tabs and keeps debugger collapsible", async () => {
@@ -70,16 +82,47 @@ test("viewer groups secondary tools into tabs and keeps debugger collapsible", a
   assert.match(app, /machine\.getRasterPosition\(\)/);
 });
 
-test("machine selector exposes Spectrum, CP/M, and TRS-80 routes", async () => {
+test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async () => {
   const index = await readFile("public/index.html", "utf8");
 
   assert.match(index, /Z80 Machine Lab/);
   assert.match(index, /ZX Spectrum 48K/);
   assert.match(index, /CP\/M 2\.2/);
   assert.match(index, /TRS-80 Model III/);
+  assert.match(index, /TI-85/);
+  assert.match(index, /Calculator/);
   assert.match(index, /MODEL III/);
   assert.match(index, /machine-selector-banner\.png/);
   assert.match(index, /contact-email\.png/);
+});
+
+test("TI-85 page exposes a live calculator LCD viewer entry point", async () => {
+  const ti85 = await readFile("public/ti85.html", "utf8");
+  const app = await readFile("public/ti85-app.js", "utf8");
+
+  assert.match(ti85, /TI-85/);
+  assert.match(ti85, /id="ti85Screen"/);
+  assert.match(ti85, /id="ti85Status"/);
+  assert.match(ti85, /id="ti85RomFile"/);
+  assert.match(ti85, /id="ti85RunPause"/);
+  assert.match(ti85, /id="ti85StepFrame"/);
+  assert.match(ti85, /id="ti85StepInstruction"/);
+  assert.match(ti85, /id="ti85Reset"/);
+  assert.match(ti85, /id="ti85On"/);
+  assert.match(ti85, /id="ti85RegisterGrid"/);
+  assert.match(ti85, /id="ti85FlagGrid"/);
+  assert.match(ti85, /id="ti85MachineState"/);
+  assert.match(ti85, /id="ti85KeyboardState"/);
+  assert.match(ti85, /id="ti85DisplayState"/);
+  assert.match(ti85, /id="ti85MemoryInspector"/);
+  assert.match(app, /Ti85Machine/);
+  assert.match(app, /drawTi85Screen/);
+  assert.match(app, /renderLcdRgba/);
+  assert.match(app, /machine\.pressKey\("ON"\)/);
+  assert.match(app, /machine\.releaseKey\("ON"\)/);
+  assert.match(app, /machine\.getDebugState\(\)/);
+  assert.match(app, /disassembleWindow/);
+  assert.match(app, /readMemoryRows/);
 });
 
 test("TRS-80 page exposes a live Model III viewer entry point", async () => {
@@ -201,19 +244,23 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/spectrum.html"), true);
   assert.equal(existsSync("dist/cpm.html"), true);
   assert.equal(existsSync("dist/trs80.html"), true);
+  assert.equal(existsSync("dist/ti85.html"), true);
   assert.equal(existsSync("dist/public/app.js"), true);
   assert.equal(existsSync("dist/public/cpm-app.js"), true);
   assert.equal(existsSync("dist/public/trs80-app.js"), true);
+  assert.equal(existsSync("dist/public/ti85-app.js"), true);
   assert.equal(existsSync("dist/public/cpm-session.js"), true);
   assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
   assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
   assert.equal(existsSync("dist/public/assets/contact-email.png"), true);
   assert.equal(existsSync("dist/src/spectrum48.js"), true);
   assert.equal(existsSync("dist/src/trs80-model3.js"), true);
+  assert.equal(existsSync("dist/src/ti85.js"), true);
   assert.equal(existsSync("dist/src/z80mbc2.js"), true);
   assert.equal(existsSync("dist/ROM/48.rom"), true);
   assert.equal(existsSync("dist/ROM/cpm22-1.dsk"), true);
   assert.equal(existsSync("dist/ROM/cpm22-2.dsk"), true);
   assert.equal(existsSync("dist/ROM/DS0N00.DSK"), true);
   assert.equal(existsSync("dist/ROM/DS0N06.DSK"), true);
+  assert.equal(existsSync("dist/ROM/TI85.ROM"), true);
 });

@@ -1236,6 +1236,121 @@ dd {
   gap: 10px;
 }
 
+.ti85-page-body {
+  display: block;
+  min-height: 100vh;
+  padding: 18px;
+  background:
+    linear-gradient(90deg, rgba(24, 24, 23, 0.96), rgba(12, 15, 15, 0.96)),
+    #111312;
+}
+
+.ti85-shell {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.ti85-frame {
+  display: grid;
+  gap: 16px;
+  border: 1px solid rgba(174, 205, 176, 0.2);
+  border-radius: 8px;
+  background: #171a1a;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34);
+  padding: clamp(14px, 3vw, 24px);
+}
+
+.ti85-frame header {
+  display: grid;
+  gap: 4px;
+}
+
+.ti85-frame header p {
+  margin: 0;
+  color: #b8c6bd;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ti85-frame h1 {
+  font-size: clamp(28px, 5vw, 44px);
+}
+
+.ti85-lcd-bezel {
+  width: min(100%, 768px);
+  margin: 0 auto;
+  border: 12px solid #080a0a;
+  border-radius: 8px;
+  background: #0c0f0f;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 18px 45px rgba(0, 0, 0, 0.32);
+  padding: clamp(10px, 2vw, 18px);
+}
+
+#ti85Screen {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  image-rendering: pixelated;
+  background: #aecdb0;
+}
+
+#ti85Screen:focus-visible {
+  outline: 3px solid #16c7bd;
+  outline-offset: 5px;
+}
+
+.ti85-controls {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(180px, 1.3fr);
+  gap: 10px;
+}
+
+.ti85-controls button {
+  background: #dce7dd;
+  border-color: rgba(174, 205, 176, 0.42);
+}
+
+.ti85-controls #ti85On {
+  background: #1f2b27;
+  color: #eaf4e8;
+}
+
+.ti85-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.ti85-rom-control {
+  display: grid;
+  align-items: center;
+  gap: 6px;
+  color: #b8c6bd;
+  font-size: 13px;
+}
+
+.ti85-rom-control input {
+  width: 100%;
+  color: #d7e2d7;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.ti85-rom-control input::file-selector-button {
+  margin-right: 8px;
+  border: 1px solid rgba(174, 205, 176, 0.42);
+  border-radius: 6px;
+  background: #dce7dd;
+  color: #151515;
+  font: inherit;
+  padding: 7px 10px;
+}
+
+.ti85-debugger {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 @media (max-width: 780px) {
   .selector-hero {
     min-height: 520px;
@@ -1270,11 +1385,13 @@ dd {
   }
 
   .cpm-controls,
-  .trs80-controls {
+  .trs80-controls,
+  .ti85-controls {
     grid-template-columns: 1fr;
   }
 
-  .trs80-rom-control {
+  .trs80-rom-control,
+  .ti85-rom-control {
     grid-column: auto;
   }
 
@@ -1287,6 +1404,10 @@ dd {
   }
 
   .cpm-file-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .ti85-debugger {
     grid-template-columns: 1fr;
   }
 }

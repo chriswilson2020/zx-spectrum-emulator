@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TI-85</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./public/styles.css">
+  </head>
+  <body class="ti85-page-body">
+    <main class="ti85-shell">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./spectrum.html">ZX Spectrum</a>
+        <a href="./cpm.html">CP/M</a>
+        <a href="./trs80.html">TRS-80</a>
+      </nav>
+      <section class="ti85-frame" aria-label="TI-85 viewer">
+        <header>
+          <p>Texas Instruments</p>
+          <h1>TI-85</h1>
+          <output id="ti85Status">Loading ROM</output>
+        </header>
+        <div class="ti85-lcd-bezel">
+          <canvas id="ti85Screen" width="128" height="64" tabindex="0" aria-label="TI-85 LCD display"></canvas>
+        </div>
+        <div class="ti85-controls">
+          <button id="ti85RunPause" type="button" aria-label="Pause" disabled>Pause</button>
+          <button id="ti85StepFrame" type="button" disabled>Frame</button>
+          <button id="ti85StepInstruction" type="button" disabled>Step</button>
+          <button id="ti85On" type="button" disabled>ON</button>
+          <button id="ti85Reset" type="button" disabled>Reset</button>
+          <label class="ti85-rom-control">
+            <span>ROM</span>
+            <input id="ti85RomFile" type="file" accept=".rom,.bin,application/octet-stream">
+          </label>
+        </div>
+        <details id="ti85DebugDrawer" class="debug-drawer ti85-debug-drawer">
+          <summary>
+            <span>Debug Drawer</span>
+            <strong>Registers, display, memory, keyboard</strong>
+          </summary>
+          <section class="debugger ti85-debugger" aria-label="TI-85 machine debugger">
+            <div class="debug-card registers-card">
+              <h2>Registers</h2>
+              <div id="ti85RegisterGrid" class="register-grid"></div>
+              <div id="ti85FlagGrid" class="flag-grid" aria-label="CPU flags"></div>
+            </div>
+            <div class="debug-card disassembly-card">
+              <h2>Disassembly</h2>
+              <ol id="ti85Disassembly" class="disassembly"></ol>
+            </div>
+            <div class="debug-card">
+              <h2>Machine</h2>
+              <div id="ti85MachineState" class="basic-status"></div>
+            </div>
+            <div class="debug-card">
+              <h2>Keyboard</h2>
+              <div id="ti85KeyboardState" class="basic-status"></div>
+            </div>
+            <div class="debug-card">
+              <h2>Display</h2>
+              <div id="ti85DisplayState" class="basic-status"></div>
+            </div>
+            <div class="debug-card memory-card">
+              <h2>Memory</h2>
+              <div id="ti85MemoryInspector" class="memory-inspector"></div>
+            </div>
+          </section>
+        </details>
+      </section>
+    </main>
+    <footer class="site-contact-footer">
+      <span>Contact</span>
+      <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
+    </footer>
+    <script type="module" src="./public/ti85-app.js"></script>
+  </body>
+</html>

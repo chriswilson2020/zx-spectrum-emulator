@@ -8,6 +8,7 @@ await copyFile("public/index.html", "dist/index.html");
 await copyFile("public/spectrum.html", "dist/spectrum.html");
 await copyFile("public/cpm.html", "dist/cpm.html");
 await copyFile("public/trs80.html", "dist/trs80.html");
+await copyFile("public/ti85.html", "dist/ti85.html");
 await cp("public", "dist/public", { recursive: true });
 await cp("src", "dist/src", { recursive: true });
 
