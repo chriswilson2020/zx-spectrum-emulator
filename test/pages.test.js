@@ -90,7 +90,10 @@ test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async 
   assert.match(index, /CP\/M 2\.2/);
   assert.match(index, /TRS-80 Model III/);
   assert.match(index, /TI-85/);
-  assert.match(index, /Calculator/);
+  assert.match(index, /ti85-icon-lcd/);
+  assert.match(index, /ti85-icon-softkeys/);
+  assert.match(index, /ti85-icon-keypad/);
+  assert.doesNotMatch(index, /Texas Instruments/i);
   assert.match(index, /MODEL III/);
   assert.match(index, /machine-selector-banner\.png/);
   assert.match(index, /contact-email\.png/);
