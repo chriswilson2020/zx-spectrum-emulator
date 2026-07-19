@@ -3,6 +3,5 @@ node_modules/
 npm-debug.log*
 dist/
 vendor/SingleStepTests-z80/
-ROM/*.rom
 !ROM/48.rom
 .superpowers/
