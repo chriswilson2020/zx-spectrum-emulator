@@ -147,6 +147,8 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   const styles = await readFile("public/styles.css", "utf8");
   assert.match(styles, /\.ti85-debug-drawer\s*{[^}]*width:\s*min\(1180px,\s*calc\(100vw - 36px\)\)/s);
   assert.match(styles, /\.ti85-debugger\s*{[^}]*grid-template-areas:/s);
+  assert.match(styles, /\.ti85-key\s*{[\s\S]*?min-height:\s*48px/);
+  assert.match(styles, /\.ti85-key-label\s*{[\s\S]*?font-size:\s*16px/);
   assert.match(styles, /@media \(max-width: 430px\)\s*{[\s\S]*?\.ti85-key\s*{[\s\S]*?min-height:\s*clamp\(34px,\s*8\.8vw,\s*38px\)/);
 });
 
