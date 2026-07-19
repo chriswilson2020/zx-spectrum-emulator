@@ -204,10 +204,16 @@ test("reports compact debug state for the TRS-80 Model III machine", () => {
   assert.equal(state.frame, 0);
   assert.equal(state.cpu.registers.PC, machine.cpu.PC);
   assert.deepEqual(state.keyboard.pressedKeys, ["A"]);
+  assert.deepEqual(state.keyboard.matrix.slice(0, 2), [
+    { address: 0x3800, value: 0x02, keys: ["A"] },
+    { address: 0x3880, value: 0x00, keys: [] }
+  ]);
   assert.deepEqual(state.display, {
     columns: 64,
     rows: 16,
-    videoStart: 0x3c00
+    videoStart: 0x3c00,
+    videoEnd: 0x3fff,
+    nonSpaceCharacters: 1
   });
 });
 

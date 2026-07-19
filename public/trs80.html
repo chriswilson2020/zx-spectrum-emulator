@@ -24,7 +24,7 @@
         <details id="trs80DebugDrawer" class="debug-drawer trs80-debug-drawer">
           <summary>
             <span>Debug Drawer</span>
-            <strong>Registers, disassembly, keyboard, display</strong>
+            <strong>Registers, disassembly, memory, keyboard</strong>
           </summary>
           <section class="debugger trs80-debugger" aria-label="TRS-80 machine debugger">
             <div class="debug-card registers-card">
@@ -39,10 +39,15 @@
             <div class="debug-card trs80-keyboard-card">
               <h2>Keyboard</h2>
               <div id="trs80KeyboardState" class="basic-status"></div>
+              <div id="trs80KeyboardMatrix" class="trs80-keyboard-matrix"></div>
             </div>
             <div class="debug-card trs80-display-card">
               <h2>Display</h2>
               <div id="trs80DisplayState" class="basic-status"></div>
+            </div>
+            <div class="debug-card memory-card trs80-memory-card">
+              <h2>Memory</h2>
+              <div id="trs80MemoryInspector" class="memory-inspector trs80-memory-inspector"></div>
             </div>
           </section>
         </details>

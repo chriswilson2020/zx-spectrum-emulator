@@ -1,5 +1,5 @@
 import { Trs80Model3Machine } from "../src/trs80-model3.js";
-import { disassembleWindow, hexByte, hexWord } from "./debugger.js";
+import { disassembleWindow, hexByte, hexWord, readMemoryRows } from "./debugger.js";
 import { loadTrs80CasEntry, parseCas, trs80CasEntries } from "./trs80-cassette.js";
 import { Trs80KeyLatch, Trs80TextTyper, keyEventToTrs80Key } from "./trs80-keyboard.js";
 
@@ -27,7 +27,9 @@ const registerGrid = document.querySelector("#trs80RegisterGrid");
 const flagGrid = document.querySelector("#trs80FlagGrid");
 const disassemblyList = document.querySelector("#trs80Disassembly");
 const keyboardState = document.querySelector("#trs80KeyboardState");
+const keyboardMatrix = document.querySelector("#trs80KeyboardMatrix");
 const displayState = document.querySelector("#trs80DisplayState");
+const memoryInspector = document.querySelector("#trs80MemoryInspector");
 
 let machine;
 let keyLatch;
@@ -47,6 +49,13 @@ const FLAG_BITS = [
   ["P/V", 0x04],
   ["N", 0x02],
   ["C", 0x01]
+];
+
+const TRS80_MEMORY_SECTIONS = [
+  ["ROM", 0x0000, 4],
+  ["Keyboard", 0x3800, 4],
+  ["Video", 0x3c00, 4],
+  ["RAM", 0x4000, 4]
 ];
 
 function setControlsEnabled(enabled) {
@@ -106,7 +115,9 @@ function renderUnavailableScreen() {
   flagGrid.replaceChildren();
   disassemblyList.replaceChildren();
   keyboardState.replaceChildren();
+  keyboardMatrix.replaceChildren();
   displayState.replaceChildren();
+  memoryInspector.replaceChildren();
 }
 
 function render() {
@@ -138,7 +149,7 @@ function updateDebugDrawer() {
     ["IFF2", state.cpu.iff2 ? 1 : 0]
   ];
 
-  registerGrid.replaceChildren(...pairs.map(([name, value]) => makeCell(name, name === "T" ? String(value) : hexWord(value))));
+  renderKeyValueGrid(registerGrid, pairs.map(([name, value]) => [name, name === "T" ? String(value) : hexWord(value)]), "register-cell");
   flagGrid.replaceChildren(...FLAG_BITS.map(([name, mask]) => {
     const flag = document.createElement("span");
     flag.className = `flag${(registers.F & mask) !== 0 ? " on" : ""}`;
@@ -166,28 +177,73 @@ function updateDebugDrawer() {
     return item;
   }));
 
-  keyboardState.replaceChildren(
-    makeCell("Held", state.keyboard.pressedKeys.join(" ") || "-"),
-    makeCell("Count", String(state.keyboard.pressedKeys.length))
-  );
-  displayState.replaceChildren(
-    makeCell("Frame", String(state.frame)),
-    makeCell("Size", `${state.display.columns}x${state.display.rows}`),
-    makeCell("Video", hexWord(state.display.videoStart)),
-    makeCell("CAS", `${state.cassette.cursor}/${state.cassette.blocks}`),
-    makeCell("Tape", state.cassette.playing ? "play" : "-")
+  renderKeyValueGrid(keyboardState, [
+    ["Held", state.keyboard.pressedKeys.join(" ") || "-"],
+    ["Count", String(state.keyboard.pressedKeys.length)]
+  ], "basic-cell");
+  renderKeyboardMatrix(state.keyboard.matrix);
+  renderKeyValueGrid(displayState, [
+    ["Frame", String(state.frame)],
+    ["Size", `${state.display.columns}x${state.display.rows}`],
+    ["Video", `${hexWord(state.display.videoStart)}-${hexWord(state.display.videoEnd)}`],
+    ["Chars", String(state.display.nonSpaceCharacters)],
+    ["CAS", `${state.cassette.cursor}/${state.cassette.blocks}`],
+    ["Tape", state.cassette.playing ? "play" : "-"],
+    ["EAR", state.cassette.inputLevel ? "1" : "0"],
+    ["Run", running ? "yes" : "no"]
+  ], "basic-cell");
+  renderMemoryInspector();
+}
+
+function renderKeyValueGrid(container, rows, className = "") {
+  container.replaceChildren(
+    ...rows.map(([label, value]) => {
+      const cell = document.createElement("div");
+      if (className) cell.className = className;
+      const name = document.createElement("span");
+      name.textContent = label;
+      const content = document.createElement("strong");
+      content.textContent = value;
+      cell.append(name, content);
+      return cell;
+    })
   );
 }
 
-function makeCell(label, value) {
-  const cell = document.createElement("div");
-  cell.className = "basic-cell";
-  const name = document.createElement("span");
-  name.textContent = label;
-  const content = document.createElement("strong");
-  content.textContent = value;
-  cell.append(name, content);
-  return cell;
+function renderKeyboardMatrix(rows) {
+  keyboardMatrix.replaceChildren(...rows.map((row) => {
+    const item = document.createElement("div");
+    item.className = row.value ? "active" : "";
+
+    const address = document.createElement("span");
+    address.textContent = hexWord(row.address);
+
+    const value = document.createElement("strong");
+    value.textContent = hexByte(row.value);
+
+    const keys = document.createElement("em");
+    keys.textContent = row.keys.join(" ") || "-";
+
+    item.append(address, value, keys);
+    return item;
+  }));
+}
+
+function renderMemoryInspector() {
+  memoryInspector.replaceChildren(
+    ...TRS80_MEMORY_SECTIONS.map(([title, address, rows]) => {
+      const section = document.createElement("section");
+      const heading = document.createElement("h3");
+      heading.textContent = `${title} ${hexWord(address)}`;
+      const listing = document.createElement("pre");
+      listing.textContent = readMemoryRows((readAddress) => machine.read8(readAddress), address, {
+        rows,
+        bytesPerRow: 8
+      }).map((row) => `${hexWord(row.address)}  ${row.bytes.map(hexByte).join(" ")}`).join("\n");
+      section.append(heading, listing);
+      return section;
+    })
+  );
 }
 
 function setKeyFromEvent(event, pressed) {

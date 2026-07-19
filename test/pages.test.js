@@ -111,7 +111,13 @@ test("TRS-80 page exposes a live Model III viewer entry point", async () => {
   assert.match(trs80, /id="trs80FlagGrid"/);
   assert.match(trs80, /id="trs80Disassembly"/);
   assert.match(trs80, /id="trs80KeyboardState"/);
+  assert.match(trs80, /id="trs80DisplayState"/);
+  assert.match(trs80, /id="trs80MemoryInspector"/);
+  assert.match(trs80, /id="trs80KeyboardMatrix"/);
   assert.match(app, /Trs80Model3Machine/);
+  assert.match(app, /readMemoryRows/);
+  assert.match(app, /TRS80_MEMORY_SECTIONS/);
+  assert.match(app, /renderKeyboardMatrix/);
   assert.match(app, /parseCas/);
   assert.match(app, /loadTrs80CasEntry/);
   assert.match(app, /machine\.saveState\(\)/);

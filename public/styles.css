@@ -524,7 +524,8 @@ dd {
 .trs80-debugger {
   grid-template-areas:
     "registers disassembly"
-    "keyboard display";
+    "keyboard display"
+    "memory memory";
   grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.2fr);
 }
 
@@ -534,6 +535,41 @@ dd {
 
 .trs80-display-card {
   grid-area: display;
+}
+
+.trs80-keyboard-matrix {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  font: 11px/1.25 "SFMono-Regular", Consolas, monospace;
+}
+
+.trs80-keyboard-matrix div {
+  display: grid;
+  grid-template-columns: 48px 32px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 202, 106, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 209, 123, 0.04);
+  color: #bbc4b7;
+  padding: 5px 7px;
+}
+
+.trs80-keyboard-matrix div.active {
+  border-color: rgba(255, 202, 106, 0.44);
+  background: rgba(255, 209, 123, 0.12);
+  color: #ffd17b;
+}
+
+.trs80-keyboard-matrix strong {
+  color: inherit;
+}
+
+.trs80-keyboard-matrix em {
+  overflow-wrap: anywhere;
+  color: inherit;
+  font-style: normal;
 }
 
 .memory-inspector {
@@ -557,6 +593,15 @@ dd {
   white-space: pre-wrap;
 }
 
+.trs80-memory-inspector {
+  grid-template-columns: 1fr;
+}
+
+.trs80-memory-inspector pre {
+  overflow-x: auto;
+  white-space: pre;
+}
+
 @media (min-width: 1280px) {
   .debugger {
     grid-template-areas:
@@ -570,6 +615,14 @@ dd {
       "registers disassembly io"
       "console disassembly trace";
     grid-template-columns: minmax(230px, 0.8fr) minmax(320px, 1.15fr) minmax(250px, 0.85fr);
+  }
+
+  .trs80-debugger {
+    grid-template-areas:
+      "registers disassembly memory"
+      "keyboard disassembly memory"
+      "display display memory";
+    grid-template-columns: minmax(230px, 0.8fr) minmax(320px, 1.1fr) minmax(330px, 1fr);
   }
 }
 
@@ -607,7 +660,8 @@ dd {
   .trs80-debugger {
     grid-template-areas:
       "registers disassembly"
-      "keyboard display";
+      "keyboard display"
+      "memory memory";
     grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
   }
 
@@ -654,7 +708,8 @@ dd {
       "registers"
       "disassembly"
       "keyboard"
-      "display";
+      "display"
+      "memory";
     grid-template-columns: 1fr;
   }
 

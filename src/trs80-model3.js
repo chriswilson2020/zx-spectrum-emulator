@@ -266,7 +266,12 @@ export class Trs80Model3Machine {
       halted: this.halted,
       frame: this.frame,
       keyboard: {
-        pressedKeys: this.getPressedKeys()
+        pressedKeys: this.getPressedKeys(),
+        matrix: Array.from(this.keyboardRows, (value, row) => ({
+          address: KEYBOARD_START + (row * 0x80),
+          value,
+          keys: KEY_ROWS[row].filter((key, bit) => key && (value & (1 << bit)) !== 0)
+        }))
       },
       cassette: {
         blocks: this.cassetteBlocks.length,
@@ -277,7 +282,9 @@ export class Trs80Model3Machine {
       display: {
         columns: Trs80Model3Machine.SCREEN_COLUMNS,
         rows: Trs80Model3Machine.SCREEN_ROWS,
-        videoStart: VIDEO_START
+        videoStart: VIDEO_START,
+        videoEnd: RAM_START - 1,
+        nonSpaceCharacters: this.videoRam.reduce((count, value) => count + (this.displayByteToChar(value) === " " ? 0 : 1), 0)
       }
     };
   }
