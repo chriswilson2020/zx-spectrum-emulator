@@ -99,6 +99,16 @@ test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async 
 test("TI-85 page exposes a live calculator LCD viewer entry point", async () => {
   const ti85 = await readFile("public/ti85.html", "utf8");
   const app = await readFile("public/ti85-app.js", "utf8");
+  const expectedTi85Keys = [
+    "DOWN", "ENTER", "(-)", ".", "0", "F5",
+    "LEFT", "+", "3", "2", "1", "STO", "F4",
+    "RIGHT", "-", "6", "5", "4", ",", "F3",
+    "UP", "*", "9", "8", "7", "X^2", "F2",
+    "/", ")", "(", "EE", "LN", "F1",
+    "^", "TAN", "COS", "SIN", "LOG", "2ND",
+    "CLEAR", "CUSTOM", "PRGM", "STAT", "GRAPH", "EXIT",
+    "DEL", "X-VAR", "ALPHA", "MORE", "ON"
+  ];
 
   assert.match(ti85, /TI-85/);
   assert.match(ti85, /id="ti85Screen"/);
@@ -120,6 +130,10 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(app, /data-ti85-key/);
   assert.match(app, /bindTi85KeyButton/);
   assert.match(app, /button\.id = "ti85On"/);
+  for (const key of expectedTi85Keys) {
+    assert.match(app, new RegExp(`key: "${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  }
+  assert.equal(app.match(/\bkey: "/g)?.length, expectedTi85Keys.length);
   assert.match(app, /drawTi85Screen/);
   assert.match(app, /renderLcdRgba/);
   assert.match(app, /machine\.pressKey\(key\)/);

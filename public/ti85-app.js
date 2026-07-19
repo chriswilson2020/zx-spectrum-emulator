@@ -53,7 +53,8 @@ const TI85_KEY_LAYOUT = [
     { key: "2ND", label: "2nd", className: "modifier second" },
     { key: "EXIT", label: "EXIT", shift: "QUIT" },
     { key: "MORE", label: "MORE", shift: "MODE" },
-    { key: "UP", label: "▲", className: "arrow offset-left" }
+    { key: "UP", label: "▲", className: "arrow" },
+    { key: "DOWN", label: "▼", className: "arrow" }
   ],
   [
     { key: "ALPHA", label: "ALPHA", shift: "alpha", className: "modifier alpha" },
