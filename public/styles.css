@@ -1254,17 +1254,21 @@ dd {
 
 .ti85-frame {
   display: grid;
-  gap: 16px;
-  border: 1px solid rgba(174, 205, 176, 0.2);
+  gap: 14px;
+  width: min(520px, 100%);
+  margin: 0 auto;
+  border: 1px solid rgba(184, 198, 189, 0.2);
   border-radius: 8px;
-  background: #171a1a;
+  background: linear-gradient(180deg, #202423 0%, #111414 100%);
   box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34);
-  padding: clamp(14px, 3vw, 24px);
+  padding: clamp(14px, 3vw, 22px);
 }
 
 .ti85-frame header {
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 2px 12px;
 }
 
 .ti85-frame header p {
@@ -1276,17 +1280,23 @@ dd {
 }
 
 .ti85-frame h1 {
-  font-size: clamp(28px, 5vw, 44px);
+  font-size: 36px;
+}
+
+.ti85-frame header output {
+  grid-column: 1 / -1;
+  min-height: 22px;
+  color: #d8e5dd;
+  font: 13px/1.35 "SFMono-Regular", Consolas, monospace;
 }
 
 .ti85-lcd-bezel {
-  width: min(100%, 768px);
-  margin: 0 auto;
-  border: 12px solid #080a0a;
-  border-radius: 8px;
-  background: #0c0f0f;
+  width: 100%;
+  border: clamp(10px, 2.6vw, 18px) solid #070909;
+  border-radius: 7px;
+  background: #0b0e0e;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 18px 45px rgba(0, 0, 0, 0.32);
-  padding: clamp(10px, 2vw, 18px);
+  padding: clamp(8px, 2vw, 14px);
 }
 
 #ti85Screen {
@@ -1304,7 +1314,7 @@ dd {
 
 .ti85-controls {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(180px, 1.3fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(180px, 1.35fr);
   gap: 10px;
 }
 
@@ -1313,14 +1323,118 @@ dd {
   border-color: rgba(174, 205, 176, 0.42);
 }
 
-.ti85-controls #ti85On {
-  background: #1f2b27;
-  color: #eaf4e8;
-}
-
 .ti85-controls button:disabled {
   cursor: not-allowed;
   opacity: 0.52;
+}
+
+.ti85-keypad {
+  display: grid;
+  gap: 9px;
+  padding: 14px 8px 4px;
+}
+
+.ti85-key-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(7px, 2vw, 12px);
+  align-items: end;
+}
+
+.ti85-key {
+  position: relative;
+  display: grid;
+  grid-template-rows: 16px minmax(38px, auto);
+  align-items: stretch;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0;
+  border: 1px solid #050606;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #343939, #171a1a);
+  color: #f3f6f4;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.18), inset 0 -3px rgba(0, 0, 0, 0.35), 0 2px 0 #050606;
+  font: inherit;
+  touch-action: none;
+  user-select: none;
+}
+
+.ti85-key:hover:not(:disabled),
+.ti85-key:focus-visible {
+  border-color: #95d7d1;
+  outline: none;
+}
+
+.ti85-key:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px rgba(0, 0, 0, 0.28), 0 0 0 #050606;
+}
+
+.ti85-key:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.ti85-key-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  min-width: 0;
+  padding: 0 4px 1px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: #d7d6a5;
+}
+
+.ti85-key-alpha {
+  color: #9fc7e8;
+}
+
+.ti85-key-label {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 4px 3px 7px;
+  overflow-wrap: anywhere;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.ti85-key.function {
+  min-height: 48px;
+  grid-template-rows: 15px minmax(32px, auto);
+  background: linear-gradient(180deg, #262b2d, #101313);
+}
+
+.ti85-key.modifier.second {
+  background: linear-gradient(180deg, #f3d990, #c68b35);
+  color: #fff8df;
+}
+
+.ti85-key.modifier.alpha {
+  background: linear-gradient(180deg, #9fc3e4, #4b78a3);
+  color: #f5fbff;
+}
+
+.ti85-key.number {
+  background: linear-gradient(180deg, #aab6bd, #66737b);
+  color: #ffffff;
+}
+
+.ti85-key.operator,
+.ti85-key.enter {
+  background: linear-gradient(180deg, #2b3030, #101212);
+}
+
+.ti85-key.arrow {
+  min-height: 48px;
+  background: linear-gradient(180deg, #a7b0b4, #717b81);
+}
+
+.ti85-key.on {
+  background: linear-gradient(180deg, #20282a, #0a0d0d);
 }
 
 .ti85-rom-control {
@@ -1409,5 +1523,30 @@ dd {
 
   .ti85-debugger {
     grid-template-columns: 1fr;
+  }
+
+  .ti85-frame h1 {
+    font-size: 30px;
+  }
+
+  .ti85-keypad {
+    gap: 7px;
+    padding-inline: 0;
+  }
+
+  .ti85-key-row {
+    gap: 6px;
+  }
+
+  .ti85-key {
+    min-height: 50px;
+  }
+
+  .ti85-key-label {
+    font-size: 16px;
+  }
+
+  .ti85-key-top {
+    font-size: 9px;
   }
 }

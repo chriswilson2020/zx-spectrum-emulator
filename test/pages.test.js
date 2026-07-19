@@ -108,7 +108,7 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(ti85, /id="ti85StepFrame"/);
   assert.match(ti85, /id="ti85StepInstruction"/);
   assert.match(ti85, /id="ti85Reset"/);
-  assert.match(ti85, /id="ti85On"/);
+  assert.match(ti85, /id="ti85Keypad"/);
   assert.match(ti85, /id="ti85RegisterGrid"/);
   assert.match(ti85, /id="ti85FlagGrid"/);
   assert.match(ti85, /id="ti85MachineState"/);
@@ -116,10 +116,14 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(ti85, /id="ti85DisplayState"/);
   assert.match(ti85, /id="ti85MemoryInspector"/);
   assert.match(app, /Ti85Machine/);
+  assert.match(app, /TI85_KEY_LAYOUT/);
+  assert.match(app, /data-ti85-key/);
+  assert.match(app, /bindTi85KeyButton/);
+  assert.match(app, /button\.id = "ti85On"/);
   assert.match(app, /drawTi85Screen/);
   assert.match(app, /renderLcdRgba/);
-  assert.match(app, /machine\.pressKey\("ON"\)/);
-  assert.match(app, /machine\.releaseKey\("ON"\)/);
+  assert.match(app, /machine\.pressKey\(key\)/);
+  assert.match(app, /machine\.releaseKey\(key\)/);
   assert.match(app, /machine\.getDebugState\(\)/);
   assert.match(app, /disassembleWindow/);
   assert.match(app, /readMemoryRows/);
