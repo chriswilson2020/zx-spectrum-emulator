@@ -855,9 +855,27 @@ dd {
 }
 
 .trs80-screen {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 5px;
   color: #ffca6a;
-  font: 700 13px/1 "SFMono-Regular", Consolas, monospace;
+  font: 700 14px/1 "SFMono-Regular", Consolas, monospace;
   text-shadow: 0 0 12px rgba(255, 202, 106, 0.82);
+}
+
+.trs80-screen span {
+  display: block;
+  grid-column: auto;
+  border: 1px solid rgba(255, 202, 106, 0.5);
+  padding: 4px 5px 3px;
+}
+
+.trs80-screen small {
+  grid-column: auto;
+  align-self: auto;
+  color: #f3d447;
+  font: 700 8px/1 "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0;
 }
 
 .site-contact-footer {
@@ -1051,6 +1069,41 @@ dd {
   padding: 5px 8px;
 }
 
+.trs80-type-panel {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 202, 106, 0.22);
+  padding-top: 14px;
+}
+
+.trs80-type-panel label {
+  color: #bbc4b7;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.trs80-type-panel textarea {
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  border: 1px solid rgba(255, 202, 106, 0.26);
+  border-radius: 6px;
+  background: #100b03;
+  color: #ffd17b;
+  font: 13px/1.35 "SFMono-Regular", Consolas, monospace;
+  padding: 10px;
+}
+
+.trs80-type-panel textarea:focus-visible {
+  outline: 3px solid #16c7bd;
+  outline-offset: 2px;
+}
+
+.trs80-type-controls {
+  display: grid;
+  grid-template-columns: 2fr repeat(3, minmax(54px, 1fr));
+  gap: 10px;
+}
+
 .cpm-controls button:disabled,
 .trs80-controls button:disabled {
   cursor: not-allowed;
@@ -1140,6 +1193,10 @@ dd {
 
   .trs80-rom-control {
     grid-column: auto;
+  }
+
+  .trs80-type-controls {
+    grid-template-columns: 1fr 1fr;
   }
 
   .cpm-file-controls {

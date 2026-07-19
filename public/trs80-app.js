@@ -1,6 +1,6 @@
 import { Trs80Model3Machine } from "../src/trs80-model3.js";
 import { disassembleWindow, hexByte, hexWord } from "./debugger.js";
-import { Trs80KeyLatch, keyEventToTrs80Key } from "./trs80-keyboard.js";
+import { Trs80KeyLatch, Trs80TextTyper, keyEventToTrs80Key } from "./trs80-keyboard.js";
 
 const screenElement = document.querySelector("#trs80Screen");
 const statusOutput = document.querySelector("#trs80Status");
@@ -9,6 +9,11 @@ const runPauseButton = document.querySelector("#trs80RunPause");
 const stepFrameButton = document.querySelector("#trs80StepFrame");
 const stepInstructionButton = document.querySelector("#trs80StepInstruction");
 const resetButton = document.querySelector("#trs80Reset");
+const typeText = document.querySelector("#trs80TypeText");
+const typeButton = document.querySelector("#trs80TypeButton");
+const startupHButton = document.querySelector("#trs80StartupH");
+const startupLButton = document.querySelector("#trs80StartupL");
+const enterButton = document.querySelector("#trs80Enter");
 const registerGrid = document.querySelector("#trs80RegisterGrid");
 const flagGrid = document.querySelector("#trs80FlagGrid");
 const disassemblyList = document.querySelector("#trs80Disassembly");
@@ -17,6 +22,7 @@ const displayState = document.querySelector("#trs80DisplayState");
 
 let machine;
 let keyLatch;
+let textTyper;
 let running = false;
 let animationFrame = 0;
 const DEFAULT_ROM_URL = new URL("../ROM/Model3-RevC-2EF8.bin", import.meta.url);
@@ -37,6 +43,10 @@ function setControlsEnabled(enabled) {
   stepFrameButton.disabled = !enabled;
   stepInstructionButton.disabled = !enabled;
   resetButton.disabled = !enabled;
+  typeButton.disabled = !enabled;
+  startupHButton.disabled = !enabled;
+  startupLButton.disabled = !enabled;
+  enterButton.disabled = !enabled;
 }
 
 async function loadDefaultRom() {
@@ -54,6 +64,7 @@ function mountRom(bytes, message) {
   try {
     machine = new Trs80Model3Machine({ rom: bytes });
     keyLatch = new Trs80KeyLatch(machine);
+    textTyper = new Trs80TextTyper(keyLatch);
     running = true;
     runPauseButton.textContent = "Pause";
     runPauseButton.setAttribute("aria-label", "Pause");
@@ -64,6 +75,7 @@ function mountRom(bytes, message) {
   } catch (error) {
     machine = undefined;
     keyLatch = undefined;
+    textTyper = undefined;
     running = false;
     setControlsEnabled(false);
     statusOutput.value = error.message;
@@ -161,7 +173,7 @@ function makeCell(label, value) {
 }
 
 function setKeyFromEvent(event, pressed) {
-  if (!machine || !keyLatch || event.target instanceof HTMLInputElement) return;
+  if (!machine || !keyLatch || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
   const key = keyEventToTrs80Key(event);
   if (!key) return;
 
@@ -174,7 +186,7 @@ function setKeyFromEvent(event, pressed) {
 function tick() {
   if (running && machine) {
     machine.runFrame();
-    keyLatch?.advanceFrame();
+    if (!textTyper?.advanceFrame()) keyLatch?.advanceFrame();
     render();
   }
   animationFrame = requestAnimationFrame(tick);
@@ -220,10 +232,33 @@ romFileInput.addEventListener("change", async () => {
   mountRom(new Uint8Array(await file.arrayBuffer()), `${file.name} loaded`);
 });
 
+typeButton.addEventListener("click", () => {
+  if (!textTyper) return;
+  textTyper.enqueue(typeText.value);
+  running = true;
+  runPauseButton.textContent = "Pause";
+  runPauseButton.setAttribute("aria-label", "Pause");
+  screenElement.focus();
+});
+
+startupHButton.addEventListener("click", () => queueText("H"));
+startupLButton.addEventListener("click", () => queueText("L"));
+enterButton.addEventListener("click", () => queueText("\n"));
+
+function queueText(text) {
+  if (!textTyper) return;
+  textTyper.enqueue(text);
+  running = true;
+  runPauseButton.textContent = "Pause";
+  runPauseButton.setAttribute("aria-label", "Pause");
+  screenElement.focus();
+}
+
 screenElement.addEventListener("keydown", (event) => setKeyFromEvent(event, true));
 screenElement.addEventListener("keyup", (event) => setKeyFromEvent(event, false));
 window.addEventListener("blur", () => {
   if (!machine || !keyLatch) return;
+  textTyper?.clear();
   keyLatch.releaseAll();
   render();
 });

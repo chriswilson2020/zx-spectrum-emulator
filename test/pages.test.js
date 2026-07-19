@@ -77,6 +77,7 @@ test("machine selector exposes Spectrum, CP/M, and TRS-80 routes", async () => {
   assert.match(index, /ZX Spectrum 48K/);
   assert.match(index, /CP\/M 2\.2/);
   assert.match(index, /TRS-80 Model III/);
+  assert.match(index, /MODEL III/);
   assert.match(index, /machine-selector-banner\.png/);
   assert.match(index, /contact-email\.png/);
 });
@@ -93,11 +94,18 @@ test("TRS-80 page exposes a live Model III viewer entry point", async () => {
   assert.match(trs80, /id="trs80StepFrame"/);
   assert.match(trs80, /id="trs80StepInstruction"/);
   assert.match(trs80, /id="trs80Reset"/);
+  assert.match(trs80, /id="trs80TypeText"/);
+  assert.match(trs80, /id="trs80TypeButton"/);
+  assert.match(trs80, /id="trs80StartupH"/);
+  assert.match(trs80, /id="trs80StartupL"/);
+  assert.match(trs80, /id="trs80Enter"/);
   assert.match(trs80, /id="trs80RegisterGrid"/);
   assert.match(trs80, /id="trs80FlagGrid"/);
   assert.match(trs80, /id="trs80Disassembly"/);
   assert.match(trs80, /id="trs80KeyboardState"/);
   assert.match(app, /Trs80Model3Machine/);
+  assert.match(app, /Trs80TextTyper/);
+  assert.match(app, /textTyper\.enqueue/);
   assert.match(app, /renderTextDisplay/);
   assert.match(app, /keyEventToTrs80Key/);
   assert.match(app, /machine\.getDebugState\(\)/);

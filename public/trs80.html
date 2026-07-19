@@ -56,6 +56,16 @@
             <input id="trs80RomFile" type="file" accept=".rom,.bin,application/octet-stream">
           </label>
         </div>
+        <section class="trs80-type-panel" aria-label="TRS-80 text input">
+          <label for="trs80TypeText">Type Text</label>
+          <textarea id="trs80TypeText" rows="4" spellcheck="false">PRINT "HELLO"</textarea>
+          <div class="trs80-type-controls">
+            <button id="trs80TypeButton" type="button" disabled>Type Text</button>
+            <button id="trs80StartupH" type="button" disabled>H</button>
+            <button id="trs80StartupL" type="button" disabled>L</button>
+            <button id="trs80Enter" type="button" disabled>Enter</button>
+          </div>
+        </section>
       </section>
     </main>
     <footer class="site-contact-footer">
