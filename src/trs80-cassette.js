@@ -25,7 +25,13 @@ export function parseCas(input) {
     }
   }
 
-  if (blocks.length === 0) throw new Error("No supported TRS-80 CAS blocks found");
+  if (blocks.length === 0) {
+    const blockHeader = detectBlockStructuredCas(bytes);
+    if (blockHeader) {
+      throw new Error(`Unsupported block-structured CAS file ${blockHeader.name || "(unnamed)"}: this is not TRS-80 Model III BASIC cassette data`);
+    }
+    throw new Error("No supported TRS-80 CAS blocks found");
+  }
   return blocks;
 }
 
@@ -182,4 +188,35 @@ function matchesAt(bytes, offset, pattern) {
 
 function wordAt(bytes, offset) {
   return bytes[offset] | (bytes[offset + 1] << 8);
+}
+
+function detectBlockStructuredCas(bytes) {
+  for (let offset = 0; offset + 5 < bytes.length; offset += 1) {
+    if (bytes[offset] !== 0x3c) continue;
+    const type = bytes[offset + 1];
+    const length = bytes[offset + 2];
+    const dataOffset = offset + 3;
+    const checksumOffset = dataOffset + length;
+    const footerOffset = checksumOffset + 1;
+    if (footerOffset >= bytes.length || bytes[footerOffset] !== 0x55) continue;
+
+    const checksum = bytes[checksumOffset];
+    const sum = bytes.slice(offset + 1, checksumOffset).reduce((total, byte) => (total + byte) & 0xff, 0);
+    if (checksum !== sum) continue;
+
+    if (type === 0x00 && length >= 8) {
+      return {
+        type,
+        name: asciiName(bytes.slice(dataOffset, dataOffset + 8))
+      };
+    }
+    return { type, name: "" };
+  }
+  return null;
+}
+
+function asciiName(bytes) {
+  return String.fromCharCode(...bytes)
+    .replace(/\0+$/g, "")
+    .trimEnd();
 }

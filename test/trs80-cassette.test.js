@@ -41,6 +41,29 @@ function makeBasicCas({ name = "H", leaderBytes = 256 } = {}) {
   ]);
 }
 
+function makeBlockCasHeader() {
+  const headerPayload = [
+    ..."BARKEEP ".split("").map((char) => char.charCodeAt(0)),
+    0x02,
+    0x00,
+    0x00,
+    0x03,
+    0x00,
+    0x01,
+    0x00
+  ];
+  const checksum = [0x00, headerPayload.length, ...headerPayload].reduce((sum, byte) => (sum + byte) & 0xff, 0);
+  return new Uint8Array([
+    ...new Array(256).fill(0x55),
+    0x3c,
+    0x00,
+    headerPayload.length,
+    ...headerPayload,
+    checksum,
+    0x55
+  ]);
+}
+
 function makeReadyMachine() {
   const machine = new Trs80Model3Machine({ rom: makeRom() });
   machine.write16(TXTTAB, BASIC_START);
@@ -59,6 +82,13 @@ test("parses Level II BASIC CAS files", () => {
   assert.equal(blocks[0].checksumValid, true);
   assert.equal(entries.length, 1);
   assert.equal(entries[0].loadable, true);
+});
+
+test("rejects block-structured CAS files with a helpful diagnostic", () => {
+  assert.throws(
+    () => parseCas(makeBlockCasHeader()),
+    /unsupported block-structured CAS.*BARKEEP.*not TRS-80 Model III BASIC/i
+  );
 });
 
 test("fast-loads BASIC CAS entries into Model III BASIC RAM", () => {
