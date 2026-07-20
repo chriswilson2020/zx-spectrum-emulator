@@ -53,7 +53,11 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.doesNotMatch(ti85App, /from "\/(public|src)\//);
   assert.match(app, /new URL\("\.\.\/ROM\/48\.rom", import\.meta\.url\)/);
   assert.match(trs80App, /new URL\("\.\.\/ROM\/Model3-RevC-2EF8\.bin", import\.meta\.url\)/);
-  assert.match(ti85App, /new URL\("\.\.\/ROM\/TI85\.ROM", import\.meta\.url\)/);
+  const ti85RomIndex = ti85App.indexOf('new URL("../ROM/TI85.ROM", import.meta.url)');
+  const free85RomIndex = ti85App.indexOf('new URL("../ROM/FREE85.ROM", import.meta.url)');
+  assert.notEqual(ti85RomIndex, -1);
+  assert.notEqual(free85RomIndex, -1);
+  assert.equal(ti85RomIndex < free85RomIndex, true);
   const devServer = await readFile("scripts/dev-server.js", "utf8");
   assert.match(devServer, /"\/ti85\.html"/);
 });
@@ -303,4 +307,5 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/ROM/DS0N00.DSK"), true);
   assert.equal(existsSync("dist/ROM/DS0N06.DSK"), true);
   assert.equal(existsSync("dist/ROM/TI85.ROM"), existsSync("ROM/TI85.ROM"));
+  assert.equal(existsSync("dist/ROM/FREE85.ROM"), existsSync("ROM/FREE85.ROM"));
 });

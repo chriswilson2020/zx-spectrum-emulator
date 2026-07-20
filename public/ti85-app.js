@@ -22,7 +22,10 @@ const memoryInspector = document.querySelector("#ti85MemoryInspector");
 let machine;
 let running = false;
 let animationFrame = 0;
-const DEFAULT_ROM_URL = new URL("../ROM/TI85.ROM", import.meta.url);
+const DEFAULT_ROM_CANDIDATES = [
+  { url: new URL("../ROM/TI85.ROM", import.meta.url), message: "TI-85 ROM loaded" },
+  { url: new URL("../ROM/FREE85.ROM", import.meta.url), message: "Free85 ROM loaded" }
+];
 const MISSING_ROM_MESSAGE = "Use your own 128K TI-85 ROM file";
 
 const FLAG_BITS = [
@@ -54,15 +57,19 @@ function setControlsEnabled(enabled) {
 }
 
 async function loadDefaultRom() {
-  try {
-    const response = await fetch(DEFAULT_ROM_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    mountRom(new Uint8Array(await response.arrayBuffer()), "Bundled ROM loaded");
-  } catch {
-    statusOutput.value = MISSING_ROM_MESSAGE;
-    setControlsEnabled(false);
-    drawUnavailableScreen();
+  for (const candidate of DEFAULT_ROM_CANDIDATES) {
+    try {
+      const response = await fetch(candidate.url);
+      if (!response.ok) continue;
+      mountRom(new Uint8Array(await response.arrayBuffer()), candidate.message);
+      return;
+    } catch {
+      // Keep trying later public ROM candidates before falling back to upload.
+    }
   }
+  statusOutput.value = MISSING_ROM_MESSAGE;
+  setControlsEnabled(false);
+  drawUnavailableScreen();
 }
 
 function mountRom(bytes, message) {
