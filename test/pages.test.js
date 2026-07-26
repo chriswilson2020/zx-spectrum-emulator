@@ -22,7 +22,7 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(index, /src="\.\/public\/assets\/machine-selector-banner\.png"/);
   assert.match(index, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/public\/styles\.css"/);
-  assert.match(spectrum, /src="\.\/public\/app\.js\?v=20260726-rom-upload"/);
+  assert.match(spectrum, /src="\.\/public\/app\.js\?v=20260726-debug-workbench"/);
   assert.match(spectrum, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/index\.html">Machines</);
   assert.match(cpm, /href="\.\/public\/styles\.css"/);
@@ -83,11 +83,23 @@ test("viewer groups secondary tools into tabs and keeps debugger collapsible", a
   assert.match(index, /id="rasterOverlay"/);
   assert.match(index, /<details class="debug-drawer"/);
   assert.match(index, /id="romFile"/);
+  assert.match(index, /id="stepBack"/);
+  assert.match(index, /id="rzxFile"/);
+  assert.match(index, /id="rzxStep"/);
+  assert.match(index, /id="sourceFile"/);
+  assert.match(index, /id="sourceListing"/);
+  assert.match(index, /id="assemblerSearch"/);
+  assert.match(index, /class="debug-card source-card resizable-window"/);
+  assert.match(index, /class="debug-card reference-card resizable-window"/);
   assert.match(app, /drawSpectrumScreen/);
   assert.match(app, /drawRasterOverlay/);
   assert.match(app, /machine\.getRasterPosition\(\)/);
   assert.match(app, /romFileInput\.addEventListener\("change"/);
   assert.match(app, /mountRom\(new Uint8Array\(await file\.arrayBuffer\(\)\)/);
+  assert.match(app, /executionHistory\.stepBack\(machine\)/);
+  assert.match(app, /parseRzx\(await file\.arrayBuffer\(\)\)/);
+  assert.match(app, /new RzxPlayback\(machine, recording\)/);
+  assert.match(app, /renderAssemblerReference/);
 });
 
 test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async () => {

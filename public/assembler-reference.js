@@ -1,0 +1,31 @@
+export const SJASMPLUS_REFERENCE_URL = "https://z00m128.github.io/sjasmplus/";
+
+export const ASSEMBLER_REFERENCE = [
+  ["Layout", "ORG address", "Set the assembly address."],
+  ["Layout", "DISP address", "Assemble code for a displaced runtime address; end with ENT."],
+  ["Layout", "ALIGN boundary[, fill]", "Advance to the next aligned address."],
+  ["Data", "DB / DEFB values", "Emit bytes, strings, or expressions."],
+  ["Data", "DW / DEFW values", "Emit little-endian 16-bit words."],
+  ["Data", "DD / DEFD values", "Emit little-endian 32-bit values."],
+  ["Data", "DS / DEFS count[, fill]", "Reserve or fill a number of bytes."],
+  ["Data", "DG pattern", "Emit graphic bitmap data using character patterns."],
+  ["Files", "INCLUDE filename", "Assemble another source file at this point."],
+  ["Files", "INCBIN filename[, offset[, length]]", "Include raw bytes from a file."],
+  ["Symbols", "name EQU expression", "Define a numeric symbol."],
+  ["Symbols", "DEFINE name value", "Define text substituted before parsing."],
+  ["Symbols", "DEFARRAY name values", "Define an indexed array of substitutions."],
+  ["Checks", "ASSERT expression[, message]", "Stop assembly when an expected condition is false."],
+  ["Conditional", "IF / ELSE / ENDIF", "Conditionally assemble source expressions."],
+  ["Conditional", "IFDEF / IFNDEF", "Conditionally assemble based on a defined symbol."],
+  ["Macros", "MACRO name args / ENDM", "Define a reusable parameterized source block."],
+  ["Macros", "DUP count / EDUP", "Repeat a block of source a fixed number of times."],
+  ["Structure", "STRUCT name / ENDS", "Define a named data structure and its member offsets."],
+  ["Names", "MODULE name / ENDMODULE", "Group labels in a namespace."],
+  ["Machine", "DEVICE ZXSPECTRUM48", "Enable a virtual 48K Spectrum memory device."],
+  ["Output", "SAVEBIN filename,start,length", "Write an assembled memory range as raw binary."],
+  ["Output", "SAVESNA filename,start", "Write a Spectrum snapshot with the selected entry point."],
+  ["Output", "SAVETAP filename,start,length", "Write an assembled memory range to a TAP file."],
+  ["Expression", "high(expr) / low(expr)", "Return the high or low byte of an expression."],
+  ["Expression", "$ / $$", "Current assembly address / current page or device context."],
+  ["Scripting", "LUA / ENDLUA", "Run an embedded Lua block during assembly."]
+].map(([category, syntax, description]) => ({ category, syntax, description }));

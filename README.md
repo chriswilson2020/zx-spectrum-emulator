@@ -34,15 +34,26 @@ The first ZX Spectrum 48K machine layer is in place:
 - The browser viewer loads the bundled `ROM/48.rom`, runs the ROM, accepts
   modern PC keyboard input, and can paste/load Sinclair BASIC listings.
 - The viewer includes a visual debugger with pause/frame-step/instruction-step
-  controls, live registers and flags, disassembly around `PC`, BASIC status,
-  memory inspectors for key Spectrum regions, raster line/t-state readouts, an
-  optional raster overlay, and immediate screen redraws while stepping.
+  and reverse-step controls, live registers and flags, disassembly around `PC`,
+  BASIC status, memory inspectors for key Spectrum regions, always-visible
+  raster line/t-state readouts, an optional raster overlay, and immediate screen
+  redraws while stepping.
+- The debugger workbench exposes independently resizable screen, register,
+  disassembly, memory, source-listing, and assembler-reference panels. Source
+  listings with hexadecimal address prefixes follow the current `PC`, while the
+  searchable quick reference covers common sjasmplus directives and links to
+  its complete documentation.
 - `.tap` files and standard-speed `.tzx` blocks can be parsed in the browser,
   inspected as tape blocks, and fast-loaded for BASIC program and CODE
   header/data pairs.
 - `.z80` snapshots can be loaded and the current machine state can be saved as
   an uncompressed 48K `.z80` snapshot for returning to BASIC programs or game
   positions later.
+- `.rzx` input recordings can be stepped frame-by-frame or played continuously
+  using their recorded opcode-fetch counts and port input values. Compressed and
+  uncompressed 48K recordings with embedded `.z80` snapshots are supported;
+  protected recordings, external snapshots, and embedded snapshot formats for
+  other machine profiles are rejected with an explicit diagnostic.
 - The BASIC source paths tokenize and detokenize the full 48K keyword range,
   renumber listings that exceed line `9999`, auto-run pasted listings, export
   editable `.bas` files, and handle ROM-specific `DEF FN` parameter

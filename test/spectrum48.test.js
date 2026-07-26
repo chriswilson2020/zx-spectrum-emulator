@@ -75,6 +75,51 @@ test("wires the CPU to fetch and execute bytes from Spectrum ROM", () => {
   assert.equal(machine.step(), 7);
   assert.equal(machine.cpu.A, 0x42);
   assert.equal(machine.cpu.PC, 0x0002);
+  assert.equal(machine.cpu.instructionFetches, 1);
+});
+
+test("saves and restores complete machine state for reverse execution", () => {
+  const machine = new Spectrum48({ rom: makeRom({ 0x0000: 0x3c }) });
+  machine.cpu.A = 0x10;
+  machine.write8(0x8000, 0x44);
+  machine.borderColor = 3;
+  const saved = machine.saveState();
+
+  machine.step();
+  machine.write8(0x8000, 0x99);
+  machine.borderColor = 6;
+  machine.restoreState(saved);
+
+  assert.equal(machine.cpu.A, 0x10);
+  assert.equal(machine.cpu.PC, 0);
+  assert.equal(machine.read8(0x8000), 0x44);
+  assert.equal(machine.borderColor, 3);
+  assert.equal(machine.cpu.instructionFetches, 0);
+});
+
+test("plays an RZX-style frame using recorded input values", () => {
+  const machine = new Spectrum48({
+    rom: makeRom({
+      0x0000: 0xdb,
+      0x0001: 0xfe,
+      0x0002: 0x00
+    })
+  });
+
+  machine.runRecordedFrame({ fetchCount: 2, inputs: Uint8Array.of(0x5a) });
+
+  assert.equal(machine.cpu.A, 0x5a);
+  assert.equal(machine.cpu.PC, 3);
+  assert.equal(machine.frame, 1);
+  assert.equal(machine.cpu.pendingInterrupt, true);
+});
+
+test("rejects RZX frames whose input log does not match execution", () => {
+  const machine = new Spectrum48({ rom: makeRom({ 0x0000: 0xdb, 0x0001: 0xfe }) });
+  assert.throws(
+    () => machine.runRecordedFrame({ fetchCount: 1, inputs: [] }),
+    /more input reads than recorded/
+  );
 });
 
 test("port fe writes update border colour and beeper state", () => {
