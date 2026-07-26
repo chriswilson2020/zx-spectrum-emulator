@@ -22,7 +22,7 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(index, /src="\.\/public\/assets\/machine-selector-banner\.png"/);
   assert.match(index, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/public\/styles\.css"/);
-  assert.match(spectrum, /src="\.\/public\/app\.js"/);
+  assert.match(spectrum, /src="\.\/public\/app\.js\?v=20260726-rom-upload"/);
   assert.match(spectrum, /src="\.\/public\/assets\/contact-email\.png"/);
   assert.match(spectrum, /href="\.\/index\.html">Machines</);
   assert.match(cpm, /href="\.\/public\/styles\.css"/);
