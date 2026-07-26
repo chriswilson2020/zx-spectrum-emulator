@@ -38,6 +38,7 @@ const stepInstructionButton = document.querySelector("#stepInstruction");
 const resetButton = document.querySelector("#reset");
 const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
+const romFileInput = document.querySelector("#romFile");
 const immediateScreenInput = document.querySelector("#immediateScreen");
 const showRasterOverlayInput = document.querySelector("#showRasterOverlay");
 const pasteForm = document.querySelector("#pasteForm");
@@ -101,6 +102,21 @@ function resetMachine() {
   if (currentTapBlocks.length > 0) machine.setTapeBlocks(currentTapBlocks);
   audio?.reset(machine.cpu.tStates);
   statusOutput.value = "Running";
+}
+
+function mountRom(bytes, message) {
+  const nextRom = Uint8Array.from(bytes);
+  const nextMachine = new Spectrum48({ rom: nextRom });
+  if (currentTapBlocks.length > 0) nextMachine.setTapeBlocks(currentTapBlocks);
+
+  rom = nextRom;
+  machine = nextMachine;
+  running = true;
+  runPauseButton.textContent = "Pause";
+  runPauseButton.setAttribute("aria-label", "Pause");
+  audio?.reset(machine.cpu.tStates);
+  statusOutput.value = message;
+  refreshDebugDisplay();
 }
 
 function pumpAudio() {
@@ -475,6 +491,19 @@ stepInstructionButton.addEventListener("click", () => {
 resetButton.addEventListener("click", () => {
   resetMachine();
   refreshDebugDisplay();
+});
+
+romFileInput.addEventListener("change", async () => {
+  const file = romFileInput.files?.[0];
+  if (!file) return;
+
+  try {
+    mountRom(new Uint8Array(await file.arrayBuffer()), `Loaded ${file.name}`);
+  } catch (error) {
+    statusOutput.value = error.message;
+  } finally {
+    romFileInput.value = "";
+  }
 });
 
 typeHelloButton.addEventListener("click", () => {

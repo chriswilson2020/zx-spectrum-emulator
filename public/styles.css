@@ -753,6 +753,38 @@ dd {
   width: min(1540px, 100%);
 }
 
+.spectrum-page-content {
+  width: min(1540px, 100%);
+}
+
+.spectrum-page-content .machine-nav {
+  width: 100%;
+}
+
+.spectrum-rom-control {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  color: #c9c9bd;
+  font-size: 13px;
+}
+
+.spectrum-rom-control input {
+  width: 100%;
+  color: #d7e2d7;
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.spectrum-rom-control input::file-selector-button {
+  margin-right: 8px;
+  border: 1px solid rgba(241, 241, 232, 0.34);
+  border-radius: 6px;
+  background: var(--text);
+  color: #151515;
+  font: inherit;
+  padding: 7px 10px;
+}
+
 .selector-body,
 .cpm-page-body,
 .trs80-page-body {
