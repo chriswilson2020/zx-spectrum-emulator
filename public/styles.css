@@ -74,10 +74,51 @@ button:focus-visible {
   min-width: 0;
 }
 
+.screen-window {
+  min-width: 320px;
+  min-height: 300px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(10, 13, 12, 0.76);
+  overflow: auto;
+}
+
+.window-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding: 9px 12px;
+}
+
+.window-header h2 {
+  margin: 0 auto 0 0;
+  font-size: 14px;
+}
+
+.window-header output {
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.window-header label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.window-header input {
+  accent-color: var(--accent);
+}
+
 .screen-wrap {
   position: relative;
   display: grid;
   place-items: center;
+  min-height: 240px;
 }
 
 #screen,
@@ -200,6 +241,16 @@ output {
 .snapshot-panel {
   display: grid;
   gap: 8px;
+}
+
+.rzx-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+#rzxStatus {
+  font: 12px/1.35 "SFMono-Regular", Consolas, monospace;
 }
 
 .tape-panel input,
@@ -351,7 +402,8 @@ dd {
   display: grid;
   grid-template-areas:
     "registers disassembly"
-    "basic memory";
+    "basic memory"
+    "source reference";
   grid-template-columns: minmax(280px, 0.9fr) minmax(360px, 1.4fr);
   gap: 12px;
   align-items: start;
@@ -360,11 +412,17 @@ dd {
 
 .debug-card {
   min-width: 0;
+  min-height: 150px;
+  overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(10, 13, 12, 0.76);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.26);
   padding: 12px;
+}
+
+.resizable-window {
+  resize: both;
 }
 
 .debug-card h2 {
@@ -481,6 +539,92 @@ dd {
 
 .memory-card {
   grid-area: memory;
+}
+
+.source-card {
+  grid-area: source;
+}
+
+.reference-card {
+  grid-area: reference;
+}
+
+.source-card label,
+.reference-card label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.source-card input,
+.reference-card input {
+  width: 100%;
+  color: var(--text);
+  font: 12px/1.2 "SFMono-Regular", Consolas, monospace;
+}
+
+.source-card input::file-selector-button {
+  margin-right: 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  padding: 6px 8px;
+}
+
+.source-listing {
+  max-height: 420px;
+  margin: 10px 0 0;
+  padding-left: 42px;
+  overflow: auto;
+  color: #d8d8cf;
+  font: 12px/1.4 "SFMono-Regular", Consolas, monospace;
+  white-space: pre;
+}
+
+.source-listing li {
+  padding: 1px 6px;
+}
+
+.source-listing li.current {
+  background: var(--yellow);
+  color: #14130c;
+}
+
+.assembler-reference {
+  display: grid;
+  gap: 6px;
+  max-height: 360px;
+  margin: 10px 0;
+  overflow: auto;
+}
+
+.assembler-reference article {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 8px;
+}
+
+.assembler-reference small {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.assembler-reference code {
+  display: block;
+  margin: 3px 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.assembler-reference p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.reference-card > a {
+  color: var(--accent);
+  font-size: 12px;
 }
 
 .cpm-debug-drawer {
@@ -606,7 +750,8 @@ dd {
   .debugger {
     grid-template-areas:
       "registers disassembly memory"
-      "basic disassembly memory";
+      "basic disassembly memory"
+      "source source reference";
     grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.1fr) minmax(360px, 1.35fr);
   }
 
@@ -645,7 +790,8 @@ dd {
   .debugger {
     grid-template-areas:
       "registers disassembly"
-      "basic memory";
+      "basic memory"
+      "source reference";
     grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.3fr);
   }
 
@@ -689,7 +835,9 @@ dd {
       "registers"
       "basic"
       "disassembly"
-      "memory";
+      "memory"
+      "source"
+      "reference";
     grid-template-columns: 1fr;
   }
 
@@ -715,6 +863,10 @@ dd {
 
   .memory-inspector {
     grid-template-columns: 1fr;
+  }
+
+  .resizable-window {
+    resize: vertical;
   }
 }
 

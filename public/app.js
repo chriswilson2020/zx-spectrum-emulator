@@ -1,4 +1,5 @@
 import { BeeperAudio } from "./audio.js";
+import { ASSEMBLER_REFERENCE } from "./assembler-reference.js";
 import { exportBasicProgram, loadBasicProgram, renumberBasicProgram } from "./basic.js";
 import {
   disassembleWindow,
@@ -8,6 +9,7 @@ import {
   readMemoryRows,
   readSystemVariables
 } from "./debugger.js";
+import { MachineHistory } from "./history.js";
 import { Spectrum48 } from "../src/spectrum48.js";
 import {
   basicTextToSpectrumKeyTaps,
@@ -16,6 +18,7 @@ import {
   spectrumKeysForModernKey
 } from "./keyboard.js";
 import { applyZ80Snapshot, createZ80Snapshot } from "./snapshot.js";
+import { parseRzx, RzxPlayback } from "./rzx.js";
 import { loadTapEntry, parseTapeFile, tapEntries } from "./tape.js";
 
 const canvas = document.querySelector("#screen");
@@ -29,12 +32,14 @@ const borderOutput = document.querySelector("#border");
 const rasterLineOutput = document.querySelector("#rasterLine");
 const rasterColumnOutput = document.querySelector("#rasterColumn");
 const rasterTStateOutput = document.querySelector("#rasterTState");
+const screenRasterOutput = document.querySelector("#screenRaster");
 const lastKeyOutput = document.querySelector("#lastKey");
 const mappedKeysOutput = document.querySelector("#mappedKeys");
 const heldKeysOutput = document.querySelector("#heldKeys");
 const runPauseButton = document.querySelector("#runPause");
 const stepFrameButton = document.querySelector("#stepFrame");
 const stepInstructionButton = document.querySelector("#stepInstruction");
+const stepBackButton = document.querySelector("#stepBack");
 const resetButton = document.querySelector("#reset");
 const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
@@ -50,6 +55,10 @@ const tapList = document.querySelector("#tapList");
 const tapLoadButton = document.querySelector("#tapLoad");
 const snapshotFileInput = document.querySelector("#snapshotFile");
 const snapshotSaveButton = document.querySelector("#snapshotSave");
+const rzxFileInput = document.querySelector("#rzxFile");
+const rzxStepButton = document.querySelector("#rzxStep");
+const rzxPlayPauseButton = document.querySelector("#rzxPlayPause");
+const rzxStatusOutput = document.querySelector("#rzxStatus");
 const toolTabButtons = document.querySelectorAll("[data-tool-tab]");
 const toolPanels = document.querySelectorAll("[data-tool-panel]");
 const registerGrid = document.querySelector("#registerGrid");
@@ -57,6 +66,10 @@ const flagGrid = document.querySelector("#flagGrid");
 const basicStatusPanel = document.querySelector("#basicStatus");
 const disassemblyPanel = document.querySelector("#disassembly");
 const memoryInspector = document.querySelector("#memoryInspector");
+const sourceFileInput = document.querySelector("#sourceFile");
+const sourceListing = document.querySelector("#sourceListing");
+const assemblerSearchInput = document.querySelector("#assemblerSearch");
+const assemblerReference = document.querySelector("#assemblerReference");
 
 let rom;
 let machine;
@@ -71,6 +84,10 @@ let lastMappedKeys = [];
 let currentTapBlocks = [];
 let currentTapEntries = [];
 let selectedTapEntryIndex = -1;
+const executionHistory = new MachineHistory({ limit: 256 });
+let rzxPlayback;
+let rzxPlaying = false;
+let sourceRows = [];
 
 function formatWord(value) {
   return value.toString(16).padStart(4, "0").toUpperCase();
@@ -101,6 +118,8 @@ function resetMachine() {
   machine = new Spectrum48({ rom });
   if (currentTapBlocks.length > 0) machine.setTapeBlocks(currentTapBlocks);
   audio?.reset(machine.cpu.tStates);
+  clearExecutionHistory();
+  clearRzxPlayback();
   statusOutput.value = "Running";
 }
 
@@ -115,8 +134,36 @@ function mountRom(bytes, message) {
   runPauseButton.textContent = "Pause";
   runPauseButton.setAttribute("aria-label", "Pause");
   audio?.reset(machine.cpu.tStates);
+  clearExecutionHistory();
+  clearRzxPlayback();
   statusOutput.value = message;
   refreshDebugDisplay();
+}
+
+function updateHistoryControls() {
+  stepBackButton.disabled = executionHistory.size === 0;
+}
+
+function clearExecutionHistory() {
+  executionHistory.clear();
+  updateHistoryControls();
+}
+
+function captureExecutionState(label) {
+  executionHistory.capture(machine, label, rzxPlayback
+    ? { rzxEventIndex: rzxPlayback.eventIndex, rzxFrameIndex: rzxPlayback.frameIndex }
+    : null);
+  updateHistoryControls();
+}
+
+function clearRzxPlayback() {
+  rzxPlayback = undefined;
+  rzxPlaying = false;
+  if (!rzxStepButton) return;
+  rzxStepButton.disabled = true;
+  rzxPlayPauseButton.disabled = true;
+  rzxPlayPauseButton.textContent = "Play RZX";
+  rzxStatusOutput.value = "No RZX recording loaded";
 }
 
 function pumpAudio() {
@@ -174,6 +221,7 @@ function updateRasterTelemetry() {
   rasterLineOutput.textContent = String(raster.line);
   rasterColumnOutput.textContent = String(raster.column);
   rasterTStateOutput.textContent = String(raster.tStateInFrame);
+  screenRasterOutput.value = `Raster ${raster.line}:${raster.column} · T ${raster.tStateInFrame}`;
 }
 
 function refreshDebugDisplay() {
@@ -323,7 +371,26 @@ function draw() {
   if (!machine) return;
 
   if (running) {
-    runMachineFrame();
+    if (rzxPlaying && rzxPlayback) {
+      try {
+        captureExecutionState("RZX frame");
+        const frame = rzxPlayback.stepFrame();
+        if (!frame || rzxPlayback.done) {
+          rzxPlaying = false;
+          running = false;
+          rzxPlayPauseButton.textContent = "Play RZX";
+          statusOutput.value = `RZX playback complete (${rzxPlayback.frameIndex} frames)`;
+        }
+        rzxStatusOutput.value = `${rzxPlayback.frameIndex}/${rzxPlayback.recording.frameCount} frames`;
+      } catch (error) {
+        rzxPlaying = false;
+        running = false;
+        rzxPlayPauseButton.textContent = "Play RZX";
+        statusOutput.value = error.message;
+      }
+    } else {
+      runMachineFrame();
+    }
     flashOn = Math.floor(machine.frame / 16) % 2 === 1;
   } else {
     pumpAudio();
@@ -428,6 +495,65 @@ function updateDebugger() {
     .join("\n");
   systemSection.append(systemHeading, systemList);
   memoryInspector.append(systemSection);
+  highlightSourceLine(registers.PC);
+}
+
+function sourceAddress(line) {
+  const match = line.match(/^\s*(?:\d+\s+)?(?:0x|\$)?([0-9a-f]{4})(?=[:\s])/i);
+  return match ? Number.parseInt(match[1], 16) : null;
+}
+
+function renderSource(text) {
+  const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
+  sourceListing.replaceChildren(...lines.map((line) => {
+    const item = document.createElement("li");
+    item.textContent = line || " ";
+    const address = sourceAddress(line);
+    if (address !== null) item.dataset.address = String(address);
+    return item;
+  }));
+  sourceRows = Array.from(sourceListing.children);
+  if (machine) highlightSourceLine(machine.cpu.PC);
+}
+
+function highlightSourceLine(pc) {
+  for (const row of sourceRows) {
+    row.classList.toggle("current", Number(row.dataset.address) === pc);
+  }
+}
+
+function renderAssemblerReference(query = "") {
+  const normalizedQuery = query.trim().toLowerCase();
+  const entries = ASSEMBLER_REFERENCE.filter((entry) =>
+    !normalizedQuery || `${entry.category} ${entry.syntax} ${entry.description}`.toLowerCase().includes(normalizedQuery)
+  );
+  assemblerReference.replaceChildren(...entries.map((entry) => {
+    const article = document.createElement("article");
+    const category = document.createElement("small");
+    category.textContent = entry.category;
+    const syntax = document.createElement("code");
+    syntax.textContent = entry.syntax;
+    const description = document.createElement("p");
+    description.textContent = entry.description;
+    article.append(category, syntax, description);
+    return article;
+  }));
+  if (entries.length === 0) assemblerReference.textContent = "No matching directives or functions";
+}
+
+function stepRzxFrame() {
+  if (!rzxPlayback || rzxPlayback.done) return;
+  captureExecutionState("RZX frame");
+  const frame = rzxPlayback.stepFrame();
+  rzxStatusOutput.value = `${rzxPlayback.frameIndex}/${rzxPlayback.recording.frameCount} frames`;
+  if (!frame || rzxPlayback.done) {
+    rzxStepButton.disabled = true;
+    rzxPlayPauseButton.disabled = true;
+    statusOutput.value = `RZX playback complete (${rzxPlayback.frameIndex} frames)`;
+  } else {
+    statusOutput.value = `RZX frame ${rzxPlayback.frameIndex}`;
+  }
+  refreshDebugDisplay();
 }
 
 window.addEventListener("keydown", (event) => {
@@ -463,6 +589,7 @@ window.addEventListener("keyup", (event) => {
 
 runPauseButton.addEventListener("click", () => {
   running = !running;
+  if (running && !rzxPlaying) clearExecutionHistory();
   runPauseButton.textContent = running ? "Pause" : "Run";
   runPauseButton.setAttribute("aria-label", running ? "Pause" : "Run");
   statusOutput.value = running ? "Running" : "Paused";
@@ -470,8 +597,11 @@ runPauseButton.addEventListener("click", () => {
 
 stepFrameButton.addEventListener("click", () => {
   running = false;
+  rzxPlaying = false;
+  rzxPlayPauseButton.textContent = "Play RZX";
   runPauseButton.textContent = "Run";
   runPauseButton.setAttribute("aria-label", "Run");
+  captureExecutionState("Frame");
   runMachineFrame();
   if (immediateScreenInput.checked) refreshDebugDisplay();
   else updateDebugger();
@@ -480,12 +610,36 @@ stepFrameButton.addEventListener("click", () => {
 
 stepInstructionButton.addEventListener("click", () => {
   running = false;
+  rzxPlaying = false;
+  rzxPlayPauseButton.textContent = "Play RZX";
   runPauseButton.textContent = "Run";
   runPauseButton.setAttribute("aria-label", "Run");
+  captureExecutionState("Instruction");
   stepInstruction();
   if (immediateScreenInput.checked) refreshDebugDisplay();
   else updateDebugger();
   statusOutput.value = "Stepped one instruction";
+});
+
+stepBackButton.addEventListener("click", () => {
+  running = false;
+  rzxPlaying = false;
+  runPauseButton.textContent = "Run";
+  runPauseButton.setAttribute("aria-label", "Run");
+  rzxPlayPauseButton.textContent = "Play RZX";
+  const entry = executionHistory.stepBack(machine);
+  if (!entry) return;
+  if (entry.metadata && rzxPlayback) {
+    rzxPlayback.eventIndex = entry.metadata.rzxEventIndex;
+    rzxPlayback.frameIndex = entry.metadata.rzxFrameIndex;
+    rzxStepButton.disabled = false;
+    rzxPlayPauseButton.disabled = false;
+    rzxStatusOutput.value = `${rzxPlayback.frameIndex}/${rzxPlayback.recording.frameCount} frames`;
+  }
+  updateHistoryControls();
+  audio?.reset(machine.cpu.tStates);
+  refreshDebugDisplay();
+  statusOutput.value = `Reversed ${entry.label.toLowerCase()}`;
 });
 
 resetButton.addEventListener("click", () => {
@@ -587,6 +741,8 @@ snapshotFileInput.addEventListener("change", async () => {
     tapLoadButton.disabled = true;
     renderTapList();
     audio?.reset(machine.cpu.tStates);
+    clearExecutionHistory();
+    clearRzxPlayback();
     statusOutput.value = `Loaded ${snapshot.format} snapshot ${file.name}`;
     refreshDebugDisplay();
   } catch (error) {
@@ -600,6 +756,53 @@ snapshotSaveButton.addEventListener("click", () => {
   const bytes = createZ80Snapshot(machine);
   downloadBytes(bytes, "zx-spectrum-state.z80");
   statusOutput.value = "Saved current machine state as a Z80 snapshot";
+});
+
+rzxFileInput.addEventListener("change", async () => {
+  const file = rzxFileInput.files?.[0];
+  if (!file) return;
+
+  try {
+    const recording = await parseRzx(await file.arrayBuffer());
+    rzxPlayback = new RzxPlayback(machine, recording);
+    rzxPlaying = false;
+    running = false;
+    runPauseButton.textContent = "Run";
+    runPauseButton.setAttribute("aria-label", "Run");
+    clearExecutionHistory();
+    rzxStepButton.disabled = false;
+    rzxPlayPauseButton.disabled = false;
+    rzxPlayPauseButton.textContent = "Play RZX";
+    rzxStatusOutput.value = `0/${recording.frameCount} frames · ${recording.creator}`;
+    statusOutput.value = `Loaded RZX ${file.name}`;
+  } catch (error) {
+    clearRzxPlayback();
+    statusOutput.value = error.message;
+  } finally {
+    rzxFileInput.value = "";
+  }
+});
+
+rzxStepButton.addEventListener("click", () => {
+  try {
+    running = false;
+    rzxPlaying = false;
+    runPauseButton.textContent = "Run";
+    rzxPlayPauseButton.textContent = "Play RZX";
+    stepRzxFrame();
+  } catch (error) {
+    statusOutput.value = error.message;
+  }
+});
+
+rzxPlayPauseButton.addEventListener("click", () => {
+  if (!rzxPlayback || rzxPlayback.done) return;
+  rzxPlaying = !rzxPlaying;
+  running = rzxPlaying;
+  runPauseButton.textContent = rzxPlaying ? "Pause" : "Run";
+  runPauseButton.setAttribute("aria-label", rzxPlaying ? "Pause" : "Run");
+  rzxPlayPauseButton.textContent = rzxPlaying ? "Pause RZX" : "Play RZX";
+  statusOutput.value = rzxPlaying ? "Playing RZX recording" : "RZX playback paused";
 });
 
 basicFileInput.addEventListener("change", async () => {
@@ -635,6 +838,23 @@ basicExportButton.addEventListener("click", () => {
   }
 });
 
+sourceFileInput.addEventListener("change", async () => {
+  const file = sourceFileInput.files?.[0];
+  if (!file) return;
+  try {
+    renderSource(await file.text());
+    statusOutput.value = `Loaded source ${file.name}`;
+  } catch (error) {
+    statusOutput.value = error.message;
+  } finally {
+    sourceFileInput.value = "";
+  }
+});
+
+assemblerSearchInput.addEventListener("input", () => {
+  renderAssemblerReference(assemblerSearchInput.value);
+});
+
 pasteForm.addEventListener("submit", (event) => {
   event.preventDefault();
   try {
@@ -645,6 +865,7 @@ pasteForm.addEventListener("submit", (event) => {
 });
 
 try {
+  renderAssemblerReference();
   await loadRom();
   resetMachine();
   draw();

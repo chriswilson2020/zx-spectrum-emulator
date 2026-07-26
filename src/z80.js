@@ -72,6 +72,7 @@ export class Z80 {
     this.Q = 0;
     this.halted = false;
     this.tStates = 0;
+    this.instructionFetches = 0;
   }
 
   get AF() {
@@ -118,6 +119,8 @@ export class Z80 {
     }
 
     if (this.halted) {
+      this.incrementRefresh();
+      this.instructionFetches += 1;
       this.tStates += 4;
       return 4;
     }
@@ -477,6 +480,7 @@ export class Z80 {
   fetchOpcode() {
     const value = this.fetch8();
     this.incrementRefresh();
+    this.instructionFetches += 1;
     return value;
   }
 
@@ -1605,7 +1609,8 @@ export class Z80 {
       interruptData: this.interruptData,
       pendingNmi: this.pendingNmi,
       halted: this.halted,
-      tStates: this.tStates
+      tStates: this.tStates,
+      instructionFetches: this.instructionFetches
     };
   }
 
@@ -1617,7 +1622,7 @@ export class Z80 {
     for (const name of ["IX", "IY", "SP", "PC", "WZ"]) {
       if (registers[name] !== undefined) this[name] = registers[name] & 0xffff;
     }
-    if (registers.R !== undefined) this.R = registers.R & 0x7f;
+    if (registers.R !== undefined) this.R = registers.R & 0xff;
     this.Q = registers.Q ?? this.Q;
     this.interruptMode = state.interruptMode ?? this.interruptMode;
     this.IFF1 = Boolean(state.IFF1);
@@ -1628,5 +1633,6 @@ export class Z80 {
     this.pendingNmi = Boolean(state.pendingNmi);
     this.halted = Boolean(state.halted);
     this.tStates = state.tStates ?? 0;
+    this.instructionFetches = state.instructionFetches ?? 0;
   }
 }

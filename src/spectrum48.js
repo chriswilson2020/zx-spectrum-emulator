@@ -92,6 +92,7 @@ export class Spectrum48 {
     this.tapePlaybackEndCursor = 0;
     this.tapeEarLevel = false;
     this.tapePlaying = false;
+    this.inputPlayback = null;
     this.frame = 0;
     this.keyboardRows = new Uint8Array(8).fill(0x1f);
     this.cpu = new Z80(this, {
@@ -124,6 +125,14 @@ export class Spectrum48 {
   }
 
   readPort(port) {
+    if (this.inputPlayback) {
+      if (this.inputPlayback.index >= this.inputPlayback.values.length) {
+        throw new Error("RZX frame performed more input reads than recorded");
+      }
+      const value = this.inputPlayback.values[this.inputPlayback.index];
+      this.inputPlayback.index += 1;
+      return value;
+    }
     if ((port & 0x0001) === 0) return 0xa0 | this.readTapeEarBit() | this.readKeyboardRows(port);
     return 0xff;
   }
@@ -413,6 +422,77 @@ export class Spectrum48 {
     const elapsed = this.runTStates(Spectrum48.T_STATES_PER_FRAME);
     this.frame += 1;
     return elapsed;
+  }
+
+  runRecordedFrame({ fetchCount, inputs }) {
+    const target = this.cpu.instructionFetches + fetchCount;
+    this.inputPlayback = {
+      values: inputs instanceof Uint8Array ? inputs : Uint8Array.from(inputs ?? []),
+      index: 0
+    };
+
+    try {
+      while (this.cpu.instructionFetches < target) this.step();
+      if (this.cpu.instructionFetches !== target) {
+        throw new Error("RZX frame ended between opcode fetches");
+      }
+      if (this.inputPlayback.index !== this.inputPlayback.values.length) {
+        throw new Error(
+          `RZX frame used ${this.inputPlayback.index} of ${this.inputPlayback.values.length} recorded input reads`
+        );
+      }
+    } finally {
+      this.inputPlayback = null;
+    }
+
+    this.cpu.requestInterrupt(0xff);
+    this.frame += 1;
+  }
+
+  saveState() {
+    return {
+      version: 1,
+      machine: "spectrum48",
+      cpu: this.cpu.getState(),
+      ram: Uint8Array.from(this.ram),
+      borderColor: this.borderColor,
+      beeperOn: this.beeperOn,
+      beeperEvents: this.beeperEvents.map((event) => ({ ...event })),
+      frame: this.frame,
+      keyboardRows: Uint8Array.from(this.keyboardRows),
+      tape: {
+        cursor: this.tapeCursor,
+        pulseIndex: this.tapePulseIndex,
+        nextPulseTState: this.tapeNextPulseTState,
+        playbackEndCursor: this.tapePlaybackEndCursor,
+        earLevel: this.tapeEarLevel,
+        playing: this.tapePlaying
+      }
+    };
+  }
+
+  restoreState(state) {
+    if (state?.machine !== "spectrum48" || state.version !== 1) {
+      throw new Error("Incompatible ZX Spectrum machine state");
+    }
+    if (!state.ram || state.ram.length !== this.ram.length) {
+      throw new Error("ZX Spectrum machine state requires 48K RAM");
+    }
+
+    this.cpu.setState(state.cpu);
+    this.ram.set(state.ram);
+    this.borderColor = state.borderColor & 0x07;
+    this.beeperOn = Boolean(state.beeperOn);
+    this.beeperEvents = (state.beeperEvents ?? []).map((event) => ({ ...event }));
+    this.frame = state.frame ?? 0;
+    this.keyboardRows.set(state.keyboardRows ?? new Uint8Array(8).fill(0x1f));
+    this.tapeCursor = state.tape?.cursor ?? 0;
+    this.tapePulseIndex = state.tape?.pulseIndex ?? 0;
+    this.tapeNextPulseTState = state.tape?.nextPulseTState ?? 0;
+    this.tapePlaybackEndCursor = state.tape?.playbackEndCursor ?? 0;
+    this.tapeEarLevel = Boolean(state.tape?.earLevel);
+    this.tapePlaying = Boolean(state.tape?.playing);
+    this.inputPlayback = null;
   }
 
   reset() {
