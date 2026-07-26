@@ -24,6 +24,7 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(spectrum, /href="\.\/public\/styles\.css"/);
   assert.match(spectrum, /src="\.\/public\/app\.js"/);
   assert.match(spectrum, /src="\.\/public\/assets\/contact-email\.png"/);
+  assert.match(spectrum, /href="\.\/index\.html">Machines</);
   assert.match(cpm, /href="\.\/public\/styles\.css"/);
   assert.match(cpm, /src="\.\/public\/cpm-app\.js(?:\?[^"]+)?"/);
   assert.match(cpm, /src="\.\/public\/assets\/contact-email\.png"/);
@@ -81,9 +82,12 @@ test("viewer groups secondary tools into tabs and keeps debugger collapsible", a
   assert.match(index, /id="immediateScreen"/);
   assert.match(index, /id="rasterOverlay"/);
   assert.match(index, /<details class="debug-drawer"/);
+  assert.match(index, /id="romFile"/);
   assert.match(app, /drawSpectrumScreen/);
   assert.match(app, /drawRasterOverlay/);
   assert.match(app, /machine\.getRasterPosition\(\)/);
+  assert.match(app, /romFileInput\.addEventListener\("change"/);
+  assert.match(app, /mountRom\(new Uint8Array\(await file\.arrayBuffer\(\)\)/);
 });
 
 test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async () => {

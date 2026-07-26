@@ -8,7 +8,14 @@
     <link rel="stylesheet" href="./public/styles.css">
   </head>
   <body class="spectrum-page-body">
-    <main class="shell">
+    <div class="spectrum-page-content">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./cpm.html">CP/M</a>
+        <a href="./trs80.html">TRS-80</a>
+        <a href="./ti85.html">TI-85</a>
+      </nav>
+      <main class="shell">
       <section class="stage" aria-label="ZX Spectrum display and debugger">
         <div class="screen-wrap">
           <canvas id="screen" width="320" height="240"></canvas>
@@ -52,6 +59,10 @@
           <button id="reset" type="button">Reset</button>
           <button id="typeHello" type="button">Type Hello</button>
           <button id="audioToggle" type="button" aria-pressed="false">Sound Off</button>
+          <label class="spectrum-rom-control">
+            <span>ROM</span>
+            <input id="romFile" type="file" accept=".rom,.bin,application/octet-stream">
+          </label>
         </div>
         <nav class="tool-tabs" role="tablist" aria-label="Tools">
           <button id="basicTab" type="button" role="tab" aria-selected="true" aria-controls="basicPanel" data-tool-tab="basic">BASIC</button>
@@ -134,7 +145,8 @@ RUN</textarea>
           </div>
         </section>
       </aside>
-    </main>
+      </main>
+    </div>
     <footer class="site-contact-footer">
       <span>Contact</span>
       <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
