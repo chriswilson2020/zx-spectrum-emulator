@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyZ80Snapshot, createZ80Snapshot, parseZ80Snapshot } from "../public/snapshot.js";
+import {
+  applySpectrumSnapshot,
+  applyZ80Snapshot,
+  createZ80Snapshot,
+  parseSnaSnapshot,
+  parseZ80Snapshot
+} from "../public/snapshot.js";
 import { Spectrum48 } from "../src/spectrum48.js";
 
 function makeMachine() {
@@ -105,6 +111,38 @@ test("saves and restores an uncompressed Z80 v1 snapshot", () => {
   assert.equal(restored.read8(0x4000), 0x01);
   assert.equal(restored.read8(0x8000), 0x02);
   assert.equal(restored.read8(0xffff), 0x03);
+});
+
+test("loads a 48K SNA snapshot and restores PC from the stack", () => {
+  const bytes = new Uint8Array(27 + 0xc000);
+  bytes[0] = 0x3f;
+  bytes[9] = 0x34;
+  bytes[10] = 0x12;
+  bytes[19] = 0x04;
+  bytes[20] = 0x81;
+  bytes[21] = 0x44;
+  bytes[22] = 0x55;
+  writeWord(bytes, 23, 0x8000);
+  bytes[25] = 2;
+  bytes[26] = 6;
+  writeWord(bytes, 27 + 0x4000, 0x9abc);
+
+  const parsed = parseSnaSnapshot(bytes);
+  const machine = makeMachine();
+  applySpectrumSnapshot(machine, parsed, "SNA");
+
+  assert.equal(machine.cpu.PC, 0x9abc);
+  assert.equal(machine.cpu.SP, 0x8002);
+  assert.equal(machine.cpu.HL, 0x1234);
+  assert.equal(machine.cpu.A, 0x55);
+  assert.equal(machine.cpu.F, 0x44);
+  assert.equal(machine.cpu.IFF1, true);
+  assert.equal(machine.cpu.interruptMode, 2);
+  assert.equal(machine.borderColor, 6);
+});
+
+test("rejects non-48K SNA snapshots", () => {
+  assert.throws(() => parseSnaSnapshot(new Uint8Array(27)), /Only 48K SNA/);
 });
 
 test("loads compressed Z80 v1 RAM blocks", () => {

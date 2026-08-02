@@ -1,4 +1,4 @@
-import { applyZ80Snapshot } from "./snapshot.js";
+import { applySpectrumSnapshot } from "./snapshot.js";
 
 const RZX_HEADER_LENGTH = 10;
 const SNAPSHOT_BLOCK = 0x30;
@@ -36,13 +36,23 @@ async function inflate(bytes, expectedLength = null) {
   return result;
 }
 
-async function parseSnapshotBlock(block) {
+async function parseSnapshotBlock(block, resolveExternalSnapshot) {
   if (block.length < 17) throw new Error("RZX snapshot block is truncated");
   const flags = read32(block, 5);
-  if (flags & 0x01) throw new Error("External RZX snapshots are not supported");
   const extension = readAscii(block, 9, 4).trim().toUpperCase();
   const uncompressedLength = read32(block, 13);
   const payload = block.slice(17);
+  if (flags & 0x01) {
+    if (payload.length < 5) throw new Error("External RZX snapshot descriptor is truncated");
+    const checksum = read32(payload, 0);
+    const filename = readAscii(payload, 4, payload.length - 4);
+    if (!resolveExternalSnapshot) {
+      throw new Error(`RZX requires external snapshot ${filename || "(unnamed)"}; select it alongside the recording`);
+    }
+    const resolved = await resolveExternalSnapshot({ filename, extension, checksum });
+    if (!resolved) throw new Error(`External RZX snapshot ${filename || "(unnamed)"} was not supplied`);
+    return { type: "snapshot", extension, data: bytesFrom(resolved), external: true, filename };
+  }
   const data = flags & 0x02 ? await inflate(payload, uncompressedLength) : payload;
   if (!(flags & 0x02) && data.length !== uncompressedLength) {
     throw new Error("RZX snapshot length does not match its header");
@@ -53,6 +63,7 @@ async function parseSnapshotBlock(block) {
 async function parseInputBlock(block, previousInputs) {
   if (block.length < 18) throw new Error("RZX input recording block is truncated");
   const frameCount = read32(block, 5);
+  const initialTStates = read32(block, 10);
   const flags = read32(block, 14);
   if (flags & 0x01) throw new Error("Protected RZX recordings are not supported");
   const payload = flags & 0x02 ? await inflate(block.slice(18)) : block.slice(18);
@@ -80,10 +91,10 @@ async function parseInputBlock(block, previousInputs) {
   }
 
   if (offset !== payload.length) throw new Error("RZX input block contains trailing frame data");
-  return { frames, previousInputs: lastInputs };
+  return { frames, previousInputs: lastInputs, initialTStates };
 }
 
-export async function parseRzx(input) {
+export async function parseRzx(input, { resolveExternalSnapshot } = {}) {
   const bytes = bytesFrom(input);
   if (bytes.length < RZX_HEADER_LENGTH || readAscii(bytes, 0, 4) !== "RZX!") {
     throw new Error("RZX file has an invalid header");
@@ -104,9 +115,10 @@ export async function parseRzx(input) {
       if (block.length < 29) throw new Error("RZX creator block is truncated");
       creator = readAscii(block, 5, 20) || "Unknown";
     } else if (block[0] === SNAPSHOT_BLOCK) {
-      timeline.push(await parseSnapshotBlock(block));
+      timeline.push(await parseSnapshotBlock(block, resolveExternalSnapshot));
     } else if (block[0] === INPUT_BLOCK) {
       const parsed = await parseInputBlock(block, previousInputs);
+      timeline.push({ type: "input-start", tStates: parsed.initialTStates });
       timeline.push(...parsed.frames);
       previousInputs = parsed.previousInputs;
     }
@@ -140,10 +152,13 @@ export class RzxPlayback {
       const event = this.recording.timeline[this.eventIndex];
       this.eventIndex += 1;
       if (event.type === "snapshot") {
-        if (event.extension !== "Z80") {
-          throw new Error(`RZX snapshot type ${event.extension || "(missing)"} is not supported; use an embedded Z80 snapshot`);
-        }
-        applyZ80Snapshot(this.machine, event.data);
+        applySpectrumSnapshot(this.machine, event.data, event.extension);
+        continue;
+      }
+      if (event.type === "input-start") {
+        const frameBase = Math.floor(this.machine.cpu.tStates / this.machine.constructor.T_STATES_PER_FRAME)
+          * this.machine.constructor.T_STATES_PER_FRAME;
+        this.machine.cpu.tStates = frameBase + (event.tStates % this.machine.constructor.T_STATES_PER_FRAME);
         continue;
       }
 

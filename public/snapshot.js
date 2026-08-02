@@ -1,6 +1,8 @@
 const V1_HEADER_LENGTH = 30;
 const RAM_LENGTH = 0xc000;
 const PAGE_LENGTH = 0x4000;
+const SNA_HEADER_LENGTH = 27;
+const SNA_48K_LENGTH = SNA_HEADER_LENGTH + RAM_LENGTH;
 const V1_END_MARKER = [0x00, 0xed, 0xed, 0x00];
 const PAGE_TO_RAM_OFFSET = new Map([
   [8, 0x0000],
@@ -147,6 +149,55 @@ export function parseZ80Snapshot(input) {
   };
 }
 
+export function parseSnaSnapshot(input) {
+  const bytes = bytesFrom(input);
+  if (bytes.length !== SNA_48K_LENGTH) {
+    throw new Error(`Only 48K SNA snapshots (${SNA_48K_LENGTH} bytes) are supported`);
+  }
+
+  const ram = bytes.slice(SNA_HEADER_LENGTH);
+  const savedSp = readWord(bytes, 23);
+  if (savedSp < 0x4000 || savedSp > 0xfffe) {
+    throw new Error("48K SNA snapshot stack pointer does not point into RAM");
+  }
+  const stackOffset = savedSp - 0x4000;
+  const pc = ram[stackOffset] | (ram[stackOffset + 1] << 8);
+  const iff = (bytes[19] & 0x04) !== 0;
+
+  return {
+    format: "SNA 48K",
+    registers: {
+      I: bytes[0],
+      L_: bytes[1], H_: bytes[2],
+      E_: bytes[3], D_: bytes[4],
+      C_: bytes[5], B_: bytes[6],
+      F_: bytes[7], A_: bytes[8],
+      L: bytes[9], H: bytes[10],
+      E: bytes[11], D: bytes[12],
+      C: bytes[13], B: bytes[14],
+      IY: readWord(bytes, 15),
+      IX: readWord(bytes, 17),
+      IFF1: iff,
+      IFF2: iff,
+      R: bytes[20],
+      F: bytes[21],
+      A: bytes[22],
+      SP: (savedSp + 2) & 0xffff,
+      PC: pc,
+      interruptMode: Math.min(2, bytes[25] & 0x03)
+    },
+    borderColor: bytes[26] & 0x07,
+    ram
+  };
+}
+
+export function parseSpectrumSnapshot(input, extension = "") {
+  const normalized = String(extension).replace(/^\./, "").toUpperCase();
+  if (normalized === "SNA") return parseSnaSnapshot(input);
+  if (normalized === "Z80") return parseZ80Snapshot(input);
+  throw new Error(`Snapshot type ${normalized || "(missing)"} is not supported by the 48K machine`);
+}
+
 export function applyZ80Snapshot(machine, snapshotOrBytes) {
   const snapshot = snapshotOrBytes?.ram ? snapshotOrBytes : parseZ80Snapshot(snapshotOrBytes);
   const cpu = machine.cpu;
@@ -169,6 +220,13 @@ export function applyZ80Snapshot(machine, snapshotOrBytes) {
   machine.keyboardRows.fill(0x1f);
   machine.clearTape();
   return snapshot;
+}
+
+export function applySpectrumSnapshot(machine, snapshotOrBytes, extension = "Z80") {
+  const snapshot = snapshotOrBytes?.ram
+    ? snapshotOrBytes
+    : parseSpectrumSnapshot(snapshotOrBytes, extension);
+  return applyZ80Snapshot(machine, snapshot);
 }
 
 export function createZ80Snapshot(machine) {

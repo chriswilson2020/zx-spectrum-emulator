@@ -17,7 +17,7 @@
       </nav>
       <main class="shell">
       <section class="stage" aria-label="ZX Spectrum display and debugger">
-        <div class="screen-window resizable-window">
+        <div class="screen-window resizable-window" data-window-id="screen">
           <header class="window-header">
             <h2>Emulated Screen</h2>
             <output id="screenRaster">Raster 0:0 · T 0</output>
@@ -41,35 +41,37 @@
             <strong>Resizable registers, source, disassembly, memory, reference</strong>
           </summary>
           <section class="debugger" aria-label="Machine debugger">
-            <div class="debug-card registers-card resizable-window">
+            <div class="debug-card registers-card resizable-window" data-window-id="registers">
               <h2>Registers</h2>
               <div id="registerGrid" class="register-grid"></div>
               <div id="flagGrid" class="flag-grid" aria-label="CPU flags"></div>
             </div>
-            <div class="debug-card basic-card resizable-window">
+            <div class="debug-card basic-card resizable-window" data-window-id="basic">
               <h2>BASIC</h2>
               <div id="basicStatus" class="basic-status"></div>
             </div>
-            <div class="debug-card disassembly-card resizable-window">
+            <div class="debug-card disassembly-card resizable-window" data-window-id="disassembly">
               <h2>Disassembly</h2>
               <ol id="disassembly" class="disassembly"></ol>
             </div>
-            <div class="debug-card memory-card resizable-window">
+            <div class="debug-card memory-card resizable-window" data-window-id="memory">
               <h2>Memory</h2>
               <div id="memoryInspector" class="memory-inspector"></div>
             </div>
-            <div class="debug-card source-card resizable-window">
+            <div class="debug-card source-card resizable-window" data-window-id="source">
               <h2>Source</h2>
               <label for="sourceFile">Load ASM/listing</label>
               <input id="sourceFile" type="file" accept=".asm,.s,.z80,.lst,.txt,text/plain">
               <ol id="sourceListing" class="source-listing"><li>Load a source or listing file to follow it beside the debugger.</li></ol>
             </div>
-            <div class="debug-card reference-card resizable-window">
+            <div class="debug-card reference-card resizable-window" data-window-id="assembler-reference">
               <h2>Assembler Reference</h2>
               <label for="assemblerSearch">Search sjasmplus directives and functions</label>
               <input id="assemblerSearch" type="search" placeholder="ORG, macro, output…">
+              <label for="assemblerCategory">Category</label>
+              <select id="assemblerCategory"><option value="">All categories</option></select>
               <div id="assemblerReference" class="assembler-reference"></div>
-              <a href="https://z00m128.github.io/sjasmplus/" target="_blank" rel="noreferrer">Full sjasmplus documentation</a>
+              <a href="https://z00m128.github.io/sjasmplus/documentation.html" target="_blank" rel="noreferrer">Full sjasmplus documentation</a>
             </div>
           </section>
         </details>
@@ -84,6 +86,11 @@
           <button id="stepFrame" type="button">Frame</button>
           <button id="stepInstruction" type="button">Step</button>
           <button id="stepBack" type="button" disabled>Step Back</button>
+          <label class="rewind-control" for="rewindTimeline">
+            <span>Rewind timeline</span>
+            <input id="rewindTimeline" type="range" min="0" max="0" value="0" disabled>
+            <output id="rewindDepth">0 checkpoints</output>
+          </label>
           <button id="reset" type="button">Reset</button>
           <button id="typeHello" type="button">Type Hello</button>
           <button id="audioToggle" type="button" aria-pressed="false">Sound Off</button>
@@ -122,10 +129,10 @@ RUN</textarea>
         <section id="snapshotsPanel" class="tool-panel" role="tabpanel" aria-labelledby="snapshotsTab" data-tool-panel="snapshots" hidden>
           <div class="snapshot-panel" aria-label="Snapshot loader">
             <label for="snapshotFile">Load Snapshot</label>
-            <input id="snapshotFile" type="file" accept=".z80">
+            <input id="snapshotFile" type="file" accept=".z80,.sna">
             <button id="snapshotSave" type="button">Save Z80 Snapshot</button>
             <label for="rzxFile">Load RZX Recording</label>
-            <input id="rzxFile" type="file" accept=".rzx,application/octet-stream">
+            <input id="rzxFile" type="file" multiple accept=".rzx,.z80,.sna,application/octet-stream">
             <div class="rzx-controls">
               <button id="rzxStep" type="button" disabled>RZX Frame</button>
               <button id="rzxPlayPause" type="button" disabled>Play RZX</button>
@@ -176,6 +183,6 @@ RUN</textarea>
       <span>Contact</span>
       <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
     </footer>
-    <script type="module" src="./public/app.js?v=20260726-debug-workbench"></script>
+    <script type="module" src="./public/app.js?v=20260802-rewind-workbench"></script>
   </body>
 </html>

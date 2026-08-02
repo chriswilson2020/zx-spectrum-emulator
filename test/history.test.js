@@ -39,3 +39,22 @@ test("bounds reverse history and clears it", () => {
   assert.equal(history.size, 0);
   assert.equal(history.stepBack(machine), null);
 });
+
+test("compacts older checkpoints into reverse RAM deltas", () => {
+  const machine = machineWithIncrementProgram();
+  const history = new MachineHistory({ limit: 10 });
+  history.capture(machine, "first");
+  machine.write8(0x4001, 0xaa);
+  machine.step();
+  history.capture(machine, "second");
+  machine.write8(0x4002, 0xbb);
+  machine.step();
+
+  assert.equal(history.entries[0].state.ram, undefined);
+  assert.deepEqual(Array.from(history.entries[0].ramOffsets), [1]);
+  history.stepBack(machine);
+  history.stepBack(machine);
+  assert.equal(machine.read8(0x4001), 0);
+  assert.equal(machine.read8(0x4002), 0);
+  assert.equal(machine.cpu.PC, 0);
+});
