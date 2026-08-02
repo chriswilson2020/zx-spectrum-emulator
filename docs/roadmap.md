@@ -87,3 +87,14 @@
   cassette pieces are solid.
 - Add Model 4 compatibility later, starting with Model III compatibility mode
   before native/banked behavior.
+
+## Phase 6: Shared Debugger and Rewind Infrastructure
+
+- Extract machine-neutral history, debugger controls, workbench windows, and
+  source-following services from the Spectrum implementation.
+- Port the shared workbench to TRS-80, TI-85, and both CP/M profiles.
+- Add deterministic rewind to TRS-80 first, TI-85 after complete session-state
+  support, and CP/M after sector-level disk journalling.
+- Keep RZX and ULA-specific behaviour confined to Spectrum profiles.
+- Track design, sequencing, acceptance criteria, risks, and progress in the
+  [Shared Debugger and Rewind Roadmap](shared-debugger-roadmap.md).

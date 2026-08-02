@@ -319,6 +319,9 @@ npm run test:singlestep
   design notes and current boundaries for the TRS-80 machine layer.
 - [Opcode Coverage](docs/opcode-coverage.md): decoder coverage probe notes.
 - [Roadmap](docs/roadmap.md): high-level project phases.
+- [Shared Debugger and Rewind Roadmap](docs/shared-debugger-roadmap.md): phased
+  plan for bringing the Spectrum workbench, source tools, and deterministic
+  rewind to TRS-80, TI-85, and CP/M.
 
 ## License
 
