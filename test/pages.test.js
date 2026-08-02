@@ -14,6 +14,26 @@ test("browser entry points use project-page-safe relative paths", async () => {
   const trs80App = await readFile("public/trs80-app.js", "utf8");
   const ti85App = await readFile("public/ti85-app.js", "utf8");
 
+  const machinePages = new Map([
+    ["spectrum.html", spectrum],
+    ["cpm.html", cpm],
+    ["trs80.html", trs80],
+    ["ti85.html", ti85],
+  ]);
+
+  for (const [currentPage, html] of machinePages) {
+    assert.match(html, /href="\.\/index\.html">Machines/);
+
+    for (const machinePage of machinePages.keys()) {
+      const machineLink = new RegExp(`href="\\.\\/${machinePage}"`);
+      if (machinePage === currentPage) {
+        assert.doesNotMatch(html, machineLink);
+      } else {
+        assert.match(html, machineLink);
+      }
+    }
+  }
+
   assert.match(index, /href="\.\/public\/styles\.css"/);
   assert.match(index, /href="\.\/spectrum\.html"/);
   assert.match(index, /href="\.\/cpm\.html"/);
