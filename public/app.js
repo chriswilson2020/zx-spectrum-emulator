@@ -10,6 +10,7 @@ import {
   readSystemVariables
 } from "./debugger.js";
 import { MachineHistory } from "./history.js";
+import { initializeDebugWindows } from "./debug-windows.js";
 import { Spectrum48 } from "../src/spectrum48.js";
 import {
   basicTextToSpectrumKeyTaps,
@@ -17,7 +18,7 @@ import {
   shouldPreventBrowserScrollKey,
   spectrumKeysForModernKey
 } from "./keyboard.js";
-import { applyZ80Snapshot, createZ80Snapshot } from "./snapshot.js";
+import { applySpectrumSnapshot, createZ80Snapshot } from "./snapshot.js";
 import { parseRzx, RzxPlayback } from "./rzx.js";
 import { loadTapEntry, parseTapeFile, tapEntries } from "./tape.js";
 
@@ -40,6 +41,8 @@ const runPauseButton = document.querySelector("#runPause");
 const stepFrameButton = document.querySelector("#stepFrame");
 const stepInstructionButton = document.querySelector("#stepInstruction");
 const stepBackButton = document.querySelector("#stepBack");
+const rewindTimelineInput = document.querySelector("#rewindTimeline");
+const rewindDepthOutput = document.querySelector("#rewindDepth");
 const resetButton = document.querySelector("#reset");
 const typeHelloButton = document.querySelector("#typeHello");
 const audioToggleButton = document.querySelector("#audioToggle");
@@ -69,6 +72,7 @@ const memoryInspector = document.querySelector("#memoryInspector");
 const sourceFileInput = document.querySelector("#sourceFile");
 const sourceListing = document.querySelector("#sourceListing");
 const assemblerSearchInput = document.querySelector("#assemblerSearch");
+const assemblerCategoryInput = document.querySelector("#assemblerCategory");
 const assemblerReference = document.querySelector("#assemblerReference");
 
 let rom;
@@ -84,10 +88,12 @@ let lastMappedKeys = [];
 let currentTapBlocks = [];
 let currentTapEntries = [];
 let selectedTapEntryIndex = -1;
-const executionHistory = new MachineHistory({ limit: 256 });
+const executionHistory = new MachineHistory({ limit: 6000, byteLimit: 64 * 1024 * 1024 });
 let rzxPlayback;
 let rzxPlaying = false;
 let sourceRows = [];
+
+initializeDebugWindows({ onStatus: (message) => { statusOutput.value = message; } });
 
 function formatWord(value) {
   return value.toString(16).padStart(4, "0").toUpperCase();
@@ -142,6 +148,10 @@ function mountRom(bytes, message) {
 
 function updateHistoryControls() {
   stepBackButton.disabled = executionHistory.size === 0;
+  rewindTimelineInput.disabled = executionHistory.size === 0;
+  rewindTimelineInput.max = String(executionHistory.size);
+  if (document.activeElement !== rewindTimelineInput) rewindTimelineInput.value = String(executionHistory.size);
+  rewindDepthOutput.value = `${executionHistory.size} checkpoint${executionHistory.size === 1 ? "" : "s"}`;
 }
 
 function clearExecutionHistory() {
@@ -200,6 +210,7 @@ function drawRasterOverlay() {
   if (!showRasterOverlayInput.checked || !machine) return;
 
   const raster = machine.getRasterPosition();
+  if (!raster.inVisibleFrame) return;
   rasterContext.save();
   rasterContext.strokeStyle = "rgba(243, 212, 71, 0.95)";
   rasterContext.fillStyle = "rgba(243, 212, 71, 0.95)";
@@ -207,11 +218,11 @@ function drawRasterOverlay() {
   rasterContext.shadowColor = "rgba(243, 212, 71, 0.85)";
   rasterContext.shadowBlur = 5;
   rasterContext.beginPath();
-  rasterContext.moveTo(0, raster.line + 0.5);
-  rasterContext.lineTo(Spectrum48.FRAME_WIDTH, raster.line + 0.5);
+  rasterContext.moveTo(0, raster.visibleY + 0.5);
+  rasterContext.lineTo(Spectrum48.FRAME_WIDTH, raster.visibleY + 0.5);
   rasterContext.stroke();
   rasterContext.beginPath();
-  rasterContext.arc(raster.column, raster.line, 3, 0, Math.PI * 2);
+  rasterContext.arc(raster.visibleX, raster.visibleY, 3, 0, Math.PI * 2);
   rasterContext.fill();
   rasterContext.restore();
 }
@@ -389,6 +400,7 @@ function draw() {
         statusOutput.value = error.message;
       }
     } else {
+      captureExecutionState("Frame");
       runMachineFrame();
     }
     flashOn = Math.floor(machine.frame / 16) % 2 === 1;
@@ -524,8 +536,10 @@ function highlightSourceLine(pc) {
 
 function renderAssemblerReference(query = "") {
   const normalizedQuery = query.trim().toLowerCase();
+  const selectedCategory = assemblerCategoryInput.value;
   const entries = ASSEMBLER_REFERENCE.filter((entry) =>
-    !normalizedQuery || `${entry.category} ${entry.syntax} ${entry.description}`.toLowerCase().includes(normalizedQuery)
+    (!selectedCategory || entry.category === selectedCategory)
+    && (!normalizedQuery || `${entry.category} ${entry.syntax} ${entry.description}`.toLowerCase().includes(normalizedQuery))
   );
   assemblerReference.replaceChildren(...entries.map((entry) => {
     const article = document.createElement("article");
@@ -589,7 +603,6 @@ window.addEventListener("keyup", (event) => {
 
 runPauseButton.addEventListener("click", () => {
   running = !running;
-  if (running && !rzxPlaying) clearExecutionHistory();
   runPauseButton.textContent = running ? "Pause" : "Run";
   runPauseButton.setAttribute("aria-label", running ? "Pause" : "Run");
   statusOutput.value = running ? "Running" : "Paused";
@@ -621,14 +634,14 @@ stepInstructionButton.addEventListener("click", () => {
   statusOutput.value = "Stepped one instruction";
 });
 
-stepBackButton.addEventListener("click", () => {
+function reverseExecutionOnce() {
   running = false;
   rzxPlaying = false;
   runPauseButton.textContent = "Run";
   runPauseButton.setAttribute("aria-label", "Run");
   rzxPlayPauseButton.textContent = "Play RZX";
   const entry = executionHistory.stepBack(machine);
-  if (!entry) return;
+  if (!entry) return null;
   if (entry.metadata && rzxPlayback) {
     rzxPlayback.eventIndex = entry.metadata.rzxEventIndex;
     rzxPlayback.frameIndex = entry.metadata.rzxFrameIndex;
@@ -640,6 +653,18 @@ stepBackButton.addEventListener("click", () => {
   audio?.reset(machine.cpu.tStates);
   refreshDebugDisplay();
   statusOutput.value = `Reversed ${entry.label.toLowerCase()}`;
+  return entry;
+}
+
+stepBackButton.addEventListener("click", () => {
+  reverseExecutionOnce();
+});
+
+rewindTimelineInput.addEventListener("change", () => {
+  const target = Math.max(0, Math.min(executionHistory.size, Number(rewindTimelineInput.value)));
+  let reversed = 0;
+  while (executionHistory.size > target && reverseExecutionOnce()) reversed += 1;
+  if (reversed > 0) statusOutput.value = `Rewound ${reversed} checkpoint${reversed === 1 ? "" : "s"}`;
 });
 
 resetButton.addEventListener("click", () => {
@@ -734,7 +759,8 @@ snapshotFileInput.addEventListener("change", async () => {
   if (!file) return;
 
   try {
-    const snapshot = applyZ80Snapshot(machine, await file.arrayBuffer());
+    const extension = file.name.split(".").pop() || "";
+    const snapshot = applySpectrumSnapshot(machine, await file.arrayBuffer(), extension);
     currentTapBlocks = [];
     currentTapEntries = [];
     selectedTapEntryIndex = -1;
@@ -759,11 +785,22 @@ snapshotSaveButton.addEventListener("click", () => {
 });
 
 rzxFileInput.addEventListener("change", async () => {
-  const file = rzxFileInput.files?.[0];
+  const files = Array.from(rzxFileInput.files ?? []);
+  const file = files.find((candidate) => candidate.name.toLowerCase().endsWith(".rzx"));
   if (!file) return;
 
   try {
-    const recording = await parseRzx(await file.arrayBuffer());
+    const snapshots = new Map(files
+      .filter((candidate) => candidate !== file)
+      .map((candidate) => [candidate.name.toLowerCase(), candidate]));
+    const recording = await parseRzx(await file.arrayBuffer(), {
+      resolveExternalSnapshot: async ({ filename }) => {
+        const exact = snapshots.get(filename.toLowerCase());
+        const basename = filename.split(/[\\/]/).pop()?.toLowerCase();
+        const match = exact ?? snapshots.get(basename);
+        return match ? match.arrayBuffer() : null;
+      }
+    });
     rzxPlayback = new RzxPlayback(machine, recording);
     rzxPlaying = false;
     running = false;
@@ -854,6 +891,14 @@ sourceFileInput.addEventListener("change", async () => {
 assemblerSearchInput.addEventListener("input", () => {
   renderAssemblerReference(assemblerSearchInput.value);
 });
+
+for (const category of [...new Set(ASSEMBLER_REFERENCE.map((entry) => entry.category))].sort()) {
+  const option = document.createElement("option");
+  option.value = category;
+  option.textContent = category;
+  assemblerCategoryInput.append(option);
+}
+assemblerCategoryInput.addEventListener("change", () => renderAssemblerReference(assemblerSearchInput.value));
 
 pasteForm.addEventListener("submit", (event) => {
   event.preventDefault();

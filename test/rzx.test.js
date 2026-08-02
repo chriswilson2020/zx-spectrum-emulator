@@ -29,13 +29,24 @@ function creatorBlock() {
   return block;
 }
 
-function snapshotBlock(snapshot) {
+function snapshotBlock(snapshot, extension = "Z80") {
   const block = new Uint8Array(17 + snapshot.length);
   block[0] = 0x30;
   write32(block, 1, block.length);
-  block.set(new TextEncoder().encode("Z80"), 9);
+  block.set(new TextEncoder().encode(extension), 9);
   write32(block, 13, snapshot.length);
   block.set(snapshot, 17);
+  return block;
+}
+
+function externalSnapshotBlock(filename, extension = "Z80") {
+  const name = new TextEncoder().encode(`${filename}\0`);
+  const block = new Uint8Array(17 + 4 + name.length);
+  block[0] = 0x30;
+  write32(block, 1, block.length);
+  write32(block, 5, 1);
+  block.set(new TextEncoder().encode(extension), 9);
+  block.set(name, 21);
   return block;
 }
 
@@ -80,8 +91,9 @@ test("parses RZX creator, snapshot, input, and repeated frames", async () => {
   assert.equal(recording.creator, "Z80 Machine Lab");
   assert.equal(recording.frameCount, 2);
   assert.equal(recording.timeline[0].extension, "Z80");
-  assert.deepEqual(Array.from(recording.timeline[1].inputs), [0x5a]);
+  assert.equal(recording.timeline[1].type, "input-start");
   assert.deepEqual(Array.from(recording.timeline[2].inputs), [0x5a]);
+  assert.deepEqual(Array.from(recording.timeline[3].inputs), [0x5a]);
 });
 
 test("inflates compressed RZX input blocks", async () => {
@@ -89,7 +101,8 @@ test("inflates compressed RZX input blocks", async () => {
   write16(frame, 0, 1);
   write16(frame, 2, 0);
   const recording = await parseRzx(join(rzxHeader(), creatorBlock(), inputBlock(frame, 1, { compressed: true })));
-  assert.equal(recording.timeline[0].fetchCount, 1);
+  assert.equal(recording.timeline[0].type, "input-start");
+  assert.equal(recording.timeline[1].fetchCount, 1);
 });
 
 test("plays RZX frames from an embedded Z80 snapshot", async () => {
@@ -111,6 +124,36 @@ test("plays RZX frames from an embedded Z80 snapshot", async () => {
   assert.equal(target.cpu.A, 0x42);
   assert.equal(playback.frameIndex, 1);
   assert.equal(playback.done, true);
+});
+
+test("resolves external RZX snapshots supplied beside the recording", async () => {
+  const supplied = new Uint8Array([1, 2, 3]);
+  const frame = new Uint8Array(4);
+  write16(frame, 0, 1);
+  const recording = await parseRzx(join(
+    rzxHeader(),
+    externalSnapshotBlock("start.z80"),
+    inputBlock(frame, 1)
+  ), {
+    resolveExternalSnapshot: ({ filename }) => filename === "start.z80" ? supplied : null
+  });
+  assert.equal(recording.timeline[0].external, true);
+  assert.equal(recording.timeline[0].filename, "start.z80");
+  assert.deepEqual(Array.from(recording.timeline[0].data), [1, 2, 3]);
+});
+
+test("plays RZX frames from an embedded 48K SNA snapshot", async () => {
+  const sna = new Uint8Array(27 + 0xc000);
+  write16(sna, 23, 0x8000);
+  write16(sna, 27 + 0x4000, 0x9000);
+  sna[27 + 0x5000] = 0x00;
+  const frame = new Uint8Array(4);
+  write16(frame, 0, 1);
+  const recording = await parseRzx(join(rzxHeader(), snapshotBlock(sna, "SNA"), inputBlock(frame, 1)));
+  const machine = new Spectrum48({ rom: new Uint8Array(0x4000) });
+  const playback = new RzxPlayback(machine, recording);
+  playback.stepFrame();
+  assert.equal(machine.cpu.PC, 0x9001);
 });
 
 test("rejects protected and external RZX data", async () => {

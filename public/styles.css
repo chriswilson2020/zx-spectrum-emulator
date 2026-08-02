@@ -425,6 +425,73 @@ dd {
   resize: both;
 }
 
+.window-tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 6px 8px 0;
+}
+
+.window-tools button {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(8, 16, 13, 0.92);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.rewind-control {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(90px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.rewind-control input {
+  width: 100%;
+}
+
+.rewind-control output {
+  min-width: 82px;
+  text-align: right;
+}
+
+.floating-debug-window {
+  position: fixed !important;
+  z-index: 30;
+  min-width: 280px;
+  max-width: calc(100vw - 16px) !important;
+  max-height: calc(100vh - 16px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
+}
+
+.floating-debug-window h2,
+.floating-debug-window .window-header {
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.debug-popout-body {
+  min-width: 0;
+  padding: 12px;
+  background: #090d0b;
+  color: var(--text);
+}
+
+.debug-popout-body > * {
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  resize: none;
+}
+
 .debug-card h2 {
   margin: 0 0 10px;
   color: var(--text);
@@ -558,6 +625,7 @@ dd {
 }
 
 .source-card input,
+.reference-card select,
 .reference-card input {
   width: 100%;
   color: var(--text);

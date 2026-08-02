@@ -47,6 +47,7 @@ const ZERO_BIT_PULSE_T_STATES = 855;
 const ONE_BIT_PULSE_T_STATES = 1710;
 const HEADER_PILOT_PULSES = 8063;
 const DATA_PILOT_PULSES = 3223;
+const ULA_CONTENTION_PATTERN = [6, 5, 4, 3, 2, 1, 0, 0];
 
 function normalizeKey(key) {
   return String(key).trim().toUpperCase();
@@ -93,6 +94,10 @@ export class Spectrum48 {
     this.tapeEarLevel = false;
     this.tapePlaying = false;
     this.inputPlayback = null;
+    this.cpuExecuting = false;
+    this.busTState = 0;
+    this.pendingContention = 0;
+    this.busAccessCount = 0;
     this.frame = 0;
     this.keyboardRows = new Uint8Array(8).fill(0x1f);
     this.cpu = new Z80(this, {
@@ -103,12 +108,14 @@ export class Spectrum48 {
 
   read8(address) {
     const mappedAddress = address & 0xffff;
+    this.trackMemoryAccess(mappedAddress);
     if (mappedAddress < 0x4000) return this.rom[mappedAddress];
     return this.ram[mappedAddress - 0x4000];
   }
 
   write8(address, value) {
     const mappedAddress = address & 0xffff;
+    this.trackMemoryAccess(mappedAddress);
     if (mappedAddress < 0x4000) return;
     this.ram[mappedAddress - 0x4000] = value & 0xff;
   }
@@ -134,7 +141,7 @@ export class Spectrum48 {
       return value;
     }
     if ((port & 0x0001) === 0) return 0xa0 | this.readTapeEarBit() | this.readKeyboardRows(port);
-    return 0xff;
+    return this.readFloatingBus();
   }
 
   writePort(port, value) {
@@ -355,25 +362,72 @@ export class Spectrum48 {
   }
 
   getRasterPosition() {
-    const tStateInFrame = ((this.cpu.tStates % Spectrum48.T_STATES_PER_FRAME) + Spectrum48.T_STATES_PER_FRAME) % Spectrum48.T_STATES_PER_FRAME;
+    return this.getRasterPositionAt(this.cpu.tStates);
+  }
+
+  readFloatingBus(tState = this.cpu.tStates) {
+    const raster = this.getRasterPositionAt(tState);
+    if (raster.displayLine < 0 || raster.displayLine >= Spectrum48.SCREEN_HEIGHT) return 0xff;
+    if (raster.displayColumn < 0 || raster.displayColumn >= 128) return 0xff;
+    const xByte = Math.floor(raster.displayColumn / 4);
+    const phase = raster.displayColumn & 0x03;
+    if (phase < 2) return this.read8(this.screenByteAddress(xByte, raster.displayLine));
+    return this.read8(0x5800 + ((raster.displayLine >> 3) * 32) + xByte);
+  }
+
+  getRasterPositionAt(tState) {
+    const tStateInFrame = ((tState % Spectrum48.T_STATES_PER_FRAME) + Spectrum48.T_STATES_PER_FRAME) % Spectrum48.T_STATES_PER_FRAME;
     const line = Math.floor(tStateInFrame / Spectrum48.T_STATES_PER_LINE);
     const column = tStateInFrame % Spectrum48.T_STATES_PER_LINE;
     const displayLine = line - Spectrum48.DISPLAY_FIRST_LINE;
     const displayColumn = column - Spectrum48.DISPLAY_FIRST_COLUMN;
+    const visibleColumn = column >= 112 ? column - 112 : column + 112;
+    const visibleLine = line - 40;
     return {
       tStateInFrame,
       line,
       column,
       displayLine,
       displayColumn,
-      inDisplay: displayLine >= 0 && displayLine < Spectrum48.SCREEN_HEIGHT && displayColumn >= 0 && displayColumn < Spectrum48.SCREEN_WIDTH
+      visibleX: visibleColumn >= 0 && visibleColumn < 160 ? visibleColumn * 2 : -1,
+      visibleY: visibleLine >= 0 && visibleLine < Spectrum48.FRAME_HEIGHT ? visibleLine : -1,
+      inVisibleFrame: visibleColumn >= 0 && visibleColumn < 160 && visibleLine >= 0 && visibleLine < Spectrum48.FRAME_HEIGHT,
+      inDisplay: displayLine >= 0 && displayLine < Spectrum48.SCREEN_HEIGHT && displayColumn >= 0 && displayColumn < 128
     };
+  }
+
+  contentionDelay(address, tState = this.cpu.tStates) {
+    const mappedAddress = address & 0xffff;
+    if (mappedAddress < 0x4000 || mappedAddress >= 0x8000) return 0;
+    const raster = this.getRasterPositionAt(tState);
+    if (raster.displayLine < 0 || raster.displayLine >= Spectrum48.SCREEN_HEIGHT) return 0;
+    if (raster.displayColumn < 0 || raster.displayColumn >= 128) return 0;
+    return ULA_CONTENTION_PATTERN[raster.displayColumn & 0x07];
+  }
+
+  trackMemoryAccess(address) {
+    if (!this.cpuExecuting) return;
+    const delay = this.contentionDelay(address, this.busTState);
+    this.pendingContention += delay;
+    this.busTState += (this.busAccessCount === 0 ? 4 : 3) + delay;
+    this.busAccessCount += 1;
   }
 
   step() {
     const tapeCycles = this.interceptRomTapeLoad();
     if (tapeCycles !== 0) return tapeCycles;
-    return this.cpu.step();
+    this.cpuExecuting = true;
+    this.busTState = this.cpu.tStates;
+    this.pendingContention = 0;
+    this.busAccessCount = 0;
+    let cycles;
+    try {
+      cycles = this.cpu.step();
+    } finally {
+      this.cpuExecuting = false;
+    }
+    this.cpu.tStates += this.pendingContention;
+    return cycles + this.pendingContention;
   }
 
   interceptRomTapeLoad() {

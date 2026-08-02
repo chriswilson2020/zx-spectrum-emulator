@@ -258,6 +258,9 @@ test("reports raster position from frame t-states", () => {
     column: 0,
     displayLine: -64,
     displayColumn: -128,
+    visibleX: 224,
+    visibleY: -1,
+    inVisibleFrame: false,
     inDisplay: false
   });
 
@@ -268,6 +271,9 @@ test("reports raster position from frame t-states", () => {
     column: 128,
     displayLine: 0,
     displayColumn: 0,
+    visibleX: 32,
+    visibleY: 24,
+    inVisibleFrame: true,
     inDisplay: true
   });
 
@@ -278,8 +284,44 @@ test("reports raster position from frame t-states", () => {
     column: 223,
     displayLine: 191,
     displayColumn: 95,
+    visibleX: 222,
+    visibleY: 215,
+    inVisibleFrame: true,
     inDisplay: true
   });
+});
+
+test("models 48K ULA contention for opcode fetches from display RAM", () => {
+  const machine = new Spectrum48({ rom: makeRom() });
+  machine.cpu.PC = 0x4000;
+  machine.write8(0x4000, 0x00);
+  machine.cpu.tStates = (Spectrum48.DISPLAY_FIRST_LINE * Spectrum48.T_STATES_PER_LINE)
+    + Spectrum48.DISPLAY_FIRST_COLUMN;
+  const elapsed = machine.step();
+  assert.equal(elapsed, 10);
+  assert.equal(machine.cpu.tStates, (Spectrum48.DISPLAY_FIRST_LINE * Spectrum48.T_STATES_PER_LINE)
+    + Spectrum48.DISPLAY_FIRST_COLUMN + 10);
+});
+
+test("applies ULA contention to later memory accesses within an instruction", () => {
+  const machine = new Spectrum48({ rom: makeRom({ 0: 0x7e }) });
+  machine.cpu.HL = 0x4000;
+  machine.write8(0x4000, 0x5a);
+  machine.cpu.tStates = (Spectrum48.DISPLAY_FIRST_LINE * Spectrum48.T_STATES_PER_LINE)
+    + Spectrum48.DISPLAY_FIRST_COLUMN;
+  assert.equal(machine.step(), 9);
+  assert.equal(machine.cpu.A, 0x5a);
+});
+
+test("exposes ULA bitmap and attribute fetches on the floating bus", () => {
+  const machine = new Spectrum48({ rom: makeRom() });
+  machine.write8(0x4000, 0xa5);
+  machine.write8(0x5800, 0x47);
+  const active = (Spectrum48.DISPLAY_FIRST_LINE * Spectrum48.T_STATES_PER_LINE)
+    + Spectrum48.DISPLAY_FIRST_COLUMN;
+  assert.equal(machine.readFloatingBus(active), 0xa5);
+  assert.equal(machine.readFloatingBus(active + 2), 0x47);
+  assert.equal(machine.readFloatingBus(0), 0xff);
 });
 
 test("renders display bytes and attributes to an RGBA buffer", () => {
