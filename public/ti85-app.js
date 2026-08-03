@@ -1,5 +1,6 @@
 import { Ti85Machine } from "../src/ti85.js";
 import { TI85_KEY_LAYOUT } from "../src/ti85-keys.js";
+import { isFree85Release210Rom } from "../src/rom-identity.js";
 import { disassembleWindow, hexByte, hexWord, readMemoryRows } from "./debugger.js";
 
 const canvas = document.querySelector("#ti85Screen");
@@ -18,15 +19,77 @@ const machineState = document.querySelector("#ti85MachineState");
 const keyboardState = document.querySelector("#ti85KeyboardState");
 const displayState = document.querySelector("#ti85DisplayState");
 const memoryInspector = document.querySelector("#ti85MemoryInspector");
+const workspace = document.querySelector("#ti85Workspace");
+const docsSection = document.querySelector("#ti85Docs");
+const docReader = document.querySelector("#ti85DocReader");
+const docReaderTitle = document.querySelector("#ti85DocReaderTitle");
+const docFrame = document.querySelector("#ti85DocFrame");
+const docNewTab = document.querySelector("#ti85DocNewTab");
+const docCloseButton = document.querySelector("#ti85DocClose");
+
+const DOCUMENTATION = {
+  manual: {
+    title: "Getting Started Manual",
+    url: "./public/free85/Release_2.10/Free85-Manual-typeset.html"
+  },
+  guidebook: {
+    title: "The Free85 Guidebook",
+    url: "./public/free85/Release_2.10/Free85-Guidebook-typeset.html"
+  }
+};
 
 let machine;
 let running = false;
 let animationFrame = 0;
+let romLoadSequence = 0;
+let free85DocumentationActive = false;
 const DEFAULT_ROM_CANDIDATES = [
   { url: new URL("../ROM/TI85.ROM", import.meta.url), message: "TI-85 ROM loaded" },
   { url: new URL("../ROM/FREE85.ROM", import.meta.url), message: "Free85 ROM loaded" }
 ];
 const MISSING_ROM_MESSAGE = "Use your own 128K TI-85 ROM file";
+
+function setFree85DocumentationVisible(visible) {
+  free85DocumentationActive = visible;
+  docsSection.hidden = !visible;
+  document.body.classList.toggle("free85-rom-active", visible);
+  if (!visible) closeDocumentation({ restoreFocus: false });
+}
+
+function openDocumentation(book) {
+  if (!free85DocumentationActive) return;
+  const entry = DOCUMENTATION[book];
+  if (!entry) return;
+
+  docReader.hidden = false;
+  workspace.classList.add("docs-open");
+  document.body.classList.add("doc-reader-open");
+  docReaderTitle.textContent = entry.title;
+  docFrame.title = entry.title;
+  docNewTab.href = entry.url;
+  if (docFrame.dataset.book !== book) {
+    docFrame.src = `${entry.url}?embed=1`;
+    docFrame.dataset.book = book;
+  }
+  document.querySelectorAll("[data-doc-book]").forEach((button) => {
+    const selected = button.dataset.docBook === book;
+    button.setAttribute("aria-pressed", String(selected));
+    button.setAttribute("aria-expanded", String(selected));
+  });
+}
+
+function closeDocumentation({ restoreFocus = true } = {}) {
+  docReader.hidden = true;
+  workspace.classList.remove("docs-open");
+  document.body.classList.remove("doc-reader-open");
+  docFrame.removeAttribute("src");
+  delete docFrame.dataset.book;
+  document.querySelectorAll("[data-doc-book]").forEach((button) => {
+    button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-expanded", "false");
+  });
+  if (restoreFocus) canvas.focus();
+}
 
 const FLAG_BITS = [
   ["S", 0x80],
@@ -61,7 +124,7 @@ async function loadDefaultRom() {
     try {
       const response = await fetch(candidate.url);
       if (!response.ok) continue;
-      mountRom(new Uint8Array(await response.arrayBuffer()), candidate.message);
+      await mountRom(new Uint8Array(await response.arrayBuffer()), candidate.message);
       return;
     } catch {
       // Keep trying later public ROM candidates before falling back to upload.
@@ -72,7 +135,9 @@ async function loadDefaultRom() {
   drawUnavailableScreen();
 }
 
-function mountRom(bytes, message) {
+async function mountRom(bytes, message) {
+  const loadSequence = ++romLoadSequence;
+  setFree85DocumentationVisible(false);
   try {
     machine = new Ti85Machine({ rom: bytes });
     running = true;
@@ -89,6 +154,14 @@ function mountRom(bytes, message) {
     setControlsEnabled(false);
     statusOutput.value = error.message;
     drawUnavailableScreen();
+    return;
+  }
+
+  try {
+    const isFree85 = await isFree85Release210Rom(bytes);
+    if (loadSequence === romLoadSequence) setFree85DocumentationVisible(isFree85);
+  } catch {
+    if (loadSequence === romLoadSequence) setFree85DocumentationVisible(false);
   }
 }
 
@@ -348,8 +421,13 @@ resetButton.addEventListener("click", () => {
 romFileInput.addEventListener("change", async () => {
   const file = romFileInput.files?.[0];
   if (!file) return;
-  mountRom(new Uint8Array(await file.arrayBuffer()), `Loaded ${file.name}`);
+  await mountRom(new Uint8Array(await file.arrayBuffer()), `Loaded ${file.name}`);
 });
+
+document.querySelectorAll("[data-doc-book]").forEach((button) => {
+  button.addEventListener("click", () => openDocumentation(button.dataset.docBook));
+});
+docCloseButton.addEventListener("click", () => closeDocumentation());
 
 renderTi85Keypad();
 loadDefaultRom();
