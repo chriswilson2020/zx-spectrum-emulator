@@ -1600,6 +1600,109 @@ dd {
   gap: 16px;
 }
 
+.ti85-workspace {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.ti85-workspace.docs-open {
+  grid-template-columns: minmax(420px, 520px) minmax(480px, 1fr);
+  align-items: start;
+  justify-items: stretch;
+}
+
+.ti85-workspace.docs-open .ti85-frame {
+  position: sticky;
+  top: 18px;
+}
+
+.ti85-doc-reader[hidden],
+.ti85-docs[hidden] {
+  display: none;
+}
+
+.ti85-doc-reader {
+  position: sticky;
+  top: 18px;
+  height: calc(100vh - 36px);
+  min-height: 640px;
+  overflow: hidden;
+  border: 1px solid rgba(174, 205, 176, 0.26);
+  border-radius: 8px;
+  background: #f7f5ef;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+}
+
+.ti85-doc-reader-bar {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #c9c5ba;
+  background: #f7f5ef;
+  color: #142d55;
+  padding: 10px 12px;
+}
+
+.ti85-doc-reader-bar > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.ti85-doc-reader-bar small {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ti85-doc-reader-bar strong {
+  font-size: 14px;
+}
+
+.ti85-doc-reader-bar nav,
+.ti85-doc-reader-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ti85-doc-reader-bar button,
+.ti85-doc-reader-bar a {
+  min-height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #9aa5b5;
+  border-radius: 5px;
+  background: transparent;
+  color: #1a3a6b;
+  padding: 7px 9px;
+  font: 750 12px/1.2 "Inter", "Avenir Next", system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.ti85-doc-reader-bar button[aria-pressed="true"] {
+  border-color: #1a3a6b;
+  background: #1a3a6b;
+  color: #ffffff;
+}
+
+.ti85-doc-reader-bar button:hover,
+.ti85-doc-reader-bar a:hover {
+  border-color: #1a3a6b;
+}
+
+.ti85-doc-reader iframe {
+  width: 100%;
+  height: calc(100% - 62px);
+  display: block;
+  border: 0;
+  background: #f7f5ef;
+}
+
 .ti85-frame {
   display: grid;
   gap: 14px;
@@ -1818,6 +1921,113 @@ dd {
   background: rgba(9, 13, 12, 0.72);
 }
 
+.ti85-docs {
+  justify-self: center;
+  width: min(760px, 100%);
+  display: grid;
+  grid-template-columns: minmax(190px, 0.7fr) minmax(0, 1.3fr);
+  gap: 18px;
+  border: 1px solid rgba(174, 205, 176, 0.22);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(174, 205, 176, 0.08), transparent 45%),
+    rgba(9, 13, 12, 0.78);
+  padding: 18px;
+}
+
+.ti85-docs-intro {
+  align-self: center;
+}
+
+.ti85-docs-intro p,
+.ti85-docs-intro h2,
+.ti85-docs-intro span,
+.ti85-doc-links h3,
+.ti85-doc-links small {
+  margin: 0;
+}
+
+.ti85-docs-intro p,
+.ti85-doc-links small {
+  color: #95d7d1;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ti85-docs-intro h2 {
+  margin-block: 4px 8px;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.ti85-docs-intro span {
+  color: #b8c6bd;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ti85-doc-links {
+  display: grid;
+  gap: 8px;
+}
+
+.ti85-doc-links article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(174, 205, 176, 0.16);
+  border-radius: 7px;
+  background: rgba(174, 205, 176, 0.045);
+  padding: 12px;
+}
+
+.ti85-doc-links h3 {
+  margin-top: 3px;
+  color: #f1f1e8;
+  font-size: 15px;
+}
+
+.ti85-doc-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ti85-doc-actions a,
+.ti85-doc-actions button {
+  min-height: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(149, 215, 209, 0.42);
+  border-radius: 6px;
+  background: rgba(22, 199, 189, 0.12);
+  color: #e7fffc;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.ti85-doc-actions a:last-child {
+  border-color: rgba(174, 205, 176, 0.22);
+  background: transparent;
+  color: #b8c6bd;
+}
+
+.ti85-doc-actions a:hover,
+.ti85-doc-actions button:hover {
+  border-color: #95d7d1;
+  background: rgba(22, 199, 189, 0.2);
+}
+
+.ti85-doc-actions a:focus-visible,
+.ti85-doc-actions button:focus-visible {
+  outline: 3px solid #16c7bd;
+  outline-offset: 2px;
+}
+
 .ti85-debugger {
   grid-template-areas:
     "registers disassembly memory"
@@ -1849,6 +2059,29 @@ dd {
   padding: 10px 12px;
   font-size: 12px;
   line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  body.doc-reader-open {
+    overflow: hidden;
+  }
+
+  .ti85-workspace.docs-open {
+    grid-template-columns: 1fr;
+  }
+
+  .ti85-workspace.docs-open .ti85-frame {
+    position: static;
+  }
+
+  .ti85-doc-reader {
+    position: fixed;
+    inset: 8px;
+    z-index: 100;
+    width: auto;
+    height: auto;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 780px) {
@@ -1918,6 +2151,18 @@ dd {
       "memory";
   }
 
+  .ti85-docs {
+    grid-template-columns: 1fr;
+  }
+
+  .ti85-doc-reader-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .ti85-doc-reader-bar > div:first-child {
+    grid-column: 1 / -1;
+  }
+
   .ti85-frame h1 {
     font-size: 30px;
   }
@@ -1951,6 +2196,19 @@ dd {
 
   .ti85-shell {
     gap: 6px;
+  }
+
+  .ti85-docs {
+    gap: 12px;
+    padding: 13px;
+  }
+
+  .ti85-doc-links article {
+    grid-template-columns: 1fr;
+  }
+
+  .ti85-doc-actions button {
+    flex: 1;
   }
 
   .machine-nav {
