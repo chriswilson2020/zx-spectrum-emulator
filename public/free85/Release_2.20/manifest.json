@@ -1,0 +1,45 @@
+{
+  "product": "Free85",
+  "release": "Release_2.20",
+  "releaseName": "Release_2.20",
+  "firmwareVersion": "2.20",
+  "documentationEdition": "Published for firmware 2.10",
+  "releaseUrl": "https://github.com/chriswilson2020/Free85/releases/tag/Release_2.20",
+  "sourceCommit": "8616d0f948db1b429be36e9fb6c7fde602f211cc",
+  "rom": {
+    "path": "../../../ROM/FREE85.ROM",
+    "sha256": "fc3f889ff0cc0c70f3fd02b74768ce37a4d6c8f2eb8af883d5057d9b6e1e9de3",
+    "source": "Official GitHub release asset"
+  },
+  "files": {
+    "Free85-Manual-typeset.html": {
+      "sha256": "b0e51e83136e565bbee8fe58be3bcacc1ff5e0c7dba41beef9e320ebb572b05f",
+      "sourceSha256": "1cef0f51ab958283cfdbcbd78fd60baa79d55fd35ea762946b1575b9226ad3c8"
+    },
+    "Free85-Manual-typeset.pdf": {
+      "sha256": "dbf964ae1b8549fa161ccbb82c8f403d6d2f8952ca20f862016a6e8de8cb3a23"
+    },
+    "Free85-Guidebook-typeset.html": {
+      "sha256": "5061770f93d7003492b02ba7dbe64f1ee439515753ce56682a85e4bf31d1216f",
+      "sourceSha256": "f83cfcc84ad6fbe1fd28707b16bee39a0e2f5c9db9a2c0ae82b04c36e660b1a8"
+    },
+    "Free85-Guidebook-typeset.pdf": {
+      "sha256": "45e4a5eec07039534b11c60bd586013aaa8ba3dc3c10f9444c4a0c95074ad5b8"
+    },
+    "Free85-Companion-typeset.html": {
+      "sha256": "b57836f428b45345ecbba64225286d111adad9f41bb061a4feeac3a179c011ed",
+      "sourceSha256": "8159083fc892c5900dc22285896ea7022c87c9e2066369caac73f11b74f0dcd5"
+    },
+    "Free85-Companion-typeset.pdf": {
+      "sha256": "19db6347a674390ae285c448727514406ad2a2861fd9fc5dd92af08a4439639d"
+    },
+    "LICENSE": {
+      "sha256": "e7e342a1633608c0afaba7b06da3106b7e69bc27ef46837897aead81ef8af22d",
+      "sourceSha256": "9f39899a30bfb914f5848814a63d1542b70ae7051ea21640ec445afb2a3a126c"
+    },
+    "NOTICE.md": {
+      "sha256": "3e47bbc4335b1458748a83bcc47ff10aaf0dc7465f836166975b55ef976d9467"
+    }
+  },
+  "notes": "HTML source hashes are recorded before changing the back-to-calculator link for this host. ROM and PDFs are official release assets; HTML, license, and notice are pinned from the matching release tag."
+}
