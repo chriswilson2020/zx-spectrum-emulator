@@ -1,4 +1,4 @@
-export const ACTIVE_FREE85_RELEASE = "Release_2.20";
+export const ACTIVE_FREE85_RELEASE = "Release_2.20_Docs";
 export const ACTIVE_FREE85_ROM_SHA256 = "fc3f889ff0cc0c70f3fd02b74768ce37a4d6c8f2eb8af883d5057d9b6e1e9de3";
 
 export async function sha256Hex(bytes) {

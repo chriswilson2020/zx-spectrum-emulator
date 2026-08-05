@@ -32,15 +32,15 @@ const docHandleButton = document.querySelector("#ti85DocHandle");
 const DOCUMENTATION = {
   manual: {
     title: "Getting Started Manual",
-    url: "./public/free85/Release_2.20/Free85-Manual-typeset.html"
+    url: "./public/free85/Release_2.20_Docs/Free85-Manual-typeset.html"
   },
   guidebook: {
     title: "The Free85 Guidebook",
-    url: "./public/free85/Release_2.20/Free85-Guidebook-typeset.html"
+    url: "./public/free85/Release_2.20_Docs/Free85-Guidebook-typeset.html"
   },
   companion: {
     title: "Explorations with Free85",
-    url: "./public/free85/Release_2.20/Free85-Companion-typeset.html"
+    url: "./public/free85/Release_2.20_Docs/Free85-Companion-typeset.html"
   }
 };
 const compactDocReaderQuery = window.matchMedia("(max-width: 1100px)");

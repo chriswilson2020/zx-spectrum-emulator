@@ -1,11 +1,11 @@
 {
   "product": "Free85",
-  "release": "Release_2.20",
-  "releaseName": "Release_2.20",
+  "release": "Release_2.20_Docs",
+  "releaseName": "Release_2.20_Docs",
   "firmwareVersion": "2.20",
-  "documentationEdition": "Published for firmware 2.10",
-  "releaseUrl": "https://github.com/chriswilson2020/Free85/releases/tag/Release_2.20",
-  "sourceCommit": "8616d0f948db1b429be36e9fb6c7fde602f211cc",
+  "documentationEdition": "Second Edition",
+  "releaseUrl": "https://github.com/chriswilson2020/Free85/releases/tag/Release_2.20_Docs",
+  "sourceCommit": "31123c72e7473a749d087df82475e19ab1ea32a9",
   "rom": {
     "path": "../../../ROM/FREE85.ROM",
     "sha256": "fc3f889ff0cc0c70f3fd02b74768ce37a4d6c8f2eb8af883d5057d9b6e1e9de3",
@@ -13,25 +13,25 @@
   },
   "files": {
     "Free85-Manual-typeset.html": {
-      "sha256": "b0e51e83136e565bbee8fe58be3bcacc1ff5e0c7dba41beef9e320ebb572b05f",
-      "sourceSha256": "1cef0f51ab958283cfdbcbd78fd60baa79d55fd35ea762946b1575b9226ad3c8"
+      "sha256": "86faef9061b24e8026d45f3767a5b45785ccbb779d67db7f0e575470a146c236",
+      "sourceSha256": "4e2e107973c15730841dafd8f8033ed2831110dee636947a9ae7e530cbddf272"
     },
     "Free85-Manual-typeset.pdf": {
-      "sha256": "dbf964ae1b8549fa161ccbb82c8f403d6d2f8952ca20f862016a6e8de8cb3a23"
+      "sha256": "8407596bb1f8607cec22ca61fb30d4c61280e5095ced26bd8a26a5e29413c394"
     },
     "Free85-Guidebook-typeset.html": {
-      "sha256": "5061770f93d7003492b02ba7dbe64f1ee439515753ce56682a85e4bf31d1216f",
-      "sourceSha256": "f83cfcc84ad6fbe1fd28707b16bee39a0e2f5c9db9a2c0ae82b04c36e660b1a8"
+      "sha256": "103887ab567b42e64869fd5707db5bf45d7113dbc3b60789bc926f40e38ad2ce",
+      "sourceSha256": "b7950cc257a683d7403ae619776b835439989dc3eff583d85b21824a9565ff18"
     },
     "Free85-Guidebook-typeset.pdf": {
-      "sha256": "45e4a5eec07039534b11c60bd586013aaa8ba3dc3c10f9444c4a0c95074ad5b8"
+      "sha256": "376718b7e7f303ca99d3c73d3e122fad7b23126d6682253fbd68cdcf30bec6bf"
     },
     "Free85-Companion-typeset.html": {
-      "sha256": "b57836f428b45345ecbba64225286d111adad9f41bb061a4feeac3a179c011ed",
-      "sourceSha256": "8159083fc892c5900dc22285896ea7022c87c9e2066369caac73f11b74f0dcd5"
+      "sha256": "50f924e5c20377c901c9ea08e898c2185f5d17371fedfc41c6d5724ac61a2e7d",
+      "sourceSha256": "61e57af64dde398ef9aa41053b9df6d542bf43325841c5caabd721888b653000"
     },
     "Free85-Companion-typeset.pdf": {
-      "sha256": "19db6347a674390ae285c448727514406ad2a2861fd9fc5dd92af08a4439639d"
+      "sha256": "74cbdac9ad51e75d8ab9c2041e15b6caf287f2ba082302ff5bc8a1d6c68f94ef"
     },
     "LICENSE": {
       "sha256": "e7e342a1633608c0afaba7b06da3106b7e69bc27ef46837897aead81ef8af22d",
