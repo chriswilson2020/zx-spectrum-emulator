@@ -1594,7 +1594,7 @@ dd {
 }
 
 .ti85-shell {
-  width: min(1180px, 100%);
+  width: min(1560px, 100%);
   margin: 0 auto;
   display: grid;
   gap: 16px;
@@ -1608,7 +1608,7 @@ dd {
 }
 
 .ti85-workspace.docs-open {
-  grid-template-columns: minmax(420px, 520px) minmax(480px, 1fr);
+  grid-template-columns: minmax(420px, 520px) minmax(520px, 1fr);
   align-items: start;
   justify-items: stretch;
 }
@@ -1629,6 +1629,8 @@ dd {
   height: calc(100vh - 36px);
   min-height: 640px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(174, 205, 176, 0.26);
   border-radius: 8px;
   background: #f7f5ef;
@@ -1697,10 +1699,20 @@ dd {
 
 .ti85-doc-reader iframe {
   width: 100%;
-  height: calc(100% - 62px);
+  height: auto;
+  min-height: 0;
+  flex: 1;
   display: block;
   border: 0;
   background: #f7f5ef;
+}
+
+.ti85-doc-handle {
+  display: none;
+}
+
+.ti85-workspace.docs-parked .ti85-doc-reader {
+  display: none;
 }
 
 .ti85-frame {
@@ -2076,11 +2088,58 @@ dd {
 
   .ti85-doc-reader {
     position: fixed;
-    inset: 8px;
+    inset: 0 0 0 auto;
     z-index: 100;
-    width: auto;
-    height: auto;
+    width: min(94vw, 720px);
+    height: 100dvh;
     min-height: 0;
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+    transform: translateX(0);
+    transition: transform 220ms ease-out;
+    will-change: transform;
+  }
+
+  .ti85-workspace.docs-parked .ti85-doc-reader {
+    display: flex;
+    pointer-events: none;
+    transform: translateX(calc(100% + 2px));
+  }
+
+  .ti85-doc-handle:not([hidden]) {
+    position: fixed;
+    top: max(116px, calc(env(safe-area-inset-top) + 92px));
+    right: -1px;
+    z-index: 99;
+    width: 26px;
+    min-height: 88px;
+    display: grid;
+    place-items: center;
+    gap: 2px;
+    border: 1px solid rgba(174, 205, 176, 0.52);
+    border-right: 0;
+    border-radius: 7px 0 0 7px;
+    background: #142d55;
+    color: #fff;
+    padding: 6px 2px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.36);
+    cursor: pointer;
+  }
+
+  .ti85-doc-handle span {
+    font: 800 18px/1 system-ui, sans-serif;
+  }
+
+  .ti85-doc-handle strong {
+    font: 750 9px/1 "Inter", "Avenir Next", system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    writing-mode: vertical-rl;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ti85-doc-reader {
+    transition: none;
   }
 }
 
@@ -2186,6 +2245,23 @@ dd {
 
   .ti85-key-top {
     font-size: 9px;
+  }
+}
+
+@media (max-width: 560px) {
+  .ti85-doc-reader-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .ti85-doc-reader-bar nav,
+  .ti85-doc-reader-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .ti85-doc-reader-bar nav > button,
+  .ti85-doc-reader-actions > * {
+    flex: 1 1 auto;
   }
 }
 

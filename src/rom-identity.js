@@ -1,4 +1,5 @@
-export const FREE85_RELEASE_210_SHA256 = "dc91f6d59ac3ab930216f7642a68284fdb8d6255170934c9c5733b360df160f0";
+export const ACTIVE_FREE85_RELEASE = "Release_2.10.1";
+export const ACTIVE_FREE85_ROM_SHA256 = "5942f3fce34b437d1f060e513aa4982baf5b41e5bd2154531a22709d851eb0f0";
 
 export async function sha256Hex(bytes) {
   if (!(bytes instanceof Uint8Array)) {
@@ -12,6 +13,6 @@ export async function sha256Hex(bytes) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function isFree85Release210Rom(bytes) {
-  return (await sha256Hex(bytes)) === FREE85_RELEASE_210_SHA256;
+export async function isActiveFree85Rom(bytes) {
+  return (await sha256Hex(bytes)) === ACTIVE_FREE85_ROM_SHA256;
 }

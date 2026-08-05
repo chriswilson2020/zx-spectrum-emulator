@@ -51,8 +51,8 @@ test("browser entry points use project-page-safe relative paths", async () => {
   assert.match(trs80, /href="\.\/public\/styles\.css"/);
   assert.match(trs80, /src="\.\/public\/trs80-app\.js"/);
   assert.match(trs80, /src="\.\/public\/assets\/contact-email\.png"/);
-  assert.match(ti85, /href="\.\/public\/styles\.css"/);
-  assert.match(ti85, /src="\.\/public\/ti85-app\.js"/);
+  assert.match(ti85, /href="\.\/public\/styles\.css(?:\?[^\"]+)?"/);
+  assert.match(ti85, /src="\.\/public\/ti85-app\.js(?:\?[^\"]+)?"/);
   assert.match(ti85, /src="\.\/public\/assets\/contact-email\.png"/);
   for (const html of [index, spectrum, cpm, trs80, ti85]) {
     assert.match(html, /class="site-contact-footer"/);
@@ -178,10 +178,14 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(ti85, /id="ti85Workspace"/);
   assert.match(ti85, /id="ti85Docs"[^>]*hidden/);
   assert.match(ti85, /id="ti85DocReader"[^>]*hidden/);
+  assert.match(ti85, /id="ti85DocHandle"[^>]*hidden/);
   assert.match(ti85, /data-doc-book="manual"/);
   assert.match(ti85, /data-doc-book="guidebook"/);
-  assert.match(ti85, /\.\/public\/free85\/Release_2\.10\/Free85-Manual-typeset\.pdf/);
-  assert.match(ti85, /\.\/public\/free85\/Release_2\.10\/Free85-Guidebook-typeset\.pdf/);
+  assert.match(ti85, /data-doc-book="companion"/);
+  assert.match(ti85, /Explorations with Free85/);
+  assert.match(ti85, /\.\/public\/free85\/Release_2\.10\.1\/Free85-Manual-typeset\.pdf/);
+  assert.match(ti85, /\.\/public\/free85\/Release_2\.10\.1\/Free85-Guidebook-typeset\.pdf/);
+  assert.match(ti85, /\.\/public\/free85\/Release_2\.10\.1\/Free85-Companion-typeset\.pdf/);
   assert.doesNotMatch(ti85, /Free85\/releases\/latest/);
   assert.match(ti85, /class="debug-card ti85-machine-card"/);
   assert.match(ti85, /class="debug-card ti85-keyboard-card"/);
@@ -205,10 +209,13 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(app, /machine\.getDebugState\(\)/);
   assert.match(app, /disassembleWindow/);
   assert.match(app, /readMemoryRows/);
-  assert.match(app, /isFree85Release210Rom/);
+  assert.match(app, /isActiveFree85Rom/);
   assert.match(app, /setFree85DocumentationVisible\(isFree85\)/);
   assert.match(app, /if \(!free85DocumentationActive\) return/);
   assert.match(app, /docFrame\.removeAttribute\("src"\)/);
+  assert.match(app, /docHandleButton\.addEventListener/);
+  assert.match(app, /workspace\.classList\.add\("docs-parked"\)/);
+  assert.match(app, /event\.key === "Escape"/);
   const styles = await readFile("public/styles.css", "utf8");
   assert.match(styles, /\.ti85-debug-drawer\s*{[^}]*width:\s*min\(1180px,\s*calc\(100vw - 36px\)\)/s);
   assert.match(styles, /\.ti85-debugger\s*{[^}]*grid-template-areas:/s);
@@ -217,6 +224,8 @@ test("TI-85 page exposes a live calculator LCD viewer entry point", async () => 
   assert.match(styles, /@media \(max-width: 430px\)\s*{[\s\S]*?\.ti85-key\s*{[\s\S]*?min-height:\s*clamp\(34px,\s*8\.8vw,\s*38px\)/);
   assert.match(styles, /\.ti85-docs\[hidden\]\s*{\s*display:\s*none/);
   assert.match(styles, /@media \(max-width: 1100px\)\s*{[\s\S]*?\.ti85-doc-reader\s*{[\s\S]*?position:\s*fixed/);
+  assert.match(styles, /\.ti85-doc-handle:not\(\[hidden\]\)/);
+  assert.match(styles, /@media \(max-width: 560px\)\s*{[\s\S]*?\.ti85-doc-reader-bar nav[\s\S]*?flex-wrap:\s*wrap/);
 });
 
 test("TRS-80 page exposes a live Model III viewer entry point", async () => {
@@ -348,6 +357,13 @@ test("build:pages creates a static dist tree for GitHub Pages", async () => {
   assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Manual-typeset.pdf"), true);
   assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Guidebook-typeset.html"), true);
   assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Companion-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Companion-typeset.pdf"), true);
   assert.equal(existsSync("dist/public/cpm-session.js"), true);
   assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
   assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
