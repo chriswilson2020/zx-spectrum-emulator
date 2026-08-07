@@ -1,5 +1,5 @@
-export const ACTIVE_FREE85_RELEASE = "Release_2.21";
-export const ACTIVE_FREE85_ROM_SHA256 = "b714dd191c4182c294017f6fe19f1699db039c9579fc39eef1dd568afb05339d";
+export const ACTIVE_FREE85_RELEASE = "Release_3.0";
+export const ACTIVE_FREE85_ROM_SHA256 = "f1e80e901e048fe59363613ec9ed0d237505aa748ca0e395300c692c62c3d6f4";
 
 export async function sha256Hex(bytes) {
   if (!(bytes instanceof Uint8Array)) {
