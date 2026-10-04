@@ -1,0 +1,412 @@
+import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
+import { readFile, rm } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import test from "node:test";
+
+test("browser entry points use project-page-safe relative paths", async () => {
+  const index = await readFile("public/index.html", "utf8");
+  const spectrum = await readFile("public/spectrum.html", "utf8");
+  const cpm = await readFile("public/cpm.html", "utf8");
+  const trs80 = await readFile("public/trs80.html", "utf8");
+  const ti85 = await readFile("public/ti85.html", "utf8");
+  const app = await readFile("public/app.js", "utf8");
+  const trs80App = await readFile("public/trs80-app.js", "utf8");
+  const ti85App = await readFile("public/ti85-app.js", "utf8");
+
+  const machinePages = new Map([
+    ["spectrum.html", spectrum],
+    ["cpm.html", cpm],
+    ["trs80.html", trs80],
+    ["ti85.html", ti85],
+  ]);
+
+  for (const [currentPage, html] of machinePages) {
+    assert.match(html, /href="\.\/index\.html">Machines/);
+
+    for (const machinePage of machinePages.keys()) {
+      const machineLink = new RegExp(`href="\\.\\/${machinePage}"`);
+      if (machinePage === currentPage) {
+        assert.doesNotMatch(html, machineLink);
+      } else {
+        assert.match(html, machineLink);
+      }
+    }
+  }
+
+  assert.match(index, /href="\.\/public\/styles\.css"/);
+  assert.match(index, /href="\.\/spectrum\.html"/);
+  assert.match(index, /href="\.\/cpm\.html"/);
+  assert.match(index, /href="\.\/trs80\.html"/);
+  assert.match(index, /href="\.\/ti85\.html"/);
+  assert.match(index, /src="\.\/public\/assets\/machine-selector-banner\.png"/);
+  assert.match(index, /src="\.\/public\/assets\/contact-email\.png"/);
+  assert.match(spectrum, /href="\.\/public\/styles\.css"/);
+  assert.match(spectrum, /src="\.\/public\/app\.js\?v=20261004-sound-fast-tape"/);
+  assert.match(spectrum, /id="audioToggle"[^>]*aria-pressed="true"[^>]*>Sound On<\/button>/);
+  assert.match(spectrum, /src="\.\/public\/assets\/contact-email\.png"/);
+  assert.match(spectrum, /href="\.\/index\.html">Machines</);
+  assert.match(cpm, /href="\.\/public\/styles\.css"/);
+  assert.match(cpm, /src="\.\/public\/cpm-app\.js(?:\?[^"]+)?"/);
+  assert.match(cpm, /src="\.\/public\/assets\/contact-email\.png"/);
+  assert.match(trs80, /href="\.\/public\/styles\.css"/);
+  assert.match(trs80, /src="\.\/public\/trs80-app\.js"/);
+  assert.match(trs80, /src="\.\/public\/assets\/contact-email\.png"/);
+  assert.match(ti85, /href="\.\/public\/styles\.css(?:\?[^\"]+)?"/);
+  assert.match(ti85, /src="\.\/public\/ti85-app\.js(?:\?[^\"]+)?"/);
+  assert.match(ti85, /src="\.\/public\/assets\/contact-email\.png"/);
+  for (const html of [index, spectrum, cpm, trs80, ti85]) {
+    assert.match(html, /class="site-contact-footer"/);
+    assert.doesNotMatch(html, new RegExp(`z80${"\\."}world`));
+    assert.doesNotMatch(html, new RegExp(`chris${"@"}`));
+  }
+  assert.doesNotMatch(index, /href="\/public\//);
+  assert.doesNotMatch(index, /src="\/public\//);
+  assert.doesNotMatch(spectrum, /href="\/public\//);
+  assert.doesNotMatch(spectrum, /src="\/public\//);
+  assert.doesNotMatch(cpm, /href="\/public\//);
+  assert.doesNotMatch(cpm, /src="\/public\//);
+  assert.doesNotMatch(trs80, /href="\/public\//);
+  assert.doesNotMatch(trs80, /src="\/public\//);
+  assert.doesNotMatch(ti85, /href="\/public\//);
+  assert.doesNotMatch(ti85, /src="\/public\//);
+  assert.doesNotMatch(app, /from "\/(public|src)\//);
+  assert.doesNotMatch(trs80App, /from "\/(public|src)\//);
+  assert.doesNotMatch(ti85App, /from "\/(public|src)\//);
+  assert.match(app, /new URL\("\.\.\/ROM\/48\.rom", import\.meta\.url\)/);
+  assert.match(trs80App, /new URL\("\.\.\/ROM\/Model3-RevC-2EF8\.bin", import\.meta\.url\)/);
+  const ti85RomIndex = ti85App.indexOf('new URL("../ROM/TI85.ROM", import.meta.url)');
+  const free85RomIndex = ti85App.indexOf('new URL("../ROM/FREE85.ROM", import.meta.url)');
+  assert.notEqual(ti85RomIndex, -1);
+  assert.notEqual(free85RomIndex, -1);
+  assert.equal(ti85RomIndex < free85RomIndex, true);
+  const devServer = await readFile("scripts/dev-server.js", "utf8");
+  assert.match(devServer, /"\/ti85\.html"/);
+});
+
+test("viewer groups secondary tools into tabs and keeps debugger collapsible", async () => {
+  const index = await readFile("public/spectrum.html", "utf8");
+  const app = await readFile("public/app.js", "utf8");
+
+  assert.match(index, /role="tablist"/);
+  assert.match(index, /data-tool-tab="basic"/);
+  assert.match(index, /data-tool-tab="tape"/);
+  assert.match(index, /data-tool-tab="snapshots"/);
+  assert.match(index, /data-tool-tab="debug"/);
+  assert.match(index, /id="basicPanel"/);
+  assert.match(index, /id="tapePanel"/);
+  assert.match(index, /id="snapshotsPanel"/);
+  assert.match(index, /id="debugPanel"/);
+  assert.match(index, /id="rasterLine"/);
+  assert.match(index, /id="rasterColumn"/);
+  assert.match(index, /id="rasterTState"/);
+  assert.match(index, /id="immediateScreen"/);
+  assert.match(index, /id="rasterOverlay"/);
+  assert.match(index, /<details class="debug-drawer"/);
+  assert.match(index, /id="romFile"/);
+  assert.match(index, /id="stepBack"/);
+  assert.match(index, /id="rewindTimeline"/);
+  assert.match(index, /id="rzxFile"/);
+  assert.match(index, /id="rzxStep"/);
+  assert.match(index, /id="sourceFile"/);
+  assert.match(index, /id="sourceListing"/);
+  assert.match(index, /id="assemblerSearch"/);
+  assert.match(index, /class="debug-card source-card resizable-window" data-window-id="source"/);
+  assert.match(index, /class="debug-card reference-card resizable-window" data-window-id="assembler-reference"/);
+  assert.match(app, /drawSpectrumScreen/);
+  assert.match(app, /drawRasterOverlay/);
+  assert.match(app, /machine\.getRasterPosition\(\)/);
+  assert.match(app, /romFileInput\.addEventListener\("change"/);
+  assert.match(app, /mountRom\(new Uint8Array\(await file\.arrayBuffer\(\)\)/);
+  assert.match(app, /executionHistory\.stepBack\(machine\)/);
+  assert.match(app, /parseRzx\(await file\.arrayBuffer\(\),/);
+  assert.match(app, /new RzxPlayback\(machine, recording\)/);
+  assert.match(app, /renderAssemblerReference/);
+});
+
+test("machine selector exposes Spectrum, CP/M, TRS-80, and TI-85 routes", async () => {
+  const index = await readFile("public/index.html", "utf8");
+
+  assert.match(index, /Z80 Machine Lab/);
+  assert.match(index, /ZX Spectrum 48K/);
+  assert.match(index, /CP\/M 2\.2/);
+  assert.match(index, /TRS-80 Model III/);
+  assert.match(index, /TI-85/);
+  assert.match(index, /ti85-icon-lcd/);
+  assert.match(index, /ti85-icon-softkeys/);
+  assert.match(index, /ti85-icon-keypad/);
+  assert.doesNotMatch(index, /Texas Instruments/i);
+  assert.match(index, /MODEL III/);
+  assert.match(index, /machine-selector-banner\.png/);
+  assert.match(index, /contact-email\.png/);
+});
+
+test("TI-85 page exposes a live calculator LCD viewer entry point", async () => {
+  const ti85 = await readFile("public/ti85.html", "utf8");
+  const app = await readFile("public/ti85-app.js", "utf8");
+  const keys = await readFile("src/ti85-keys.js", "utf8");
+  const expectedTi85Keys = [
+    "DOWN", "ENTER", "(-)", ".", "0", "F5",
+    "LEFT", "+", "3", "2", "1", "STO", "F4",
+    "RIGHT", "-", "6", "5", "4", ",", "F3",
+    "UP", "*", "9", "8", "7", "X^2", "F2",
+    "/", ")", "(", "EE", "LN", "F1",
+    "^", "TAN", "COS", "SIN", "LOG", "2ND",
+    "CLEAR", "CUSTOM", "PRGM", "STAT", "GRAPH", "EXIT",
+    "DEL", "X-VAR", "ALPHA", "MORE", "ON"
+  ];
+
+  assert.match(ti85, /Texas Instruments-like/);
+  assert.match(ti85, /TI-85-like/);
+  assert.match(ti85, /referenced only to describe calculator compatibility/);
+  assert.match(ti85, /not affiliated with or endorsed by Texas Instruments/);
+  assert.match(ti85, /original code and assets/);
+  assert.match(ti85, /legally obtained TI-85 ROM file/);
+  assert.match(ti85, /id="ti85Screen"/);
+  assert.match(ti85, /id="ti85Status"/);
+  assert.match(ti85, /id="ti85RomFile"/);
+  assert.match(ti85, /id="ti85RunPause"/);
+  assert.match(ti85, /id="ti85StepFrame"/);
+  assert.match(ti85, /id="ti85StepInstruction"/);
+  assert.match(ti85, /id="ti85Reset"/);
+  assert.match(ti85, /id="ti85Keypad"/);
+  assert.match(ti85, /id="ti85RegisterGrid"/);
+  assert.match(ti85, /id="ti85FlagGrid"/);
+  assert.match(ti85, /id="ti85MachineState"/);
+  assert.match(ti85, /id="ti85KeyboardState"/);
+  assert.match(ti85, /id="ti85DisplayState"/);
+  assert.match(ti85, /id="ti85MemoryInspector"/);
+  assert.match(ti85, /id="ti85Workspace"/);
+  assert.match(ti85, /id="ti85Docs"[^>]*hidden/);
+  assert.match(ti85, /id="ti85DocReader"[^>]*hidden/);
+  assert.match(ti85, /id="ti85DocHandle"[^>]*hidden/);
+  assert.match(ti85, /data-doc-book="manual"/);
+  assert.match(ti85, /data-doc-book="guidebook"/);
+  assert.match(ti85, /data-doc-book="companion"/);
+  assert.match(ti85, /Explorations with Free85/);
+  assert.match(ti85, /\.\/public\/free85\/Release_3\.0\/Free85-Manual-typeset\.pdf/);
+  assert.match(ti85, /\.\/public\/free85\/Release_3\.0\/Free85-Guidebook-typeset\.pdf/);
+  assert.match(ti85, /\.\/public\/free85\/Release_3\.0\/Free85-Companion-typeset\.pdf/);
+  assert.doesNotMatch(ti85, /Free85\/releases\/latest/);
+  assert.match(ti85, /class="debug-card ti85-machine-card"/);
+  assert.match(ti85, /class="debug-card ti85-keyboard-card"/);
+  assert.match(ti85, /class="debug-card ti85-display-card"/);
+  assert.match(app, /Ti85Machine/);
+  assert.match(app, /Use your own 128K TI-85 ROM file/);
+  assert.match(app, /USE YOUR OWN/);
+  assert.match(app, /TI-85 ROM FILE/);
+  assert.match(app, /TI85_KEY_LAYOUT/);
+  assert.match(app, /data-ti85-key/);
+  assert.match(app, /bindTi85KeyButton/);
+  assert.match(app, /button\.id = "ti85On"/);
+  for (const key of expectedTi85Keys) {
+    assert.match(keys, new RegExp(`key: "${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  }
+  assert.equal(keys.match(/\bkey: "/g)?.length, expectedTi85Keys.length);
+  assert.match(app, /drawTi85Screen/);
+  assert.match(app, /renderLcdRgba/);
+  assert.match(app, /machine\.pressKey\(key\)/);
+  assert.match(app, /machine\.releaseKey\(key\)/);
+  assert.match(app, /machine\.getDebugState\(\)/);
+  assert.match(app, /disassembleWindow/);
+  assert.match(app, /readMemoryRows/);
+  assert.match(app, /isActiveFree85Rom/);
+  assert.match(app, /setFree85DocumentationVisible\(isFree85\)/);
+  assert.match(app, /if \(!free85DocumentationActive\) return/);
+  assert.match(app, /docFrame\.removeAttribute\("src"\)/);
+  assert.match(app, /docHandleButton\.addEventListener/);
+  assert.match(app, /workspace\.classList\.add\("docs-parked"\)/);
+  assert.match(app, /event\.key === "Escape"/);
+  const styles = await readFile("public/styles.css", "utf8");
+  assert.match(styles, /\.ti85-debug-drawer\s*{[^}]*width:\s*min\(1180px,\s*calc\(100vw - 36px\)\)/s);
+  assert.match(styles, /\.ti85-debugger\s*{[^}]*grid-template-areas:/s);
+  assert.match(styles, /\.ti85-key\s*{[\s\S]*?min-height:\s*48px/);
+  assert.match(styles, /\.ti85-key-label\s*{[\s\S]*?font-size:\s*16px/);
+  assert.match(styles, /@media \(max-width: 430px\)\s*{[\s\S]*?\.ti85-key\s*{[\s\S]*?min-height:\s*clamp\(34px,\s*8\.8vw,\s*38px\)/);
+  assert.match(styles, /\.ti85-docs\[hidden\]\s*{\s*display:\s*none/);
+  assert.match(styles, /@media \(max-width: 1100px\)\s*{[\s\S]*?\.ti85-doc-reader\s*{[\s\S]*?position:\s*fixed/);
+  assert.match(styles, /\.ti85-doc-handle:not\(\[hidden\]\)/);
+  assert.match(styles, /@media \(max-width: 560px\)\s*{[\s\S]*?\.ti85-doc-reader-bar nav[\s\S]*?flex-wrap:\s*wrap/);
+});
+
+test("TRS-80 page exposes a live Model III viewer entry point", async () => {
+  const trs80 = await readFile("public/trs80.html", "utf8");
+  const app = await readFile("public/trs80-app.js", "utf8");
+
+  assert.match(trs80, /TRS-80 Model III/);
+  assert.match(trs80, /id="trs80Screen"/);
+  assert.match(trs80, /id="trs80Status"/);
+  assert.match(trs80, /id="trs80RomFile"/);
+  assert.match(trs80, /id="trs80RunPause"/);
+  assert.match(trs80, /id="trs80StepFrame"/);
+  assert.match(trs80, /id="trs80StepInstruction"/);
+  assert.match(trs80, /id="trs80Reset"/);
+  assert.match(trs80, /id="trs80TypeText"/);
+  assert.match(trs80, /id="trs80TypeButton"/);
+  assert.match(trs80, /id="trs80StartupH"/);
+  assert.match(trs80, /id="trs80StartupL"/);
+  assert.match(trs80, /id="trs80Enter"/);
+  assert.match(trs80, /id="trs80CasFile"/);
+  assert.match(trs80, /id="trs80CasList"/);
+  assert.match(trs80, /id="trs80CasLoad"/);
+  assert.match(trs80, /id="trs80CasPlay"/);
+  assert.match(trs80, /id="trs80CasStop"/);
+  assert.match(trs80, /id="trs80SaveSession"/);
+  assert.match(trs80, /id="trs80LoadSession"/);
+  assert.match(trs80, /id="trs80SessionFile"/);
+  assert.match(trs80, /id="trs80RegisterGrid"/);
+  assert.match(trs80, /id="trs80FlagGrid"/);
+  assert.match(trs80, /id="trs80Disassembly"/);
+  assert.match(trs80, /id="trs80KeyboardState"/);
+  assert.match(trs80, /id="trs80DisplayState"/);
+  assert.match(trs80, /id="trs80MemoryInspector"/);
+  assert.match(trs80, /id="trs80KeyboardMatrix"/);
+  assert.match(app, /Trs80Model3Machine/);
+  assert.match(app, /readMemoryRows/);
+  assert.match(app, /TRS80_MEMORY_SECTIONS/);
+  assert.match(app, /renderKeyboardMatrix/);
+  assert.match(app, /parseCas/);
+  assert.match(app, /loadTrs80CasEntry/);
+  assert.match(app, /machine\.saveState\(\)/);
+  assert.match(app, /machine\.restoreState/);
+  assert.match(app, /Trs80TextTyper/);
+  assert.match(app, /textTyper\.enqueue/);
+  assert.match(app, /renderTextDisplay/);
+  assert.match(app, /keyEventToTrs80Key/);
+  assert.match(app, /machine\.getDebugState\(\)/);
+  assert.match(app, /disassembleWindow/);
+});
+
+test("CP/M page exposes a live terminal entry point", async () => {
+  const cpm = await readFile("public/cpm.html", "utf8");
+  const app = await readFile("public/cpm-app.js", "utf8");
+
+  assert.match(cpm, /id="cpmTerminal"/);
+  assert.match(cpm, /id="cpmDebugDrawer"/);
+  assert.match(cpm, /id="cpmRegisterGrid"/);
+  assert.match(cpm, /id="cpmFlagGrid"/);
+  assert.match(cpm, /id="cpmDisassembly"/);
+  assert.match(cpm, /id="cpmIoState"/);
+  assert.match(cpm, /id="cpmConsoleState"/);
+  assert.match(cpm, /id="cpmTraceState"/);
+  assert.match(cpm, /tabindex="0"/);
+  assert.match(cpm, /id="cpmMachineProfile"/);
+  assert.match(cpm, /id="cpmReset"/);
+  assert.match(cpm, /id="cpmDiskFile"/);
+  assert.match(cpm, /id="cpmDiskDrive"/);
+  assert.match(cpm, /id="cpmLoadDisk"/);
+  assert.match(cpm, /id="cpmSaveDisk"/);
+  assert.match(cpm, /id="cpmRestoreDisk"/);
+  assert.match(cpm, /id="cpmClearLocalDisks"/);
+  assert.match(cpm, /id="cpmSaveSession"/);
+  assert.match(cpm, /id="cpmLoadSession"/);
+  assert.match(cpm, /id="cpmSessionFile"/);
+  assert.match(cpm, /id="cpmFileDrive"/);
+  assert.match(cpm, /<option value="2">C: Companion Disk<\/option>/);
+  assert.match(cpm, /<option value="2">C: Companion<\/option>/);
+  assert.match(cpm, /id="cpmFileList"/);
+  assert.match(cpm, /id="cpmImportFile"/);
+  assert.match(cpm, /id="cpmDownloadFile"/);
+  assert.match(cpm, /id="cpmDeleteFile"/);
+  assert.match(cpm, /id="cpmForeignDiskFile"/);
+  assert.match(cpm, /id="cpmLoadForeignDisk"/);
+  assert.match(cpm, /id="cpmForeignFileList"/);
+  assert.match(cpm, /id="cpmCopyForeignFiles"/);
+  assert.match(cpm, /id="cpmCopyAllForeignFiles"/);
+  assert.match(app, /new URL\(path, import\.meta\.url\)/);
+  assert.match(app, /loadDiskAsset\("\.\.\/ROM\/cpm22-1\.dsk"\)/);
+  assert.match(app, /loadDiskAsset\("\.\.\/ROM\/cpm22-2\.dsk"\)/);
+  assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N00\.DSK"\)/);
+  assert.match(app, /loadDiskAsset\("\.\.\/ROM\/DS0N06\.DSK"\)/);
+  assert.match(app, /Z80Mbc2Machine/);
+  assert.match(app, /indexedDB\.open\(LOCAL_DISK_DB/);
+  assert.match(app, /createZip/);
+  assert.match(app, /readZip/);
+  assert.match(app, /SESSION_FORMAT/);
+  assert.match(app, /updateDebugDrawer/);
+  assert.match(app, /machine\.getDebugState\(\)/);
+  assert.match(app, /autoPersistDrive\(driveIndex\)/);
+  assert.match(app, /scheduleDirtyDiskPersistence/);
+  assert.match(app, /downloadBytes/);
+  assert.match(app, /RawCpmDisk\.z80simFloppy\(bytes\)/);
+  assert.match(app, /RawCpmDisk\.blankZ80simFloppy\(\)/);
+  assert.match(app, /activeProfile\.createFileSystem\(selectedFileDisk\(\), selectedDiskIndex\(fileDriveSelect\)\)/);
+  assert.match(app, /detectCpmDiskGeometry/);
+  assert.match(app, /foreignFileSystem\.readFile/);
+  assert.doesNotMatch(app, /from "\/(public|src)\//);
+});
+
+test("build:pages creates a static dist tree for GitHub Pages", async () => {
+  await rm("dist", { recursive: true, force: true });
+
+  const result = spawnSync(process.execPath, ["scripts/build-pages.js"], {
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.equal(existsSync("dist/index.html"), true);
+  assert.equal(existsSync("dist/spectrum.html"), true);
+  assert.equal(existsSync("dist/cpm.html"), true);
+  assert.equal(existsSync("dist/trs80.html"), true);
+  assert.equal(existsSync("dist/ti85.html"), true);
+  assert.equal(existsSync("dist/public/app.js"), true);
+  assert.equal(existsSync("dist/public/cpm-app.js"), true);
+  assert.equal(existsSync("dist/public/trs80-app.js"), true);
+  assert.equal(existsSync("dist/public/ti85-app.js"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Companion-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.10.1/Free85-Companion-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/Free85-Companion-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.11.1/Free85-Companion-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/Free85-Companion-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.20_Docs/Free85-Companion-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/Free85-Companion-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_2.21/Free85-Companion-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/manifest.json"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/Free85-Manual-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/Free85-Manual-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/Free85-Guidebook-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/Free85-Guidebook-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/Free85-Companion-typeset.html"), true);
+  assert.equal(existsSync("dist/public/free85/Release_3.0/Free85-Companion-typeset.pdf"), true);
+  assert.equal(existsSync("dist/public/cpm-session.js"), true);
+  assert.equal(existsSync("dist/public/cpm-terminal.js"), true);
+  assert.equal(existsSync("dist/public/assets/machine-selector-banner.png"), true);
+  assert.equal(existsSync("dist/public/assets/contact-email.png"), true);
+  assert.equal(existsSync("dist/src/spectrum48.js"), true);
+  assert.equal(existsSync("dist/src/trs80-model3.js"), true);
+  assert.equal(existsSync("dist/src/ti85.js"), true);
+  assert.equal(existsSync("dist/src/ti85-keys.js"), true);
+  assert.equal(existsSync("dist/src/z80mbc2.js"), true);
+  assert.equal(existsSync("dist/ROM/48.rom"), true);
+  assert.equal(existsSync("dist/ROM/cpm22-1.dsk"), true);
+  assert.equal(existsSync("dist/ROM/cpm22-2.dsk"), true);
+  assert.equal(existsSync("dist/ROM/DS0N00.DSK"), true);
+  assert.equal(existsSync("dist/ROM/DS0N06.DSK"), true);
+  assert.equal(existsSync("dist/ROM/TI85.ROM"), existsSync("ROM/TI85.ROM"));
+  assert.equal(existsSync("dist/ROM/FREE85.ROM"), existsSync("ROM/FREE85.ROM"));
+});

@@ -1,0 +1,45 @@
+{
+  "product": "Free85",
+  "release": "Release_2.21",
+  "releaseName": "Release_2.21",
+  "firmwareVersion": "2.21",
+  "documentationEdition": "Second Edition",
+  "releaseUrl": "https://github.com/chriswilson2020/Free85/releases/tag/Release_2.21",
+  "sourceCommit": "9437faab8b37bc902cf110fd0d1f9c0fc83693ea",
+  "rom": {
+    "path": "../../../ROM/FREE85.ROM",
+    "sha256": "b714dd191c4182c294017f6fe19f1699db039c9579fc39eef1dd568afb05339d",
+    "source": "Official GitHub release asset"
+  },
+  "files": {
+    "Free85-Manual-typeset.html": {
+      "sha256": "7ef40d3cea4a76c13990eb48a82322bc5d16c6f01cc804402196d9157798c7d4",
+      "sourceSha256": "e4148a913657a31b56d3cb6e730dfed4b42bbad58ce9b4fc6ac2441a2b7bf54a"
+    },
+    "Free85-Manual-typeset.pdf": {
+      "sha256": "ad5f7a338c442ca8a8db9bc29eca805c8fc22cea093476263f5cddcffa5b575d"
+    },
+    "Free85-Guidebook-typeset.html": {
+      "sha256": "1769752b254f21b1a38b38954362b64a704b04e84f78a3e6a4adffb2aa8f79c8",
+      "sourceSha256": "508b18c8b3447538d755a3a5bb4e1734d970874173507ec50e0a1a7f272d03b3"
+    },
+    "Free85-Guidebook-typeset.pdf": {
+      "sha256": "b6d9832c33e6a2afe267a712eb4bbbead021bee961ae7c48a7df0d7cc41c880b"
+    },
+    "Free85-Companion-typeset.html": {
+      "sha256": "2ae030464d3e01dc82cd289810a1988f57d780369b1cf4cc60c7f671913c617c",
+      "sourceSha256": "5df9680d9cae301cd70c059f77c778719a9ef0ba6b6666331344d3b695a50286"
+    },
+    "Free85-Companion-typeset.pdf": {
+      "sha256": "720d68b1c10b8179b57cbe2164c619ab843916e05c7641da5f04b6a54478dce6"
+    },
+    "LICENSE": {
+      "sha256": "e7e342a1633608c0afaba7b06da3106b7e69bc27ef46837897aead81ef8af22d",
+      "sourceSha256": "9f39899a30bfb914f5848814a63d1542b70ae7051ea21640ec445afb2a3a126c"
+    },
+    "NOTICE.md": {
+      "sha256": "3e47bbc4335b1458748a83bcc47ff10aaf0dc7465f836166975b55ef976d9467"
+    }
+  },
+  "notes": "HTML source hashes are recorded before changing the back-to-calculator link for this host. ROM and PDFs are official release assets; HTML, license, and notice are pinned from the matching release tag."
+}

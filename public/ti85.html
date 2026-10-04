@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TI-85-like</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./public/styles.css?v=20260807-free85-3-0">
+  </head>
+  <body class="ti85-page-body">
+    <main class="ti85-shell">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./spectrum.html">ZX Spectrum</a>
+        <a href="./cpm.html">CP/M</a>
+        <a href="./trs80.html">TRS-80</a>
+      </nav>
+      <div id="ti85Workspace" class="ti85-workspace">
+        <section class="ti85-frame" aria-label="TI-85-like viewer">
+          <header>
+            <p>Texas Instruments-like</p>
+            <h1>TI-85-like</h1>
+            <output id="ti85Status">Loading ROM</output>
+          </header>
+          <div class="ti85-lcd-bezel">
+            <canvas id="ti85Screen" width="128" height="64" tabindex="0" aria-label="TI-85-like LCD display"></canvas>
+          </div>
+          <section id="ti85Keypad" class="ti85-keypad" aria-label="TI-85-like keypad"></section>
+          <div class="ti85-controls">
+            <button id="ti85RunPause" type="button" aria-label="Pause" disabled>Pause</button>
+            <button id="ti85StepFrame" type="button" disabled>Frame</button>
+            <button id="ti85StepInstruction" type="button" disabled>Step</button>
+            <button id="ti85Reset" type="button" disabled>Reset</button>
+            <label class="ti85-rom-control">
+              <span>ROM</span>
+              <input id="ti85RomFile" type="file" accept=".rom,.bin,application/octet-stream">
+            </label>
+          </div>
+        </section>
+        <aside id="ti85DocReader" class="ti85-doc-reader" aria-label="Free85 documentation reader" hidden>
+          <header class="ti85-doc-reader-bar">
+            <div>
+              <small>Free85 3.0 documentation</small>
+              <strong id="ti85DocReaderTitle">Getting Started Manual</strong>
+            </div>
+            <nav aria-label="Choose Free85 documentation">
+              <button type="button" data-doc-book="manual" aria-pressed="true">Manual</button>
+              <button type="button" data-doc-book="guidebook" aria-pressed="false">Guidebook</button>
+              <button type="button" data-doc-book="companion" aria-pressed="false">Explorations</button>
+            </nav>
+            <div class="ti85-doc-reader-actions">
+              <a id="ti85DocNewTab" href="./public/free85/Release_3.0/Free85-Manual-typeset.html" target="_blank" rel="noopener">Open separately</a>
+              <button id="ti85DocClose" type="button" aria-label="Close documentation">Close</button>
+            </div>
+          </header>
+          <iframe id="ti85DocFrame" title="Getting Started Manual" loading="lazy"></iframe>
+        </aside>
+        <button id="ti85DocHandle" class="ti85-doc-handle" type="button" aria-label="Open documentation drawer" aria-controls="ti85DocReader" aria-expanded="false" hidden>
+          <span aria-hidden="true">‹</span>
+          <strong>Reference</strong>
+        </button>
+      </div>
+      <section id="ti85Docs" class="ti85-docs" aria-labelledby="ti85DocsTitle" hidden>
+        <div class="ti85-docs-intro">
+          <p>Free85 Release 3.0</p>
+          <h2 id="ti85DocsTitle">Learn the active ROM</h2>
+          <span>These locally pinned books match the Free85 firmware currently running above.</span>
+        </div>
+        <div class="ti85-doc-links">
+          <article>
+            <div><small>Start here</small><h3>Getting Started Manual</h3></div>
+            <div class="ti85-doc-actions">
+              <button type="button" data-doc-book="manual" aria-expanded="false">Open beside calculator</button>
+              <a href="./public/free85/Release_3.0/Free85-Manual-typeset.pdf" target="_blank" rel="noopener">PDF</a>
+            </div>
+          </article>
+          <article>
+            <div><small>Complete reference</small><h3>The Free85 Guidebook</h3></div>
+            <div class="ti85-doc-actions">
+              <button type="button" data-doc-book="guidebook" aria-expanded="false">Open beside calculator</button>
+              <a href="./public/free85/Release_3.0/Free85-Guidebook-typeset.pdf" target="_blank" rel="noopener">PDF</a>
+            </div>
+          </article>
+          <article>
+            <div><small>Put it to work</small><h3>Explorations with Free85</h3></div>
+            <div class="ti85-doc-actions">
+              <button type="button" data-doc-book="companion" aria-expanded="false">Open beside calculator</button>
+              <a href="./public/free85/Release_3.0/Free85-Companion-typeset.pdf" target="_blank" rel="noopener">PDF</a>
+            </div>
+          </article>
+        </div>
+      </section>
+      <details id="ti85DebugDrawer" class="debug-drawer ti85-debug-drawer">
+        <summary>
+          <span>Debug Drawer</span>
+          <strong>Registers, display, memory, keyboard</strong>
+        </summary>
+        <section class="debugger ti85-debugger" aria-label="TI-85 machine debugger">
+          <div class="debug-card registers-card">
+            <h2>Registers</h2>
+            <div id="ti85RegisterGrid" class="register-grid"></div>
+            <div id="ti85FlagGrid" class="flag-grid" aria-label="CPU flags"></div>
+          </div>
+          <div class="debug-card disassembly-card">
+            <h2>Disassembly</h2>
+            <ol id="ti85Disassembly" class="disassembly"></ol>
+          </div>
+          <div class="debug-card ti85-machine-card">
+            <h2>Machine</h2>
+            <div id="ti85MachineState" class="basic-status"></div>
+          </div>
+          <div class="debug-card ti85-keyboard-card">
+            <h2>Keyboard</h2>
+            <div id="ti85KeyboardState" class="basic-status"></div>
+          </div>
+          <div class="debug-card ti85-display-card">
+            <h2>Display</h2>
+            <div id="ti85DisplayState" class="basic-status"></div>
+          </div>
+          <div class="debug-card memory-card">
+            <h2>Memory</h2>
+            <div id="ti85MemoryInspector" class="memory-inspector"></div>
+          </div>
+        </section>
+      </details>
+      <p class="ti85-legal-note">
+        Texas Instruments and TI-85 are referenced only to describe calculator compatibility.
+        This independent demo is not affiliated with or endorsed by Texas Instruments. The
+        emulator UI and implementation use original code and assets, not TI logos, product
+        artwork, or source code. Use your own legally obtained TI-85 ROM file.
+      </p>
+    </main>
+    <footer class="site-contact-footer">
+      <span>Contact</span>
+      <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
+    </footer>
+    <script type="module" src="./public/ti85-app.js?v=20260807-free85-3-0"></script>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+{
+  "product": "Free85",
+  "release": "Release_2.11.1",
+  "releaseName": "Release_2.11.1",
+  "firmwareVersion": "2.10",
+  "releaseUrl": "https://github.com/chriswilson2020/Free85/releases/tag/Release_2.11.1",
+  "sourceCommit": "2afaf3bb2ef838e876a1626927555786c1c9e7bc",
+  "rom": {
+    "path": "../../../ROM/FREE85.ROM",
+    "sha256": "5942f3fce34b437d1f060e513aa4982baf5b41e5bd2154531a22709d851eb0f0",
+    "source": "Release tag (the release notes confirm it is byte-identical to Release_2.11)"
+  },
+  "files": {
+    "Free85-Manual-typeset.html": {
+      "sha256": "b0e51e83136e565bbee8fe58be3bcacc1ff5e0c7dba41beef9e320ebb572b05f",
+      "sourceSha256": "1cef0f51ab958283cfdbcbd78fd60baa79d55fd35ea762946b1575b9226ad3c8"
+    },
+    "Free85-Manual-typeset.pdf": {
+      "sha256": "6b21896bd50c654636cbc860b731c48bd69175bc1749ab612598b838af50e3a8"
+    },
+    "Free85-Guidebook-typeset.html": {
+      "sha256": "5061770f93d7003492b02ba7dbe64f1ee439515753ce56682a85e4bf31d1216f",
+      "sourceSha256": "f83cfcc84ad6fbe1fd28707b16bee39a0e2f5c9db9a2c0ae82b04c36e660b1a8"
+    },
+    "Free85-Guidebook-typeset.pdf": {
+      "sha256": "d748da76cd93af70227ee45fea92c75c0cca0b3c4b42dc1b89187da82ce5a121"
+    },
+    "Free85-Companion-typeset.html": {
+      "sha256": "b57836f428b45345ecbba64225286d111adad9f41bb061a4feeac3a179c011ed",
+      "sourceSha256": "8159083fc892c5900dc22285896ea7022c87c9e2066369caac73f11b74f0dcd5"
+    },
+    "Free85-Companion-typeset.pdf": {
+      "sha256": "705b74fc0168d60287eebd2d1253dcb7e0d1fafcf267c41836efb46ed7e093c7"
+    },
+    "LICENSE": {
+      "sha256": "e7e342a1633608c0afaba7b06da3106b7e69bc27ef46837897aead81ef8af22d",
+      "sourceSha256": "9f39899a30bfb914f5848814a63d1542b70ae7051ea21640ec445afb2a3a126c"
+    },
+    "NOTICE.md": {
+      "sha256": "3e47bbc4335b1458748a83bcc47ff10aaf0dc7465f836166975b55ef976d9467"
+    }
+  },
+  "notes": "HTML source hashes are recorded before changing the back-to-calculator link for this host. The release publishes PDFs as assets; the identical ROM and HTML sources are pinned from the immutable release tag."
+}

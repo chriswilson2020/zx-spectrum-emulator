@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ZX Spectrum Online Emulator | JavaScript 48K Web Emulator</title>
+    <meta name="description" content="Free ZX Spectrum 48K online emulator in JavaScript. Load TAP and standard-speed TZX tapes, SNA/Z80 snapshots, RZX recordings, BASIC and Z80 debugging tools.">
+    <link rel="canonical" href="https://tuklusan.github.io/zx-spectrum-emulator/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ZX Spectrum Online Emulator | JavaScript 48K Web Emulator">
+    <meta property="og:description" content="Run a ZX Spectrum 48K in your browser with TAP/TZX tape loading, SNA/Z80 snapshots, RZX playback, BASIC tools and a built-in Z80 debugger.">
+    <meta property="og:url" content="https://tuklusan.github.io/zx-spectrum-emulator/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ZX Spectrum Online Emulator | JavaScript 48K Web Emulator">
+    <meta name="twitter:description" content="JavaScript ZX Spectrum 48K web emulator with TAP/TZX, SNA/Z80, RZX, BASIC and Z80 debugging tools.">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./public/styles.css">
+    <link rel="stylesheet" href="./public/seo.css">
+  </head>
+  <body class="spectrum-page-body">
+    <div class="spectrum-page-content">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./cpm.html">CP/M</a>
+        <a href="./trs80.html">TRS-80</a>
+        <a href="./ti85.html">TI-85</a>
+      </nav>
+      <header class="spectrum-seo-hero">
+        <p class="spectrum-seo-kicker">Free · Open source · Runs in your browser</p>
+        <h1>ZX Spectrum 48K Online Emulator</h1>
+        <p class="spectrum-seo-summary">Run a Sinclair ZX Spectrum 48K directly in your browser with this JavaScript web emulator. Load TAP and standard-speed TZX tapes, open SNA and Z80 snapshots, play RZX recordings, paste Sinclair BASIC, and inspect the machine with built-in Z80 debugging tools.</p>
+        <ul class="spectrum-seo-pills" aria-label="ZX Spectrum emulator features">
+          <li>JavaScript web emulator</li>
+          <li>TAP / standard-speed TZX</li>
+          <li>SNA / Z80 snapshots</li>
+          <li>RZX playback</li>
+          <li>Sinclair BASIC tools</li>
+          <li>Z80 debugger + rewind</li>
+        </ul>
+      </header>
+      <main class="shell">
+      <section class="stage" aria-label="ZX Spectrum display and debugger">
+        <div class="screen-window resizable-window" data-window-id="screen">
+          <header class="window-header">
+            <h2>Emulated Screen</h2>
+            <output id="screenRaster">Raster 0:0 · T 0</output>
+            <label>
+              <input id="immediateScreen" type="checkbox" checked>
+              <span>Immediate stepping</span>
+            </label>
+            <label>
+              <input id="showRasterOverlay" type="checkbox">
+              <span>Raster overlay</span>
+            </label>
+          </header>
+          <div class="screen-wrap">
+            <canvas id="screen" width="320" height="240"></canvas>
+            <canvas id="rasterOverlay" width="320" height="240" aria-hidden="true"></canvas>
+          </div>
+        </div>
+        <details class="debug-drawer" open>
+          <summary>
+            <span>Debug Workbench</span>
+            <strong>Resizable registers, source, disassembly, memory, reference</strong>
+          </summary>
+          <section class="debugger" aria-label="Machine debugger">
+            <div class="debug-card registers-card resizable-window" data-window-id="registers">
+              <h2>Registers</h2>
+              <div id="registerGrid" class="register-grid"></div>
+              <div id="flagGrid" class="flag-grid" aria-label="CPU flags"></div>
+            </div>
+            <div class="debug-card basic-card resizable-window" data-window-id="basic">
+              <h2>BASIC</h2>
+              <div id="basicStatus" class="basic-status"></div>
+            </div>
+            <div class="debug-card disassembly-card resizable-window" data-window-id="disassembly">
+              <h2>Disassembly</h2>
+              <ol id="disassembly" class="disassembly"></ol>
+            </div>
+            <div class="debug-card memory-card resizable-window" data-window-id="memory">
+              <h2>Memory</h2>
+              <div id="memoryInspector" class="memory-inspector"></div>
+            </div>
+            <div class="debug-card source-card resizable-window" data-window-id="source">
+              <h2>Source</h2>
+              <label for="sourceFile">Load ASM/listing</label>
+              <input id="sourceFile" type="file" accept=".asm,.s,.z80,.lst,.txt,text/plain">
+              <ol id="sourceListing" class="source-listing"><li>Load a source or listing file to follow it beside the debugger.</li></ol>
+            </div>
+            <div class="debug-card reference-card resizable-window" data-window-id="assembler-reference">
+              <h2>Assembler Reference</h2>
+              <label for="assemblerSearch">Search sjasmplus directives and functions</label>
+              <input id="assemblerSearch" type="search" placeholder="ORG, macro, output…">
+              <label for="assemblerCategory">Category</label>
+              <select id="assemblerCategory"><option value="">All categories</option></select>
+              <div id="assemblerReference" class="assembler-reference"></div>
+              <a href="https://z00m128.github.io/sjasmplus/documentation.html" target="_blank" rel="noreferrer">Full sjasmplus documentation</a>
+            </div>
+          </section>
+        </details>
+      </section>
+      <aside class="panel" aria-label="Machine controls">
+        <header>
+          <h2 class="emulator-control-title">ZX Spectrum 48K</h2>
+          <output id="status">Loading ROM...</output>
+        </header>
+        <div class="controls">
+          <button id="runPause" type="button" aria-label="Pause">Pause</button>
+          <button id="stepFrame" type="button">Frame</button>
+          <button id="stepInstruction" type="button">Step</button>
+          <button id="stepBack" type="button" disabled>Step Back</button>
+          <label class="rewind-control" for="rewindTimeline">
+            <span>Rewind timeline</span>
+            <input id="rewindTimeline" type="range" min="0" max="0" value="0" disabled>
+            <output id="rewindDepth">0 checkpoints</output>
+          </label>
+          <button id="reset" type="button">Reset</button>
+          <button id="typeHello" type="button">Type Hello</button>
+          <button id="audioToggle" type="button" aria-pressed="true">Sound On</button>
+          <label class="spectrum-rom-control">
+            <span>ROM</span>
+            <input id="romFile" type="file" accept=".rom,.bin,application/octet-stream">
+          </label>
+        </div>
+        <nav class="tool-tabs" role="tablist" aria-label="Tools">
+          <button id="basicTab" type="button" role="tab" aria-selected="true" aria-controls="basicPanel" data-tool-tab="basic">BASIC</button>
+          <button id="tapeTab" type="button" role="tab" aria-selected="false" aria-controls="tapePanel" data-tool-tab="tape">Tape</button>
+          <button id="snapshotsTab" type="button" role="tab" aria-selected="false" aria-controls="snapshotsPanel" data-tool-tab="snapshots">Snapshots</button>
+          <button id="debugTab" type="button" role="tab" aria-selected="false" aria-controls="debugPanel" data-tool-tab="debug">Debug</button>
+        </nav>
+        <section id="basicPanel" class="tool-panel active" role="tabpanel" aria-labelledby="basicTab" data-tool-panel="basic">
+          <form id="pasteForm" class="paste-form">
+            <label for="pasteText">Paste BASIC</label>
+            <textarea id="pasteText" rows="5" spellcheck="false">10 PRINT "HELLO"
+RUN</textarea>
+            <button type="submit">Type Pasted Text</button>
+          </form>
+          <div class="basic-file-panel" aria-label="BASIC source files">
+            <label for="basicFile">BASIC Source</label>
+            <input id="basicFile" type="file" accept=".bas,.txt,text/plain">
+            <button id="basicExport" type="button">Export BASIC</button>
+          </div>
+        </section>
+        <section id="tapePanel" class="tool-panel" role="tabpanel" aria-labelledby="tapeTab" data-tool-panel="tape" hidden>
+          <div class="tape-panel" aria-label="TAP loader">
+            <label for="tapFile">Load TAP/TZX</label>
+            <input id="tapFile" type="file" accept=".tap,.tzx">
+            <div id="tapList" class="tap-list" aria-live="polite"></div>
+            <button id="tapLoad" type="button" disabled>Load Selected Block</button>
+          </div>
+        </section>
+        <section id="snapshotsPanel" class="tool-panel" role="tabpanel" aria-labelledby="snapshotsTab" data-tool-panel="snapshots" hidden>
+          <div class="snapshot-panel" aria-label="Snapshot loader">
+            <label for="snapshotFile">Load Snapshot</label>
+            <input id="snapshotFile" type="file" accept=".z80,.sna">
+            <button id="snapshotSave" type="button">Save Z80 Snapshot</button>
+            <label for="rzxFile">Load RZX Recording</label>
+            <input id="rzxFile" type="file" multiple accept=".rzx,.z80,.sna,application/octet-stream">
+            <div class="rzx-controls">
+              <button id="rzxStep" type="button" disabled>RZX Frame</button>
+              <button id="rzxPlayPause" type="button" disabled>Play RZX</button>
+            </div>
+            <output id="rzxStatus">No RZX recording loaded</output>
+          </div>
+        </section>
+        <section id="debugPanel" class="tool-panel" role="tabpanel" aria-labelledby="debugTab" data-tool-panel="debug" hidden>
+          <dl class="telemetry">
+            <div>
+              <dt>Frame</dt>
+              <dd id="frame">0</dd>
+            </div>
+            <div>
+              <dt>PC</dt>
+              <dd id="pc">0000</dd>
+            </div>
+            <div>
+              <dt>Border</dt>
+              <dd id="border">0</dd>
+            </div>
+            <div>
+              <dt>Raster</dt>
+              <dd><span id="rasterLine">0</span>:<span id="rasterColumn">0</span></dd>
+            </div>
+            <div>
+              <dt>T-state</dt>
+              <dd id="rasterTState">0</dd>
+            </div>
+            <div>
+              <dt>Key</dt>
+              <dd id="lastKey">-</dd>
+            </div>
+            <div>
+              <dt>Mapped</dt>
+              <dd id="mappedKeys">-</dd>
+            </div>
+            <div>
+              <dt>Held</dt>
+              <dd id="heldKeys">-</dd>
+            </div>
+          </dl>
+        </section>
+      </aside>
+      </main>
+
+      <section class="spectrum-seo-content" aria-labelledby="about-zx-spectrum-emulator">
+        <section class="spectrum-seo-section">
+          <h2 id="about-zx-spectrum-emulator">ZX Spectrum web emulator for games, BASIC and Z80 development</h2>
+          <p>This browser-based emulator recreates the original 48K Sinclair ZX Spectrum around a validated Z80 CPU core, 48K memory map, keyboard matrix, beeper, 50 Hz display and ULA timing behavior. It runs as a JavaScript application in a modern web browser, with no desktop emulator installation required.</p>
+          <p>It is deliberately more than a quick game launcher. The same page combines tape and snapshot loading with Sinclair BASIC import/export, RZX playback, instruction stepping, reverse stepping, rewind history, live registers and flags, disassembly, memory inspection, raster timing and source-listing tools.</p>
+        </section>
+
+        <div class="spectrum-seo-feature-grid" aria-label="ZX Spectrum emulator feature highlights">
+          <article class="spectrum-seo-card">
+            <h3>TAP and TZX tape support</h3>
+            <p>Open <code>.tap</code> tape images and standard-speed <code>.tzx</code> data blocks in the browser. Inspect tape blocks, fast-load supported BASIC and CODE header/data pairs, or let standard-speed blocks feed the emulated EAR input.</p>
+          </article>
+          <article class="spectrum-seo-card">
+            <h3>SNA and Z80 snapshot support</h3>
+            <p>Load classic 48K <code>.sna</code> snapshots and compatible <code>.z80</code> snapshots, including compressed or uncompressed version 1 files and extended snapshots containing the normal 48K pages. Save the current machine as an uncompressed 48K Z80 snapshot.</p>
+          </article>
+          <article class="spectrum-seo-card">
+            <h3>Browser Z80 debugger</h3>
+            <p>Pause execution, step by frame or instruction, step backward, scrub rewind history, and inspect registers, flags, disassembly, memory, raster position and t-states. Load assembly/listing files beside the debugger and search the built-in sjasmplus reference.</p>
+          </article>
+        </div>
+
+        <section class="spectrum-seo-section">
+          <h2>Supported ZX Spectrum file formats</h2>
+          <table class="spectrum-seo-format-table">
+            <thead>
+              <tr>
+                <th scope="col">Format</th>
+                <th scope="col">Browser support</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>TAP</code></td>
+                <td>Tape block parsing, inspection, supported fast-loading and standard-speed EAR pulse playback.</td>
+              </tr>
+              <tr>
+                <td><code>TZX</code></td>
+                <td>Standard-speed data blocks. Turbo, pure-data and more complex custom-loader TZX timing are not claimed as supported.</td>
+              </tr>
+              <tr>
+                <td><code>SNA</code></td>
+                <td>Load classic 48K SNA snapshots.</td>
+              </tr>
+              <tr>
+                <td><code>Z80</code></td>
+                <td>Load compatible 48K Z80 snapshots and save the current state as an uncompressed version 1 Z80 snapshot.</td>
+              </tr>
+              <tr>
+                <td><code>RZX</code></td>
+                <td>Step through or play compatible 48K RZX input recordings with embedded or user-supplied SNA/Z80 snapshots.</td>
+              </tr>
+              <tr>
+                <td><code>BAS / TXT</code></td>
+                <td>Paste or import Sinclair BASIC source, tokenize it into Spectrum memory, run it, and export editable BASIC text.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="spectrum-seo-section">
+          <h2>Built-in ZX Spectrum and Z80 debugging tools</h2>
+          <p>The debugging workbench is aimed at people writing, studying or reverse-engineering Z80 and Spectrum software. It exposes live CPU state, flags, disassembly around the program counter, key memory regions, BASIC state, raster timing and an optional raster overlay. Resizable debugger panels can follow source listings while the emulator runs or steps, and the bounded reverse history allows frame rewind without taking a complete 48K memory copy at every checkpoint.</p>
+        </section>
+
+        <section class="spectrum-seo-section">
+          <h2>Open-source JavaScript ZX Spectrum emulator</h2>
+          <p>The emulator code is open source under the MIT License. The bundled historical ZX Spectrum 48K ROM is separate from the emulator code license; the repository keeps its ROM and third-party provenance notes separately.</p>
+          <nav class="spectrum-seo-links" aria-label="Project links">
+            <a href="https://github.com/tuklusan/zx-spectrum-emulator">ZX Spectrum emulator source on GitHub</a>
+            <a href="https://github.com/tuklusan/zx-spectrum-emulator/blob/main/LICENSE" rel="license">MIT License</a>
+            <a href="https://github.com/tuklusan/zx-spectrum-emulator/blob/main/ROM/README.md">ROM and disk image notices</a>
+            <a href="./machines.html">Other browser Z80 machines</a>
+          </nav>
+        </section>
+      </section>
+    </div>
+    <footer class="site-contact-footer">
+      <span>Contact</span>
+      <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
+    </footer>
+    <script type="module" src="./public/app.js?v=20261004-sound-fast-tape"></script>
+  </body>
+</html>

@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free85 Getting Started Manual (typeset)</title>
+<link rel="icon" href="data:,">
+<style>
+/* Free85 typeset edition — design system for the Paged.js DTP pipeline.
+ *
+ * Used only by scripts/build-guidebook-typeset.js (the plain pipeline keeps
+ * print.css). The look is a clean homage to late-80s/90s pocket-calculator
+ * guidebooks: dense but ordered, black text with a single deep-navy accent,
+ * sans headings over a serif text face, everything print-safe (no gradients,
+ * degrades to greyscale).
+ *
+ * Format: A5, mirrored margins, running heads, outer folios. Front matter is
+ * folioed in lowercase roman numerals; the body restarts at arabic 1.
+ *
+ * RULE WEIGHTS: Chrome floors border-width to whole CSS pixels, so every
+ * border declared below 1.5pt prints at exactly 0.72pt no matter what it
+ * asks for. Hairlines are therefore written at their true intent (0.4pt,
+ * 0.45pt) and land together at 0.72pt, but any rule meant to read as
+ * heavier must be at least 1.5pt — 2px exactly — or the weight step
+ * silently vanishes. This is why the double-rule idiom is 1.5pt over
+ * 0.45pt rather than the 1.4pt the proportions suggest.
+ */
+
+:root {
+  --accent: #1a3a6b;          /* deep navy — the one accent colour */
+  --accent-tint: #eef1f6;     /* ~4% navy panel ground */
+  --accent-mid: #6d7fa0;      /* keycap border tint */
+  --rule-grey: #b3b3b3;       /* hairline table rules */
+  --ink: #111111;
+  --ink-soft: #444444;
+  --lcd-ground: #b1cfb5;      /* sampled from the screenshot PNG background */
+  --lcd-pixel: #2d3e37;       /* sampled from the screenshot pixel colour */
+  --bezel: #23262b;
+  --serif: Charter, Georgia, "Times New Roman", serif;
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: Menlo, Consolas, "Courier New", monospace;
+}
+
+/* ---------------------------------------------------------------- pages -- */
+
+@page {
+  size: 148mm 210mm;
+}
+
+/* Body pages: mirrored margins (inner 16mm / outer 12mm), book title on the
+ * verso head, chapter (or manual section) title on the recto head, folio in
+ * the outer corner of the footer. */
+@page body:right {
+  margin: 14mm 12mm 16mm 16mm;
+  @top-right {
+    content: string(rhead);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 6.75pt;
+    letter-spacing: 0.06em;
+    color: #444444;
+    text-transform: uppercase;
+    vertical-align: bottom;
+    padding-bottom: 1.6mm;
+  }
+  @bottom-right {
+    content: counter(page);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 8pt;
+    color: #111111;
+    vertical-align: top;
+    padding-top: 3mm;
+  }
+}
+@page body:left {
+  margin: 14mm 16mm 16mm 12mm;
+  @top-left {
+    content: string(booktitle);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 6.75pt;
+    letter-spacing: 0.06em;
+    color: #444444;
+    text-transform: uppercase;
+    vertical-align: bottom;
+    padding-bottom: 1.6mm;
+  }
+  @bottom-left {
+    content: counter(page);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    font-size: 8pt;
+    color: #111111;
+    vertical-align: top;
+    padding-top: 3mm;
+  }
+}
+/* Blank pages forced by recto chapter starts carry nothing. */
+@page body:blank {
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-left { content: none; }
+  @bottom-right { content: none; }
+}
+
+/* Front matter: roman folios centred in the footer, no running heads. */
+@page frontmatter:right {
+  margin: 14mm 12mm 16mm 16mm;
+  @bottom-center {
+    content: counter(page, lower-roman);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 7.5pt;
+    color: #444444;
+    vertical-align: top;
+    padding-top: 3mm;
+  }
+}
+@page frontmatter:left {
+  margin: 14mm 16mm 16mm 12mm;
+  @bottom-center {
+    content: counter(page, lower-roman);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 7.5pt;
+    color: #444444;
+    vertical-align: top;
+    padding-top: 3mm;
+  }
+}
+@page frontmatter:blank {
+  @bottom-center { content: none; }
+}
+
+/* Cover pages bleed to the trim: no margins, no marginal content. */
+@page cover {
+  margin: 0;
+  background: #1a3a6b;
+}
+
+/* Colophon / back page: quiet, no folio. */
+@page colophon {
+  margin: 14mm 12mm 16mm 16mm;
+}
+
+/* ------------------------------------------------------------- base text -- */
+
+html {
+  font-family: var(--serif);
+  font-size: 9.5pt;
+  line-height: 1.45;
+  color: var(--ink);
+  /* Words shorter than 6 letters never hyphenate, at least 5 characters stay
+   * before the break and 3 after. Verified in Chrome 150: the unprefixed
+   * property parses (CSS.supports true); the -webkit- pair below does NOT
+   * (Safari/WebKit only) and is future-proofing for other renderers.
+   *
+   * 5 before, not the 3 this started at, because Chrome counts leading
+   * PUNCTUATION towards the limit: at 3 a curly quote bought a break after
+   * two letters ("in-tegral"), and at 4 an opening parenthesis still bought
+   * one after three ("(sec-tion"). 5 costs almost nothing — measured across
+   * the companion it moves the median line's widest word space from 3.78pt
+   * to 3.89pt and leaves the 95th percentile and the worst line unchanged.
+   *
+   * Note the degenerate page-turn stubs ("stat-us", "bott-om") were never
+   * CSS hyphenation at all — they were Paged.js fragmenting a word at the
+   * page break and appending its own U+2011 hyphen; see the LOCAL PATCH
+   * (Free85) in scripts/vendor/paged.polyfill.js textBreak(). */
+  hyphenate-limit-chars: 6 5 3;
+  -webkit-hyphenate-limit-before: 5;
+  -webkit-hyphenate-limit-after: 3;
+}
+body { margin: 0; }
+
+p {
+  margin: 0 0 5.5pt;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  orphans: 2;
+  widows: 2;
+}
+
+ul, ol { margin: 2pt 0 6pt; padding-left: 5.5mm; }
+li { margin: 0 0 2.5pt; orphans: 2; widows: 2; }
+li > p { margin-bottom: 2.5pt; }
+
+a { color: inherit; text-decoration: none; }
+strong { font-weight: 700; }
+
+/* Sectioning containers get page names and folio behaviour. */
+section.front-matter { page: frontmatter; counter-reset: page 1; break-before: right; page-break-before: right; }
+section.book-body { page: body; counter-reset: page 1; break-before: right; page-break-before: right; }
+section.cover-page { page: cover; }
+section.colophon { page: colophon; break-before: page; }
+section.back-cover { page: cover; break-before: left; page-break-before: left; }
+
+/* Pages that carry a chapter opener (or the book title block) are tagged
+ * .free85-opener-page by the Free85Folios handler; they run quiet — no
+ * running head, no folio. (Paged.js's own pagedjs_body_first_page class is
+ * unusable for this: it lands on the page where the chapter's section NODE
+ * opens, which is the previous chapter's last page.) */
+.free85-opener-page .pagedjs_margin .pagedjs_margin-content { display: none; }
+
+/* Genre detail: a thin full-width rule under the running head on ordinary
+ * body pages (not opener or blank pages). */
+.pagedjs_body_page:not(.pagedjs_blank_page):not(.free85-opener-page) .pagedjs_margin-top {
+  border-bottom: 0.4pt solid #999999;
+}
+
+/* ------------------------------------------------------------- headings -- */
+
+h1, h2, h3, h4 {
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h2 {
+  font-size: 12pt;
+  line-height: 1.2;
+  margin: 14pt 0 5pt;
+}
+
+/* Section-number ladder hung in the outer margin at each section heading:
+ * "4-3" in the Guidebook (generated from counters) and "1.4" in Explorations
+ * (lifted out of the heading text). Numbers assigned by the build script. */
+h2[data-secno] { position: relative; }
+h2[data-secno]::before {
+  content: attr(data-secno);
+  position: absolute;
+  top: 0.3em;
+  width: 8mm;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 7pt;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+.pagedjs_right_page h2[data-secno]::before { right: -9.5mm; text-align: left; }
+.pagedjs_left_page h2[data-secno]::before { left: -9.5mm; text-align: right; }
+h3 {
+  font-size: 10pt;
+  line-height: 1.25;
+  margin: 10pt 0 3.5pt;
+}
+h4 {
+  font-size: 9.5pt;
+  margin: 8pt 0 3pt;
+}
+
+/* -------------------------------------------------------- chapter opener -- */
+
+/* Guidebook chapters: oversized accent number, title, double rule, then the
+ * chapter's first paragraph pulled up as a standfirst. Body text continues
+ * on the same page — dense, in the calculator-manual manner. */
+header.chapter-opener {
+  break-before: right;
+  page-break-before: right;
+  margin: 4mm 0 8mm;
+}
+/* The body group itself already starts on a fresh recto; without this the
+ * first chapter's own forced right-break would insert two blank pages. */
+section.book-body > section.chapter:first-child > header.chapter-opener {
+  break-before: auto;
+  page-break-before: auto;
+}
+.chapter-opener .chapter-kicker {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 8pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1mm;
+}
+.chapter-opener .chapter-number {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 44pt;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  margin: 0 0 2.5mm;
+}
+.chapter-opener h1 {
+  font-size: 17pt;
+  line-height: 1.15;
+  margin: 0 0 4mm;
+  letter-spacing: -0.015em;
+}
+.chapter-opener .opener-rule {
+  border-top: 1.5pt solid var(--accent);
+  border-bottom: 0.45pt solid var(--accent);
+  height: 1.6pt;
+  margin: 0 0 4.5mm;
+}
+.appendix-opener .opener-rule {
+  border-top: 0.45pt solid var(--accent);
+  border-bottom: none;
+  height: 0;
+}
+/* The companion's afterword takes the appendix opener's smaller title but
+ * keeps the chapters' double rule: it is the last page of a book with no
+ * appendices, so beside eight double-ruled openers a single hairline read
+ * as an afterthought rather than as a deliberate ending. */
+.afterword-opener .opener-rule {
+  border-top: 1.5pt solid var(--accent);
+  border-bottom: 0.45pt solid var(--accent);
+  height: 1.6pt;
+}
+.chapter-opener .standfirst {
+  font-style: italic;
+  font-size: 9.5pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-align: left;              /* ragged — it is display text */
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  margin: 0;
+}
+/* Inside the italic standfirst a boxed keycap looks heavy: text-only
+ * semibold sans variant instead. */
+.standfirst kbd {
+  border: none;
+  background: none;
+  padding: 0;
+  text-shadow: none;
+  font-size: 8.5pt;
+  letter-spacing: 0.02em;
+}
+
+/* Appendices: the simpler variant (small caps kicker + big letter). */
+.appendix-opener .chapter-number { font-size: 34pt; }
+.appendix-opener h1 { font-size: 15pt; }
+
+/* Front-matter / manual title treatment (no opener page, just a designed
+ * heading block). */
+header.fm-title {
+  margin: 6mm 0 8mm;
+}
+.fm-title .fm-kicker {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 8pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 2mm;
+}
+.fm-title h1 {
+  font-size: 19pt;
+  line-height: 1.15;
+  margin: 0 0 4mm;
+}
+.fm-title .opener-rule {
+  border-top: 1.5pt solid var(--accent);
+  border-bottom: 0.45pt solid var(--accent);
+  height: 1.6pt;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------- keycaps -- */
+
+kbd {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 7.5pt;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  background: #f6f7f9;
+  border: 1px solid var(--accent-mid);
+  border-bottom-width: 2px;
+  border-radius: 2px;
+  padding: 0 2.5px;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: 0.05em;
+  text-shadow: 0 0.5px 0 #ffffff;   /* faint letterpress, print-safe */
+}
+
+/* --------------------------------------------------------------- callouts -- */
+
+aside.callout {
+  border-left: 2.25pt solid var(--accent);
+  background: var(--accent-tint);
+  padding: 4.5pt 7pt 4.5pt 8pt;
+  margin: 7pt 0 8pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+aside.callout p {
+  font-size: 8.75pt;
+  line-height: 1.42;
+  text-align: left;              /* ragged in the narrow panel */
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  margin: 0;
+}
+aside.callout p + p { margin-top: 3pt; }
+.callout-label {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 6.75pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 1.5pt !important;
+}
+
+/* ---------------------------------------------------------- Try it panel -- */
+
+/* The signature component of Explorations with Free85: each section closes
+ * with a numbered exercise set. Same navy tint as the callouts, but ruled
+ * top and bottom in the family's double-rule idiom rather than barred on the
+ * left, so a page carrying both reads them as different things. */
+aside.tryit {
+  background: var(--accent-tint);
+  border-top: 1.5pt solid var(--accent);
+  border-bottom: 0.45pt solid var(--accent);
+  padding: 4.5pt 8pt 5pt;
+  margin: 9pt 0 9pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.tryit-label {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 6.75pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 2.5pt !important;
+}
+/* Hung navy numerals: the exercise text aligns as a block, the way the
+ * numbered steps in the walkthroughs do not need to. */
+aside.tryit ol {
+  list-style: none;
+  counter-reset: tryit;
+  margin: 0;
+  padding-left: 5mm;
+}
+aside.tryit ol > li {
+  position: relative;
+  counter-increment: tryit;
+  font-size: 8.75pt;
+  line-height: 1.42;
+  text-align: left;              /* ragged in the narrow panel */
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  margin: 0 0 2.5pt;
+}
+aside.tryit ol > li:last-child { margin-bottom: 0; }
+aside.tryit ol > li::before {
+  content: counter(tryit) ".";
+  position: absolute;
+  left: -5mm;
+  width: 3.6mm;
+  text-align: right;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 7.5pt;
+  color: var(--accent);
+}
+aside.tryit p { font-size: 8.75pt; line-height: 1.42; text-align: left; }
+
+/* ------------------------------------------------------------ LCD frames -- */
+
+figure.lcd {
+  margin: 8pt 0 9pt;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+figure.lcd .lcd-frame {
+  display: inline-block;
+  background: var(--bezel);
+  padding: 1.9mm;
+  border-radius: 1.4mm;
+}
+figure.lcd .lcd-glass {
+  display: inline-block;
+  background: var(--lcd-ground);
+  border: 0.3mm solid #86987f;   /* inner hairline between bezel and glass */
+  padding: 2.6mm 3.2mm;
+}
+figure.lcd img {
+  display: block;
+  width: 62mm;
+  image-rendering: pixelated;
+}
+figure.lcd figcaption {
+  font-family: var(--sans);
+  font-style: italic;
+  font-size: 7.5pt;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-top: 3pt;
+}
+
+/* Diagrams of the mathematics: drawn artwork, not screens. Deliberately
+ * undressed — no bezel, no glass, no rule — so a reader can tell at a glance
+ * which pictures came off the calculator and which explain the mathematics
+ * behind it. Authored as SVG so they stay sharp in print; the palette is the
+ * book's single navy plus ink, and nothing depends on colour, so the page
+ * survives greyscale reproduction. */
+figure.diagram {
+  margin: 9pt 0 10pt;
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+figure.diagram img,
+figure.diagram svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  width: 78mm;              /* ~two thirds of the 120mm measure */
+  height: auto;
+}
+figure.diagram.wide img,
+figure.diagram.wide svg { width: 108mm; }
+figure.diagram figcaption {
+  font-family: var(--sans);
+  font-style: italic;
+  font-size: 7.5pt;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-top: 3.5pt;
+}
+
+/* ------------------------------------------------------------------ code -- */
+
+code, kbd {
+  hyphens: none;            /* never hyphenate command names or key labels */
+  -webkit-hyphens: none;
+  /* A code or kbd token is one unit: no soft break inside the span, not at
+   * an internal hyphen (`individual-delete`) and not after the `-` of
+   * `->Bin`. Lines still wrap between tokens — appendix A's long
+   * comma-separated lists break at the ", " separators, which sit outside
+   * the spans. Checked invariant: the longest inline code token sets ~68mm
+   * against the 120mm measure, so nowrap cannot overflow a line; add a
+   * targeted overflow-wrap fallback if a longer token ever appears. */
+  white-space: nowrap;
+}
+code {
+  font-family: var(--mono);
+  font-size: 8pt;
+}
+pre code { white-space: inherit; }   /* code blocks keep pre-wrap */
+pre {
+  font-family: var(--mono);
+  font-size: 8pt;
+  line-height: 1.4;
+  background: var(--accent-tint);
+  border-left: 1.5pt solid var(--accent-mid);
+  padding: 4.5pt 7pt;
+  margin: 6pt 0 7pt;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+pre code { font-size: inherit; }
+
+/* ---------------------------------------------------------------- tables -- */
+
+table {
+  border-collapse: collapse;
+  font-size: 8.5pt;
+  line-height: 1.35;
+  margin: 6pt 0 8pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+th {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 7.5pt;
+  letter-spacing: 0.03em;
+  text-align: left;
+  border-bottom: 1.5pt solid var(--accent);
+  padding: 2.5pt 6pt 2.5pt 0;
+}
+td {
+  border-bottom: 0.4pt solid var(--rule-grey);
+  padding: 2.5pt 6pt 2.5pt 0;
+  vertical-align: top;
+}
+th:last-child, td:last-child { padding-right: 0; }
+
+/* Appendix B key map: four columns of long text on an A5 page. Fixed layout
+ * at a small size, breaking across pages but never inside one key's row
+ * (same approach as the plain pipeline, tuned for the new margins). */
+table.keymap {
+  font-size: 6.4pt;
+  line-height: 1.3;
+  width: 100%;
+  table-layout: fixed;
+  break-inside: auto;
+  page-break-inside: auto;
+}
+table.keymap tr { break-inside: avoid; page-break-inside: avoid; }
+table.keymap th, table.keymap td {
+  padding: 1.5pt 3pt 1.5pt 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+table.keymap th:nth-child(1) { width: 11mm; }
+table.keymap th:nth-child(4) { width: 20mm; }
+table.keymap code { font-size: 6.2pt; }
+
+/* Appendix A is a dense catalog: its many area headings stay compact. */
+section.appendix-a h2 {
+  font-size: 9pt;
+  margin: 9pt 0 2.5pt;
+}
+
+/* Long tables (tagged by the build script at >12 rows: the ch16 instruction
+ * table, appendix D's status table, ...) run close to a full page: kept
+ * unbreakable they cascade into orphaned headings and stranded near-empty
+ * pages, so let them flow and protect only the rows. A handler re-inserts
+ * the header row on the continuation pages. */
+/* Program listings share one grid across the book, so two on a page read as
+ * the same component. Fixed layout is what makes the widths hold: with auto
+ * layout each listing sized its Keys column from its own longest row. */
+table.program {
+  table-layout: fixed;
+  width: 100%;
+}
+table.program th:nth-child(1), table.program td:nth-child(1) { width: 8%; }
+table.program th:nth-child(2), table.program td:nth-child(2) { width: 32%; }
+table.program th:nth-child(3), table.program td:nth-child(3) { width: 60%; }
+
+table.table-long {
+  break-inside: auto;
+  page-break-inside: auto;
+}
+table.table-long tr { break-inside: avoid; page-break-inside: avoid; }
+
+/* Paragraphs and list items carrying long unbreakable code tokens (tagged by
+ * the build script) go ragged-right instead of stretching word spaces. */
+.num-heavy { text-align: left; }
+
+/* A one-line lead-in to a framed screenshot stays with its figure. */
+p:has(+ figure.lcd) { break-after: avoid; page-break-after: avoid; }
+
+/* ------------------------------------------------------------ blockquote -- */
+
+/* Ordinary blockquotes (none expected outside callouts, but keep them sane). */
+blockquote {
+  border-left: 1.5pt solid var(--rule-grey);
+  margin: 6pt 0 7pt;
+  padding-left: 8pt;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------------- TOC -- */
+
+/* The TOC starts its own page when it follows front-matter text (guidebook);
+ * when it is the first thing in the group (manual) forcing a break here
+ * would fight the section's own forced break and stall pagination. */
+* + nav.toc { break-before: page; page-break-before: always; }
+nav.toc .toc-heading {
+  font-size: 15pt;
+  margin: 4mm 0 3mm;
+}
+nav.toc .toc-rule {
+  border-top: 1.5pt solid var(--accent);
+  border-bottom: 0.45pt solid var(--accent);
+  height: 1.6pt;
+  margin: 0 0 5mm;
+}
+nav.toc .toc-group {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 7.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 5mm 0 2mm;
+}
+a.toc-entry {
+  display: flex;
+  align-items: baseline;
+  font-size: 9.5pt;
+  line-height: 1.35;
+  margin: 0 0 2.75pt;
+  text-align: left;
+}
+a.toc-entry .toc-no {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 8.5pt;
+  color: var(--accent);
+  flex: 0 0 7mm;
+}
+a.toc-entry.toc-plain .toc-no { flex-basis: 0; }
+a.toc-entry .toc-title { flex-shrink: 1; }
+a.toc-entry .toc-dots {
+  flex: 1 0 6mm;
+  border-bottom: 1px dotted #999999;
+  margin: 0 4pt 2.5pt;
+  min-width: 6mm;
+}
+a.toc-entry::after {
+  content: target-counter(attr(href url), page);
+  font-family: var(--sans);
+  font-size: 8.5pt;
+  flex: none;
+}
+/* Front-matter entries point at roman-folioed pages, so their leader has to
+ * resolve in the same numbering the foot of that page prints. */
+a.toc-entry.toc-roman::after {
+  content: target-counter(attr(href url), page, lower-roman);
+}
+
+/* ---------------------------------------------------------------- covers -- */
+
+section.cover-page {
+  height: 209mm;
+  background: var(--accent);
+  color: #ffffff;
+  box-sizing: border-box;
+  padding: 12mm;
+}
+.cover-inner {
+  height: 100%;
+  box-sizing: border-box;
+  border: 0.6pt solid rgba(255, 255, 255, 0.65);
+  padding: 10mm 9mm;
+  display: flex;
+  flex-direction: column;
+}
+/* Original abstract calculator motif: an LCD window over a 5x2 key grid. */
+.cover-motif { margin: 4mm 0 0; }
+.cover-lcd {
+  background: var(--lcd-ground);
+  color: var(--lcd-pixel);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 17pt;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;           /* recentre despite trailing tracking */
+  text-align: center;
+  padding: 5.5mm 0 5mm;
+  border: 1.6mm solid #10233f;
+  border-radius: 1mm;
+}
+.cover-keys {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2.6mm;
+  margin-top: 4.5mm;
+}
+.cover-keys span {
+  display: block;
+  height: 6.2mm;
+  border: 0.5pt solid rgba(255, 255, 255, 0.75);
+  border-bottom-width: 1.6pt;
+  border-radius: 1mm;
+  background: rgba(255, 255, 255, 0.07);
+}
+.cover-titleblock { margin-top: auto; }
+.cover-kicker {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 9pt;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 3mm;
+}
+.cover-title {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 24pt;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  margin: 0 0 4mm;
+}
+.cover-rule {
+  border-top: 0.8pt solid rgba(255, 255, 255, 0.85);
+  margin: 0 0 3.5mm;
+}
+.cover-edition {
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0 0 8mm;
+}
+.cover-url {
+  font-family: var(--mono);
+  font-size: 7.5pt;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+/* Back cover: quiet navy field, wordmark and URL only. */
+section.back-cover {
+  height: 209mm;
+  box-sizing: border-box;
+  background: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bc-inner { text-align: center; }
+.bc-mark {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13pt;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: #ffffff;
+  margin: 0 0 3.5mm;
+}
+.bc-rule {
+  width: 22mm;
+  border-top: 0.6pt solid rgba(255, 255, 255, 0.7);
+  margin: 0 auto 3.5mm;
+}
+.bc-url {
+  font-family: var(--mono);
+  font-size: 7.5pt;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+/* -------------------------------------------------------------- colophon -- */
+
+section.colophon {
+  font-size: 8.25pt;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  height: 178mm;                  /* keep the block anchored to the foot */
+}
+.colophon-push { margin-top: auto; }
+.colophon-mark {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 10pt;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  margin: 0 0 2mm;
+}
+.colophon-rule {
+  border-top: 1.5pt solid var(--accent);
+  margin: 0 0 4mm;
+  width: 26mm;
+}
+section.colophon p { text-align: left; margin: 0 0 4pt; hyphens: manual; -webkit-hyphens: manual; }
+
+/* ------------------------------------------------------- running strings -- */
+
+/* NOTE: Paged.js tracks exactly ONE selector per named string (the last
+ * string-set rule for a name wins), so each name below must be declared in
+ * a single rule; per-book variants live together in one selector list. */
+.cover-title { string-set: booktitle content(text); }
+.chapter-opener h1,
+body.manual section.book-body h2 { string-set: rhead content(text); }
+
+
+@media screen {
+  html { background: #0c100f; font-size: 16px; }
+  body {
+    width: min(920px, calc(100% - 24px));
+    margin: 24px auto 72px;
+    background: #f7f5ef;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  }
+  body.embedded-reader {
+    width: 100%;
+    margin: 0;
+    box-shadow: none;
+  }
+  body.embedded-reader .web-reader-nav { display: none; }
+  .web-reader-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #c9c5ba;
+    background: rgba(247, 245, 239, 0.96);
+    padding: 12px clamp(18px, 5vw, 56px);
+    font: 700 14px/1.2 var(--sans);
+    backdrop-filter: blur(10px);
+  }
+  .web-reader-nav a {
+    border: 1px solid #9aa5b5;
+    border-radius: 5px;
+    color: var(--accent);
+    padding: 8px 10px;
+  }
+  .web-reader-nav a:first-child { margin-right: auto; }
+  body > section:not(.cover-page):not(.back-cover) {
+    padding: clamp(28px, 6vw, 68px);
+  }
+  section.cover-page, section.back-cover {
+    width: 100%;
+    height: min(209mm, calc(100vh - 48px));
+    min-height: 620px;
+  }
+  section.colophon { min-height: 70vh; height: auto; }
+  section.chapter { padding-block: 18px 42px; }
+  p, li { font-size: 1rem; }
+  table { display: block; overflow-x: auto; font-size: 0.9rem; }
+  .toc-entry::after { content: none; }
+  h2[data-secno]::before { display: none; }
+}
+@media screen and (max-width: 560px) {
+  html { font-size: 14px; }
+  body { width: 100%; margin: 0; }
+  .web-reader-nav { padding: 9px 10px; }
+  .web-reader-nav a { padding: 7px 8px; }
+  section.cover-page, section.back-cover { min-height: 560px; }
+}
+
+</style>
+</head>
+<body class="manual">
+<nav class="web-reader-nav" aria-label="Book navigation"><a href="../../../ti85.html">← Free85 calculator</a><a href="./Free85-Manual-typeset.html">Manual</a><a href="./Free85-Guidebook-typeset.html">Guidebook</a><a href="./Free85-Companion-typeset.html">Explorations</a></nav>
+<section class="cover-page"><div class="cover-inner"><div class="cover-motif"><div class="cover-lcd">FREE85</div><div class="cover-keys"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div><div class="cover-titleblock"><p class="cover-kicker">Scientific graphing calculator</p><h1 class="cover-title">Free85 Getting Started Manual</h1><div class="cover-rule"></div><p class="cover-edition">For firmware 3.0 · Second Edition</p><p class="cover-url">chriswilson2020.github.io/Free85</p></div></div></section>
+<section class="front-matter">
+<nav class="toc"><h1 class="toc-heading">Contents</h1><div class="toc-rule"></div><a class="toc-entry toc-plain" href="#welcome"><span class="toc-no"></span><span class="toc-title">Welcome</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#running-free85"><span class="toc-no"></span><span class="toc-title">Running Free85</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#the-keyboard"><span class="toc-no"></span><span class="toc-title">The keyboard</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#the-screen"><span class="toc-no"></span><span class="toc-title">The screen</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#first-calculations"><span class="toc-no"></span><span class="toc-title">First calculations</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#modes"><span class="toc-no"></span><span class="toc-title">Modes</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#the-catalog-and-custom-menu"><span class="toc-no"></span><span class="toc-title">The catalog and custom menu</span><span class="toc-dots"></span></a><a class="toc-entry toc-plain" href="#where-next"><span class="toc-no"></span><span class="toc-title">Where next</span><span class="toc-dots"></span></a></nav>
+</section>
+<section class="book-body">
+
+<header class="fm-title"><p class="fm-kicker">Free85 · Getting started</p><h1 id="free85-getting-started-manual">Free85 Getting Started Manual</h1><div class="opener-rule"></div></header>
+<h2 id="welcome">Welcome</h2>
+<p>Free85 is a scientific graphing calculator that runs in your browser. It is a complete, independently written firmware of original Z80 code, running on a faithful emulation of a TI-85-compatible pocket calculator.</p>
+<p>Free85 is clean-room software. Everything in it (the firmware, the font, the screen artwork, the tests, and this manual) was written from scratch for this project. It contains no Texas Instruments ROM code, disassembly, fonts, artwork, or binary tables. The TI-85 is referenced only to describe the hardware profile the firmware runs on; the project is not affiliated with or endorsed by Texas Instruments. Because the internals are original, Free85 makes no promise of compatibility with TI programs, files, tokens, ROM calls, or internal data structures. What it does promise is that every physical key, every shifted function printed above a key, and every reachable menu leads to a real, working feature.</p>
+<p>Free85 is open source under the MIT License. See the <code>LICENSE</code> file for the licence text and <code>NOTICE.md</code> for the project notices.</p>
+<p>This manual gets you from a blank screen to confident everyday use: running the calculator, understanding the keyboard and display, doing your first calculations, adjusting modes, and finding functions in the catalog. When you want depth (graphing, statistics, programming, and everything else), the companion Guidebook covers each subject in its own chapter. The final section of this manual maps out where to go.</p>
+<h3 id="the-hardware-at-a-glance">The hardware at a glance</h3>
+<p>The machine Free85 targets is a Z80 processor at 6 MHz driving a 128 by 64 pixel monochrome LCD, with eight 16 KiB ROM pages (131,072 bytes in all), 32 KiB of RAM, and a keyboard of 49 matrix keys plus a separate <kbd>ON</kbd> key.</p>
+<h2 id="running-free85">Running Free85</h2>
+<p class="num-heavy">The easiest way to use Free85 is the browser calculator published from this repository by GitHub Pages. It lives at <a href="https://chriswilson2020.github.io/Free85/" class="uri">https://chriswilson2020.github.io/Free85/</a> and is also linked from the repository README in case the address changes. Open the page and the calculator is ready to use, no installation at all.</p>
+<p>To run it on your own machine you need Node.js 24 or newer. From the repository root:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run dev</span></code></pre></div>
+<p class="num-heavy">Then open <a href="http://localhost:3000/" class="uri">http://localhost:3000/</a> in a browser. The bundled open-source <code>FREE85.ROM</code> loads automatically, and the page also lets you select another compatible 128 KiB ROM if you have one.</p>
+<p>There is also a quick terminal preview that boots the machine, presses any keys you list, and prints an ASCII rendering of the LCD:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run run:free85 <span class="at">--</span> GRAPH</span></code></pre></div>
+<p>This is handy for scripting and for checking behaviour without opening a browser. The key names it accepts are the physical key names used throughout this manual, such as <code>ENTER</code>, <code>2ND</code>, <code>GRAPH</code>, and <code>F1</code>.</p>
+<h2 id="the-keyboard">The keyboard</h2>
+<p>The keyboard has fifty keys arranged in a few zones. Once you know the zones, your fingers find things quickly.</p>
+<ul>
+<li><strong>Soft keys.</strong> <kbd>F1</kbd> <kbd>F2</kbd> <kbd>F3</kbd> <kbd>F4</kbd> <kbd>F5</kbd> sit directly under the screen. They have no fixed meaning of their own: they select whatever five labels are currently shown along the bottom row of the display. When the labels change, the keys change with them.</li>
+<li><strong>Navigation and modifiers.</strong> The next two rows share the cursor pad on their right-hand side: the first row holds <kbd>2nd</kbd>, <kbd>EXIT</kbd>, and <kbd>MORE</kbd> beside the <kbd>▲</kbd> and <kbd>▼</kbd> keys, and the second holds <kbd>ALPHA</kbd>, <kbd>x-VAR</kbd>, and <kbd>DEL</kbd> beside <kbd>◀</kbd> and <kbd>▶</kbd>. <kbd>EXIT</kbd> backs out one level; <kbd>2nd</kbd> <kbd>EXIT</kbd> is <code>QUIT</code>, which jumps straight back to the home screen.</li>
+<li><strong>Application keys.</strong> <kbd>GRAPH</kbd>, <kbd>STAT</kbd>, <kbd>PRGM</kbd>, <kbd>CUSTOM</kbd>, and <kbd>CLEAR</kbd> open the major applications: graphing, statistics, programming, your custom menu, and clearing the entry line.</li>
+<li><strong>Function rows.</strong> <kbd>LOG</kbd>, <kbd>SIN</kbd>, <kbd>COS</kbd>, <kbd>TAN</kbd>, <kbd>^</kbd>, then <kbd>LN</kbd>, <kbd>EE</kbd>, <kbd>(</kbd>, <kbd>)</kbd>, <kbd>÷</kbd>, then <kbd>x²</kbd> beside the digit pad. Each carries a shifted function printed above it and, on most keys, a letter for alpha entry.</li>
+<li><strong>Digit pad.</strong> The digits, decimal point, <kbd>(-)</kbd> for negative numbers, the arithmetic operators down the right-hand side, <kbd>STO▶</kbd> for storing variables, and <kbd>ENTER</kbd> in the bottom corner.</li>
+<li><strong>The <kbd>ON</kbd> key.</strong> A separate key that wakes the calculator or interrupts a running operation; <kbd>2nd</kbd> <kbd>ON</kbd> turns it off.</li>
+</ul>
+<h3 id="how-2nd-works">How <kbd>2nd</kbd> works</h3>
+<p class="num-heavy"><kbd>2nd</kbd> is a one-shot modifier. Press it once, and the <em>next</em> key you press performs the shifted function printed above that key instead of its normal one. For example, <kbd>^</kbd> normally types the power operator, but <kbd>2nd</kbd> <kbd>^</kbd> types <code>PI</code>. Try it: press <kbd>2</kbd>, then <kbd>2nd</kbd> <kbd>^</kbd>, then <kbd>ENTER</kbd>, and the calculator evaluates <code>2PI</code> to <code>6.2831853071796</code>. The modifier applies to exactly one keypress and then switches itself off.</p>
+<h3 id="how-alpha-works">How <kbd>ALPHA</kbd> works</h3>
+<p><kbd>ALPHA</kbd> is the letter modifier. Most keys have a letter assigned to them: <kbd>LOG</kbd> is <code>A</code>, <kbd>SIN</kbd> is <code>B</code>, and so on through the keyboard to <kbd>.</kbd> for <code>Z</code>, with <kbd>x-VAR</kbd> providing <code>x</code>. Press <kbd>ALPHA</kbd> once and the next key types its letter: <kbd>ALPHA</kbd> <kbd>LOG</kbd> types <code>A</code>.</p>
+<p>Press <kbd>ALPHA</kbd> twice and letter entry locks: the status line shows <code>LOCK</code>, and every key types its letter until you press <kbd>ALPHA</kbd> again to unlock. For example, <kbd>ALPHA</kbd> <kbd>ALPHA</kbd> <kbd>SIN</kbd> <kbd>ALPHA</kbd> <kbd>1</kbd> types <code>B1</code> (the lock typed <code>B</code>, the third <kbd>ALPHA</kbd> released it, and <kbd>1</kbd> went back to being a digit).</p>
+<p>Lowercase letters exist too. <kbd>2nd</kbd> <kbd>ALPHA</kbd> selects lowercase letter entry; then <kbd>ALPHA</kbd> followed by a letter key types the lowercase letter. For example, <kbd>2nd</kbd> <kbd>ALPHA</kbd> <kbd>ALPHA</kbd> <kbd>SIN</kbd> types <code>b</code>.</p>
+<h3 id="what-more-does">What <kbd>MORE</kbd> does</h3>
+<p>Menus in Free85 show at most five choices at a time, one per soft key, and <kbd>MORE</kbd> pages to the next set. In the <code>MATH</code> menu, for example, the first page offers <code>ABS(</code>, <code>SQRT(</code>, <code>FACT(</code>, <code>NPR(</code>, and <code>NCR(</code>; pressing <kbd>MORE</kbd> brings the next five, starting with <code>SINH(</code> and <code>COSH(</code>. Keep pressing <kbd>MORE</kbd> to cycle through all the pages. The same paging works on any row of soft labels, including the home screen’s own menu row.</p>
+<h3 id="keys-worth-memorising">Keys worth memorising</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Key</th>
+<th>Normal</th>
+<th>With <kbd>2nd</kbd></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><kbd>ENTER</kbd></td>
+<td>Evaluate the entry</td>
+<td><code>ENTRY</code>: recall the previous entry</td>
+</tr>
+<tr>
+<td><kbd>(-)</kbd></td>
+<td>Unary minus</td>
+<td><code>ANS</code>: insert the previous answer</td>
+</tr>
+<tr>
+<td><kbd>CLEAR</kbd></td>
+<td>Clear the entry or dismiss an error</td>
+<td><code>TOLER</code>: change the numerical tolerance</td>
+</tr>
+<tr>
+<td><kbd>EXIT</kbd></td>
+<td>Back out one level</td>
+<td><code>QUIT</code>: return home</td>
+</tr>
+<tr>
+<td><kbd>MORE</kbd></td>
+<td>Next menu page</td>
+<td><code>MODE</code>: system mode screen</td>
+</tr>
+<tr>
+<td><kbd>DEL</kbd></td>
+<td>Delete at the cursor</td>
+<td><code>INS</code>: toggle insert/overwrite</td>
+</tr>
+<tr>
+<td><kbd>ALPHA</kbd></td>
+<td>Letter entry (twice to lock)</td>
+<td>Lowercase letter entry</td>
+</tr>
+<tr>
+<td><kbd>CUSTOM</kbd></td>
+<td>Your custom menu</td>
+<td><code>CATALOG</code>: every callable function</td>
+</tr>
+<tr>
+<td><kbd>STO▶</kbd></td>
+<td>Store to a variable</td>
+<td><code>RCL</code>: recall a variable</td>
+</tr>
+<tr>
+<td><kbd>GRAPH</kbd></td>
+<td>The graph screen</td>
+<td><code>SOLVER</code>: equation solver</td>
+</tr>
+</tbody>
+</table>
+<p>Every key also has a second function and often a letter, far more than fits in one table. Guidebook appendix B lists the complete map of all fifty keys with their normal, shifted, and alpha meanings.</p>
+<h2 id="the-screen">The screen</h2>
+<p>Switch the calculator on and you see the home screen:</p>
+<figure class="lcd"><div class="lcd-frame"><div class="lcd-glass"><img role="img" aria-label="The Free85 home screen after switching on" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAEACAIAAABK8lkwAAAG3ElEQVR42u3dMW7cMBCGUV/ItTvf2UXOkSulC9wYWUWc4T/UA14VKBtKkfgZoLl6e//8uOTr969/uvM5FeNZZdV5Xf237lyfVde88zpDgoTnvXpufBMAARAAEAABEAABAAEQAAEQAATgUQFYNTElfE7FTZB8XmnHw6kxuBOP6nnjKgEQAAEAARAAARAAEAABEAABAAEQAAEQAASgdh4QAAEQABAAARAAAQABEAABEAAQgI4AdG7gmhiA5PMSAMgPwKqF4lUbNgVAAAQABEAABEAAQAAEQAAEAJ4VgIQJxSKwAMATAlDxfC37MjgBEAABAAEQAAEQAARAAARAAAQAATg+AHcWNARAAEAABEAABAAEQAAEQABAAARAAAQABGBGADonuLSXwu96uXP1OKvHAydN+rteCl89HwqAAAgACIAACIAAgAAIgAAIAAJwfgD8NwM8kwAACAAAAgCAANC3oHT1xTJpL/DpHFv1eZ36SwS7Fif9QoEACIAACIAACIAACIAACIAAIAACIAACIAAIwFMCkDCh7BrPlPNKC0D1xH3nGE+3ACAAAiAACAACIAACgAAgAAIgAAiAAAiAAGQFoOLPEQAEQAAEAAFAAARAABAAARAAARAABMBGsL6NTlM+Z9dGsIkbANMCYPOXACAAAiAAAiAACIAACIAACAACIAACIAACIAC1i6UVXzo2cRF41/inLwJPX2xHAARAAARAABAAARAAARAABEAABEAABAABeMpGsIoXgwiAAAiAACAAAiAAAiAACIAACIAACAACIAACgAAwY6L0Uvj+jWAVgfdSeARAAARAAAQAARAAARAAAUAABEAABEAAEAAABAAAAQAQAAAEgOzFwF2Lt1fHvGsROG2xtOL+SVtoNR4BQAAEQACMRwAQAAEQAOMRAARAAARAAARAALK+hGvKl4JVT8RXA7krALs2Hk4MZMJ4BAABEAABEAABQAAEQAAEQAAEQAAEQAAEQAAEQABmBCDhOkwMQOcCbNp4BAABEAABEAABQAAEQAAEQAAEQAAEQAAEQAAEoGMjWOfGoooNOGkBSJhQkl90k/aDgpfaC4AACIAACIAACIAACIAACIAACIAACIAACIAAmJ0tAp+/qFt9HZ68CJywUW76xj0BEAABEAABEAABEAABEAABEAABEAABEAABEAABOD8GnTfurodEAGb9wOF4AUAABEAABEAAEAABEAABEAAEQAAEQAAEgD0P6qqXwidsTKvY6OSl8D2Lxk8YjwAgAAIgAAIgAAiAAAiAAAgAAiAAAiAAUwOwakIBQAAAEAAABAAAi8AACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAAAuAqAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAAAiAqwAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAA/BSA98+Pv175C68c//2Yn9z5u698ZsV5rdJ5faqvc8U1mXgfdt4zd473fPWfV9q9JAACIAACIAACIAACIAACIAACIAACIAACIADPDcDVm6bzhkg7PuEB7vyciRNcwudUT2rVz2n1eHbdP2n3YcQisAAIgAAIgAAIgACY4ARAAARAAATABCcAAiAAxwfgzokJgBtUAPrvn+rntHo8ac/XqnMRAAEQAAEQAAEQAAEQAAEQAAEQAAEQAAEQAAE4OQAVGx/uHJ+80enORhUbnXo2OiVfn+rndEoAVm0ArJjQ0zZ/CYAACIAACIAACIAACIAACIAACIAACIAACIAAJC6a2Qg2a9Hy1EXgXdctbfHf/Za/iC0AAiAAAiAAAiAAAiAAAiAAAiAAAiAAAiAAAiAA5wTgpI0qnRtwpmz2EQABEAABEAABEAABEAABEAABEAABEAABEAABEAABEIAZN2jCS6unfFnVrv/3J/wAcdJL4as37lVvRLURTAAEQAAEQAAEQAAEQAAEQAAEQAAEQAAEQACqApD88AMgAAAIAAACAMB/+wNTw/VCiTiWFAAAAABJRU5ErkJggg==" alt="The Free85 home screen after switching on" /></div></div><figcaption>The Free85 home screen after switching on</figcaption></figure>
+<p>Reading from the top:</p>
+<ul>
+<li><strong>Status region.</strong> The top line shows the calculator’s current state at a glance: the angle mode (<code>RAD</code> or <code>DEG</code>) and display format (<code>AUTO</code>, <code>SCI</code>, <code>ENG</code>, or <code>FIX</code>) on the left, and the editor state on the right (<code>INS</code> for insert mode, <code>OVR</code> for overwrite, and <code>LOCK</code> when alpha lock is on).</li>
+<li><strong>Title banner.</strong> <code>FREE85 HOME</code> tells you which screen you are on.</li>
+<li><strong>Version banner.</strong> <code>VERSION 3.0.0</code> names the firmware release and disappears as soon as you type.</li>
+<li><strong>Entry line.</strong> The underscore is the cursor. Whatever you type appears here.</li>
+<li><strong>Result area.</strong> The middle of the screen. After you press <kbd>ENTER</kbd> the result appears here, introduced by <code>=</code>.</li>
+<li><strong>Soft-menu labels.</strong> The bottom row names what <kbd>F1</kbd> through <kbd>F5</kbd> currently do. On the home screen these open the main menus: <code>MATH</code>, <code>GRF</code>, <code>VAR</code>, <code>MEM</code>, and <code>SYS</code>, with a second page under <kbd>MORE</kbd>.</li>
+</ul>
+<p>Menus and editors take over the screen when you open them. Press <kbd>F1</kbd> on the home screen and the <code>MATH</code> menu appears, listing five functions with a hint line at the bottom:</p>
+<figure class="lcd"><div class="lcd-frame"><div class="lcd-glass"><img role="img" aria-label="The MATH menu opened with F1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAEACAIAAABK8lkwAAAGgElEQVR42u3dMU4rMRCAYS5ETZc7U3AOrkSHaCJ24xl7xv6kr0LLJpu8+Eea5+zb++Pj1+f317+uHP/3mGdGfvfKOTOuC2AnbwIgAIAACIAAAAIgAABHBeDKYrpqwa12PIAACACAAAgAgAAIAEDXIXDUzwUAQAAEAEAABABAAAQAYJ8AjGzgyljQM54PgAAIAIAACACAAAgAQNcA3F2IDYEBBEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAAAEQAAABEAAAARAAABeC4CXAEAAABAAAAQAAAHoauQmMNk3t8m4QY2BNiAAAiAAgAAIAIAACADAzgGotsEte1G26AMCIAACAAiAAAAIgAAACMA+AbDoAwIgAAIACIAAAAiAAACcHoCRjVerNoIJACAAAiAAgAAIgAAAAiAAAgAIQI8hcMbzFwBAAARAAAABEAAAARAAAAHYMwBiAAiAAAgAIAACIACAAAgAgADEBKDazeXFABAAARAAQAAEQAAAARAAAQBODAAAAgCAAAAgAAACsP9FzhzkVngOUYNlw2QQAAEQAAEAARAAAQAEQAAEABCA6ov+zPOs+lI5m8gAARAAAQAEQAAEABAAARAAQAAEwKIPCIAACAAIgAAIgACAAAiAAAACsGMMRjZeRQWg2qYtAQABEAABEAAQAAEQAEAABEAAAAE4JRIVfi4AgAAIgAAAAiAAAgAIgAAIACAAawKw6pjsRVwMQAAEQAAEAARAAAQAEAABEABAADot6FEbr678bvcbwogBCIAACIAAgAAIgAAIAAiAAAgAIAAACAAAAgCAAAAgAB2GwHc3amUMk6OeQ4WbzAACIAACAAiAAAgAIAACIACAAMwIwMzzdN8IZtEHARAAARAAEAABEABAAARAAAABEIDcAMy8Xos+CIAACIAAgAAIgAAAAiAAAgAIQNcAVNh4JQCAAAiAAAACIAACAAiAAAgAIACGwAIACIAACAAgAAIgAIAACIAAAAKwbwB8GRwgAAIgAIAACIAAAAIgAAIACECPADw7pvIN3MUABEAABEAAQAAEQAAAARAAAQAEAAABAEAAABAAAASg6hD4ygaumTeWMbwFBEAABAAQAAEQAEAABEAAAAG4t+COBCAqJDMDBiAAAgAgAAIAIAACAAjAKUPgqJ9XCIBFHxAAARAAQAAEAEAABABAAF4fFFfeCCYAgAAIgAAAAiAAAAIgAAACMG94O/P8AgAIgAAIACAAAgAgAAIAIAB1AyAGgAAIgAAAAiAAAgAIgAAIACAA+wdADAABEAABAARAAAQAEAABEABAAAAQAAAEAAABAMAQOOcm7BVuCGMIDAiAAAgAIAACIACAAAiAAACnB2Dki9hWbShzg3hAAARAAAABEAABAARAAAQAEICYhbjjl8FZ9AEBEAABAARAAAAEQAAABOD1QXFGAKI2ggkAIAACIACAAAgAgAAIAIAAxA+Ns4fSAgAIgAAIACAAAiAAgAAIgAAAAlArACPnEQNAAARAAAABEAABAARAAAQAEIB5AXh2TNQNZ8QAEAABEABAAARAAAABEAABAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAB8BIACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAAIAAACAAAAgCAAAAgAAAIAAACAIAAACAAAAgAAAIAgAAACAAAAgCAAAAgAADsFoD3x8fLrjzA3eOjRF1X9uuTfY1R78vdc656naPeo2rv+6r3K+O97vL5EgABEAABEAABEAABEAABEAABEAABEAABEAAB2C0A2QvTqgBUOE+1640KRrXXOfsPlGp/0IwcM3K9q86DAAiAAAiAACAAAiAAAiAACIAACIAACADrA1DtAyMA4x9IAaj57zn7/RIAARAAARAAARAAARAAARAAARAAARAAARAAARCAszaCrRpOdtkQ1D0AUYPiLhuLuv9BUyEAJ3y+BEAABEAABEAABEAABEAABEAABEAABEAABEAADIH3HALv+rirhp+rhsnd/1NAl+Ftl6E6AiAAAiAAAiAAAiAAAiAAAiAAFmIBEAABEAABsBALwJ4L9E5D4MobuLLfCwTA4wqAAAgAAuBxBUAABAAB8LgCIAACwJoAVLtheva1VL7x/cwFpcLNwU/7MriMjX6V//0IhgAIgAAIgAAIgAAIgAAIgAAgAAIgAAIgANwLgJcAQAAAEAAABACALf0A3o19waADkM8AAAAASUVORK5CYII=" alt="The MATH menu opened with F1" /></div></div><figcaption>The MATH menu opened with F1</figcaption></figure>
+<p>Here <code>F1-F5 INSERT MORE</code> means: press the soft key matching a listed item to insert it into your entry, or press <kbd>MORE</kbd> for the next page. <kbd>EXIT</kbd> takes you back to the home screen with your entry untouched.</p>
+<p>Other screens work similarly. Press <kbd>GRAPH</kbd> and the calculator draws the graph screen: axes and grid dots. Press <kbd>MORE</kbd> on the graph screen and the table of values opens, with columns for <code>Y1</code>, <code>Y2</code>, and <code>Y3</code> and soft labels <code>UP DN GRAPH EXIT</code>. Full-screen dialogs, such as error messages and the mode screen, tell you on-screen which keys they respond to. Equations themselves are typed on the home entry line; the Guidebook’s graphing chapters explain the workflow.</p>
+<h2 id="first-calculations">First calculations</h2>
+<p>Time to calculate something. From the home screen, press:</p>
+<p><kbd>2</kbd> <kbd>+</kbd> <kbd>3</kbd> <kbd>ENTER</kbd></p>
+<p>The entry line shows <code>2+3</code> and the result area answers <code>= 5</code>:</p>
+<figure class="lcd"><div class="lcd-frame"><div class="lcd-glass"><img role="img" aria-label="Entering 2+3 and pressing ENTER" src="data:image/png;base64,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" alt="Entering 2+3 and pressing ENTER" /></div></div><figcaption>Entering 2+3 and pressing ENTER</figcaption></figure>
+<p>Notice that the expression stays on the entry line after evaluation. That is deliberate: you can keep typing to extend the expression and press <kbd>ENTER</kbd> again, or press <kbd>CLEAR</kbd> to start fresh.</p>
+<h3 id="the-previous-answer">The previous answer</h3>
+<p>The <kbd>(-)</kbd> key’s shifted function is <code>ANS</code>, the previous answer. After the calculation above, press <kbd>CLEAR</kbd> to empty the entry line, then:</p>
+<p><kbd>2nd</kbd> <kbd>(-)</kbd> <kbd>+</kbd> <kbd>1</kbd> <kbd>0</kbd> <kbd>ENTER</kbd></p>
+<p>The entry line reads <code>ANS+10</code> and the result is <code>= 15</code>: the <code>5</code> from before, plus ten. <code>ANS</code> can appear anywhere in an expression, as many times as you like, and always means the most recent numeric result.</p>
+<h3 id="recalling-the-previous-entry">Recalling the previous entry</h3>
+<p>The <kbd>ENTER</kbd> key’s shifted function is <code>ENTRY</code>. Press <kbd>CLEAR</kbd> to empty the line, then <kbd>2nd</kbd> <kbd>ENTER</kbd>, and the previous entry, <code>2+3</code>, reappears with the cursor at the end, ready to edit and re-evaluate.</p>
+<h3 id="editing">Editing</h3>
+<p>The cursor keys move along the entry line, and <kbd>DEL</kbd> deletes the character just before the cursor position. For example, type <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>, press <kbd>◀</kbd> once, and press <kbd>DEL</kbd>: the <code>2</code> disappears, leaving <code>13</code>.</p>
+<p>By default the editor is in insert mode (the status line shows <code>INS</code>), and typing pushes existing characters to the right. With <code>13</code> on the line, press <kbd>◀</kbd> and type <kbd>2</kbd>: the line becomes <code>123</code>. Press <kbd>2nd</kbd> <kbd>DEL</kbd> to toggle overwrite mode instead; the status line changes to <code>OVR</code>, and typing replaces the character under the cursor, so the same <kbd>◀</kbd> <kbd>2</kbd> on <code>13</code> then produces <code>12</code>. Press <kbd>2nd</kbd> <kbd>DEL</kbd> again to return to insert mode.</p>
+<h3 id="when-something-goes-wrong">When something goes wrong</h3>
+<p>Errors are full-screen and polite. Type <kbd>1</kbd> <kbd>÷</kbd> <kbd>0</kbd> <kbd>ENTER</kbd> and a message screen replaces the home screen. It shows three lines: the error name <code>DIVIDE BY ZERO</code>, the hint <code>CLEAR OR EXIT</code> beneath it, and <code>EXIT BACK</code> at the bottom, telling you that <kbd>EXIT</kbd> returns you to your entry. The name is worth reading rather than glancing past: <code>SYNTAX ERROR</code> means the machine could not read what you typed, while <code>DIVIDE BY ZERO</code>, <code>DOMAIN ERROR</code>, <code>NUMERIC OVERFLOW</code> and <code>PRECISION LOST</code> all mean it read you perfectly well and the answer does not exist or cannot be trusted. Appendix C of the Guidebook lists them all. Press <kbd>CLEAR</kbd> or <kbd>EXIT</kbd> and you are back on the home screen with <code>1/0</code> intact and the cursor at the end, so you can fix the mistake instead of retyping it.</p>
+<h2 id="modes">Modes</h2>
+<p>Press <kbd>2nd</kbd> <kbd>MORE</kbd> to open the <code>SYSTEM MODE</code> screen:</p>
+<figure class="lcd"><div class="lcd-frame"><div class="lcd-glass"><img role="img" aria-label="The system mode screen" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAEACAIAAABK8lkwAAAG4ElEQVR42u3dMW4bMRBAUV9ItTrdOUXOkSulCwwDG2vNGc6QfMCrBHnB7K74C4Lhx68/v/95vJ63XP3t58+vvPP9qPF0u07U/RlR9bwynnXG84ITfAiAAAiAACAAAiAAAgACIAACIACwfQCifgBRE8qKE9/d69yNTfZ9GBlP1XOven9AAARAAAQABEAABEAAQAAEQAAEAE4MQNSP84QAdA5h9jgFAARAAARAAEAABEAABAAEQAAEQACg70aw7Am323gyNigJwJzr2PwFAiAAAiAAIAACIAACAAIgAAIgAAjAGouoVePptlGu232zCAwCIAACIAAgAAIgAAIAAiAAAiAAIAACIAACAAIgAAIgACAAAiAAAgACIAACIAAwNwDZG2eqNl5Vjceh8A6FBwEQAAEQABAAARAAAQABEAABEABYdREYAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAgIwAPF7Pb11d6J3v3P3+zPGMjOHu2GaOJ+qaM8cDCIAACAAgAAIgAIAACIAAADEBiJq4oybojPFETbgdHljV/cm+DiAAAiAAgAAIgAAAAiAAAgCsEYCMz6smbgEQABAAARAAAQABEAABEAAQAAEQAAGAHQIwsqlnZNPQyCLzzJB02OgUNZ6Zz10AQAAEQAAEAARAAARAAEAABEAAgD0XgW0Em7MInD0RCwAIgAAIgACAAAiAAAgACIAACIAAgAAIQP1GsJkH+AgACIAACIAAgAAIgAAIAAiAAAiAAIAAjE5SIxuUOlxnZgCqQutQeBAAARAAAQABEAABEAAQAAEQAAGAXgFwCwAEAAABAEAAANh/EXjmYSMZC78dFqWj/l3dDpmZuSjd4T0EARAAARAAEAABEAABAAEQAAEQADhxI9jqG5RGvjPzPsyc9LttADzh/oMACIAACAAIgAAIgACAAAiAAAgACED8daI+FwABAAEQAAEQABAAARAAAQABEAABEADYbSNYtw1BM8OQsYGrQwCiDswRABAAARAAAQABEAABEAAQAAEQAAEAi8ArLcZaBLYIDAIgAAIgACAAAiAAAgACIAACIAAgAPMmlKpFaQEQABAAARAAAQABEAABEAAQAAEQAAGAEwNwd5PRKhOTAPwsulGHsEf9rUPhQQAEQAAEAARAAARAABAAARAAAYATA+AWAAgAAAIAgAAAsH8AMg45WeVgmewDaqruc9VBN1WL1RaBQQAEQAAEAARAAARAAEAABEAABAB+vhFs5sarmcHYdWPazAk3eyPhKuMHARAAARAAEAABEAABAAEQAAEQAFg1AFUT5eoHkghA7XsFCIAACAAgAAIgACAAAiAAAgAC0DcAVYuEUZukMjZedTuApVsAbAQDARAAARAAEAABEAABAAEQAAEQAARgvQDstKibPRGvvoi6yn0GARAAARAAEAABEAABAAEQAAEQANghAN02OnX4fof/tE4ABAAEQAAEQABAAARAAAQABEAABEAA4GsAMjYWdTgUftdF4+yNTp0PhJn5HoIACIAACAAIgAAIgACAAAiAAAgA7BYAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABABAAdwFAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAuA7A4/X81tWF3vnO3e+PjCfKO2N4Z2xR9ydqPNBBt99FxjwmAAIgACAAAiAAAgACIAACIAAIgABUBiD7AYxcp8MDiLr+3ZfvtBeR2vezw/hHfher/E4FQAAEAAEQAAEQAAFAAARAAARAABAAAdghABmfr/4Dy74PAiAAO42/at5Yfb4SAAEQAAEQAAEQAAFAAARAAARAABAAARCA/wUgewPFyHWqNjpFbbYSgDkb7k6Y6He6PxkB6Pw7FQABEAABcH8EQAAEQAAEQAAEQAAEQAAEQAAEYLdFYBvB5vy7LAJbBD5h/FWLwLvefwEQAARAAARAAAQAARAAARAAAUAABEAABEAAEAABEAABEAAEQAAEQAAEAAEQAAEQAAFAAARAACoOhRcAAeCcgDkUXgAEQAAQAAEQAAEQAARAAARAAAQAARCAewHwCgKcSQAABAAAAQBge38BCRTC4mcLt8IAAAAASUVORK5CYII=" alt="The system mode screen" /></div></div><figcaption>The system mode screen</figcaption></figure>
+<p>Three settings are shown, and the soft keys <code>ANG FMT - + MEM</code> adjust them:</p>
+<ul>
+<li><strong>Angle.</strong> <code>ANGLE RAD</code> or <code>ANGLE DEG</code>. Press <kbd>F1</kbd> (<code>ANG</code>) to toggle between radians and degrees. The choice is echoed in the home-screen status line and affects all trigonometric functions.</li>
+<li><strong>Display format.</strong> Press <kbd>F2</kbd> (<code>FMT</code>) to cycle <code>FORMAT</code> through four settings:
+<ul>
+<li><code>AUTO</code>: ordinary decimal output, switching to an exponent for values outside the compact display range;</li>
+<li><code>SCI</code>: one digit before the decimal point and an explicit exponent;</li>
+<li><code>ENG</code>: one to three digits before the point and an exponent divisible by three;</li>
+<li><code>FIX</code>: a fixed number of decimal places with half-up rounding.</li>
+</ul>
+While <code>FIX</code> is selected, <kbd>▲</kbd> and <kbd>▼</kbd> change the number of decimal places, from <code>FIX 0</code> up to <code>FIX 11</code>. The format changes how results are displayed, not the precision the calculator stores.</li>
+<li><strong>Contrast.</strong> <code>CONTRAST 16</code> by default. <kbd>F3</kbd> (<code>-</code>) lowers the setting one step at a time and <kbd>F4</kbd> (<code>+</code>) raises it; the number updates as you press.</li>
+</ul>
+<p><kbd>F5</kbd> (<code>MEM</code>) opens the memory browser from here, showing the object count and letting you inspect and delete stored objects. Press <kbd>EXIT</kbd> to leave the mode screen and return home.</p>
+<h3 id="number-base-display">Number-base display</h3>
+<p>Free85 can show integer results in other bases. After calculating an integer, say <code>42</code>, press <kbd>2nd</kbd> <kbd>1</kbd> to open the <code>NUMBER BASE</code> screen. Its soft keys <code>DEC HEX OCT BIN</code> display the previous answer in the chosen base; press <kbd>F2</kbd> (<code>HEX</code>) and the screen shows <code>0x002A</code>. Base entry, two’s-complement behaviour, and the Boolean word operations are covered in Guidebook chapter 10, <em>Number Bases and Boolean Operations</em>.</p>
+<h2 id="the-catalog-and-custom-menu">The catalog and custom menu</h2>
+<p>Every function you can call lives in one alphabetical list: the catalog. Press <kbd>2nd</kbd> <kbd>CUSTOM</kbd> to open it:</p>
+<figure class="lcd"><div class="lcd-frame"><div class="lcd-glass"><img role="img" aria-label="The catalog, opened with 2nd CUSTOM" src="data:image/png;base64,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" alt="The catalog, opened with 2nd CUSTOM" /></div></div><figcaption>The catalog, opened with 2nd CUSTOM</figcaption></figure>
+<p>The header shows the page number and the current item (the list starts at <code>ABS</code>), with the hint <code>ARROWS SELECT</code>. Use <kbd>▲</kbd> and <kbd>▼</kbd> to move through the list, and press <kbd>ENTER</kbd> to paste the highlighted item into your entry line. For example, <kbd>2nd</kbd> <kbd>CUSTOM</kbd> <kbd>▼</kbd> <kbd>▼</kbd> <kbd>ENTER</kbd> pastes <code>ACOSH(</code> at the home screen. Press <kbd>EXIT</kbd> to leave the catalog without choosing anything.</p>
+<p>The catalog and the custom menu work as a pair. While an item is highlighted in the catalog, pressing one of <kbd>F1</kbd> through <kbd>F5</kbd> assigns it to that custom-menu slot; the screen confirms with a message such as <code>ASSIGNED F2</code>.</p>
+<p>Press <kbd>CUSTOM</kbd> (unshifted) to open your custom menu. Its five slots come preloaded with <code>ABS</code>, <code>EXP</code>, <code>LIS</code>, <code>SQR</code>, and <code>STA</code>, shown as soft labels, and the screen explains itself: <code>F1-F5 RUN SLOT</code> and <code>MORE: CATALOG</code>. Pressing a soft key inserts that slot’s function (<kbd>CUSTOM</kbd> <kbd>F1</kbd> pastes <code>ABS(</code>), and pressing <kbd>MORE</kbd> jumps to the catalog so you can reassign slots. Once you have arranged your five most-used functions here, they are always two keypresses away.</p>
+<h2 id="where-next">Where next</h2>
+<p>This manual has walked you through the front door; the Free85 Guidebook is the full tour, one chapter per subject:</p>
+<ol type="1">
+<li><strong>Operating the Calculator</strong>: modes, the editor, and previous entries.</li>
+<li><strong>Variables and Stored Data</strong>: storing, recalling, and managing named data.</li>
+<li><strong>Mathematics, Calculus, and Comparisons</strong>: the full function set and the fourteen-digit arithmetic behind every result, with worked examples throughout.</li>
+<li><strong>Cartesian Graphing, Drawing, Formats, and Persistence</strong>: plotting, drawing, graph formats, and what the calculator remembers of a plot.</li>
+<li><strong>Polar Graphing</strong>: curves in polar coordinates.</li>
+<li><strong>Parametric Graphing</strong>: curves driven by a parameter.</li>
+<li><strong>Differential-Equation Graphing</strong>: graphing solutions of differential equations.</li>
+<li><strong>Physical and User Constants and Conversions</strong>: built-in values and unit conversions.</li>
+<li><strong>Strings and Characters</strong>: text values and the character palette.</li>
+<li><strong>Number Bases and Boolean Operations</strong>: binary, octal, and hexadecimal display, entry, and word logic.</li>
+<li><strong>Complex Numbers</strong>: arithmetic and functions beyond the reals.</li>
+<li><strong>Lists</strong>: ordered collections and list arithmetic.</li>
+<li><strong>Matrices and Vectors</strong>: linear-algebra objects and their operations.</li>
+<li><strong>Equation, Polynomial, and Simultaneous Solving</strong>: root finding for any expression, polynomials up to degree four, and linear systems of up to four unknowns.</li>
+<li><strong>Statistics and Statistical Plots</strong>: column summaries, least-squares regression in linear, logarithmic, exponential, power, and polynomial forms, and the scatter, connected xy-line, histogram, and box plots.</li>
+<li><strong>Calculator Programming</strong>: the on-calculator programming environment.</li>
+<li><strong>Worked Application Examples</strong>: complete applications, step by step.</li>
+<li><strong>Memory Management</strong>: browsing, inspecting, and deleting stored objects.</li>
+<li><strong>Calculator Linking</strong>: transferring stored objects between calculators and backing up a whole machine over the link port.</li>
+</ol>
+<p>Four appendices round it out: appendix A is the command and function catalog, appendix B the complete key map of all fifty keys, appendix C the system variables and error messages, and appendix D records feature status across the release. Pick the chapter that matches what you want to do next, and enjoy the calculator.</p>
+
+</section>
+<section class="colophon"><div class="colophon-push"></div><p class="colophon-mark">FREE85</p><div class="colophon-rule"></div><p><strong>Free85 Getting Started Manual</strong> · For firmware 3.0 · Second Edition</p><p>Free85 is clean-room software: the firmware, the font, the screen artwork, the tests, and this book were written from scratch for the project. It contains no Texas Instruments ROM code, disassembly, fonts, artwork, or binary tables. The TI-85 is referenced only to describe the hardware profile the firmware runs on; the project is not affiliated with or endorsed by Texas Instruments.</p><p>Free85 is open source under the MIT License. See the LICENSE file for the licence text and NOTICE.md for the project notices.</p><p>Free85 3.0 · Typeset from the Markdown sources with pandoc and Paged.js, and rendered to PDF by headless Chromium. Set in Charter, Helvetica Neue, and Menlo.</p><p>https://chriswilson2020.github.io/Free85/</p></section>
+<section class="back-cover"><div class="bc-inner"><p class="bc-mark">FREE85</p><div class="bc-rule"></div><p class="bc-url">chriswilson2020.github.io/Free85</p></div></section>
+
+<script>
+if (new URLSearchParams(window.location.search).has("embed")) {
+  document.body.classList.add("embedded-reader");
+}
+</script>
+</body>
+</html>

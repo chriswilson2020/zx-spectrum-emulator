@@ -1,0 +1,6 @@
+# Free85 documentation text assets are verified byte-for-byte against
+# release manifests. Keep canonical LF bytes on every platform.
+public/free85/**/*.html text eol=lf
+public/free85/**/*.md   text eol=lf
+public/free85/**/LICENSE text eol=lf
+public/free85/**/*.json text eol=lf

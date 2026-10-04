@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CP/M 2.2</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./public/styles.css">
+  </head>
+  <body class="cpm-page-body">
+    <main class="cpm-shell">
+      <nav class="machine-nav" aria-label="Machine navigation">
+        <a href="./index.html">Machines</a>
+        <a href="./spectrum.html">ZX Spectrum</a>
+        <a href="./trs80.html">TRS-80</a>
+        <a href="./ti85.html">TI-85</a>
+      </nav>
+      <section class="cpm-terminal-frame" aria-label="CP/M terminal">
+        <header>
+          <p>CP/M 2.2</p>
+          <h1>Terminal</h1>
+          <output id="cpmStatus">Loading disk</output>
+        </header>
+        <pre id="cpmTerminal" class="cpm-terminal" tabindex="0" aria-label="CP/M terminal" aria-live="polite"></pre>
+        <details id="cpmDebugDrawer" class="debug-drawer cpm-debug-drawer">
+          <summary>
+            <span>Debug Drawer</span>
+            <strong>Registers, disassembly, disk I/O, console queues</strong>
+          </summary>
+          <section class="debugger cpm-debugger" aria-label="CP/M machine debugger">
+            <div class="debug-card registers-card">
+              <h2>Registers</h2>
+              <div id="cpmRegisterGrid" class="register-grid"></div>
+              <div id="cpmFlagGrid" class="flag-grid" aria-label="CPU flags"></div>
+            </div>
+            <div class="debug-card disassembly-card">
+              <h2>Disassembly</h2>
+              <ol id="cpmDisassembly" class="disassembly"></ol>
+            </div>
+            <div class="debug-card cpm-io-card">
+              <h2>Machine I/O</h2>
+              <div id="cpmIoState" class="basic-status"></div>
+            </div>
+            <div class="debug-card cpm-console-card">
+              <h2>Console</h2>
+              <div id="cpmConsoleState" class="basic-status"></div>
+            </div>
+            <div class="debug-card cpm-trace-card">
+              <h2>Recent Calls</h2>
+              <pre id="cpmTraceState" class="cpm-trace-state">Tracing not enabled</pre>
+            </div>
+          </section>
+        </details>
+        <div class="cpm-controls">
+          <label class="cpm-profile-control">
+            <span>Machine</span>
+            <select id="cpmMachineProfile" aria-label="CP/M machine profile">
+              <option value="z80pack" selected>z80pack</option>
+              <option value="z80mbc2">Z80-MBC2</option>
+            </select>
+          </label>
+          <button id="cpmReset" type="button">Reset</button>
+          <select id="cpmDiskDrive" aria-label="Disk image drive">
+            <option value="0">A: System Disk</option>
+            <option value="1" selected>B: Work Disk</option>
+            <option value="2">C: Companion Disk</option>
+          </select>
+          <button id="cpmLoadDisk" type="button">Load Disk</button>
+          <button id="cpmSaveDisk" type="button">Save Disk</button>
+          <button id="cpmRestoreDisk" type="button">Restore Bundled</button>
+          <button id="cpmClearLocalDisks" type="button">Clear Local</button>
+          <button id="cpmSaveSession" type="button">Save Session</button>
+          <button id="cpmLoadSession" type="button">Load Session</button>
+          <input id="cpmDiskFile" class="visually-hidden" type="file" accept=".dsk,application/octet-stream" tabindex="-1" aria-hidden="true">
+          <input id="cpmSessionFile" class="visually-hidden" type="file" accept=".zip,application/zip,application/octet-stream" tabindex="-1" aria-hidden="true">
+        </div>
+        <section class="cpm-file-panel" aria-label="CP/M files">
+          <header>
+            <p>Files</p>
+            <select id="cpmFileDrive" aria-label="File browser drive">
+              <option value="0">A: System</option>
+              <option value="1" selected>B: Work</option>
+              <option value="2">C: Companion</option>
+            </select>
+            <button id="cpmRefreshFiles" type="button">Refresh</button>
+          </header>
+          <select id="cpmFileList" size="8" aria-label="CP/M directory"></select>
+          <div class="cpm-file-controls">
+            <button id="cpmImportFile" type="button">Import File</button>
+            <button id="cpmDownloadFile" type="button">Download File</button>
+            <button id="cpmDeleteFile" type="button">Delete File</button>
+            <input id="cpmHostFile" class="visually-hidden" type="file" tabindex="-1" aria-hidden="true">
+          </div>
+        </section>
+        <section class="cpm-file-panel" aria-label="Foreign CP/M disk import">
+          <header>
+            <p>Foreign Disk</p>
+            <button id="cpmLoadForeignDisk" type="button">Load Foreign Disk</button>
+            <input id="cpmForeignDiskFile" class="visually-hidden" type="file" accept=".dsk,application/octet-stream" tabindex="-1" aria-hidden="true">
+          </header>
+          <select id="cpmForeignFileList" size="8" multiple aria-label="Foreign CP/M directory"></select>
+          <div class="cpm-file-controls">
+            <button id="cpmCopyForeignFiles" type="button">Copy Selected To Drive</button>
+            <button id="cpmCopyAllForeignFiles" type="button">Copy All To Drive</button>
+            <button id="cpmClearForeignDisk" type="button">Clear Foreign Disk</button>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer class="site-contact-footer">
+      <span>Contact</span>
+      <img src="./public/assets/contact-email.png" alt="Contact email address" width="388" height="60">
+    </footer>
+    <script type="module" src="./public/cpm-app.js?v=20260601-cpm-session"></script>
+  </body>
+</html>

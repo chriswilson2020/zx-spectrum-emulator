@@ -1,0 +1,35 @@
+{
+  "product": "Free85",
+  "release": "Release_2.10",
+  "firmwareVersion": "2.10",
+  "releaseUrl": "https://github.com/chriswilson2020/Free85/releases/tag/Release_2.10",
+  "documentationSourceCommit": "c97cbc4ffe59ca38861cc34d398ad5374397b113",
+  "rom": {
+    "path": "../../../ROM/FREE85.ROM",
+    "sha256": "dc91f6d59ac3ab930216f7642a68284fdb8d6255170934c9c5733b360df160f0"
+  },
+  "files": {
+    "Free85-Manual-typeset.html": {
+      "sha256": "d58d468cfdb7f39a3e68b647135a7cad877bdb2754f669be1a2aa8f9012e6050",
+      "sourceSha256": "8f496877c8cdea914f01cfb8139f2e4d137d1ec71690a5a029392bca104d061a"
+    },
+    "Free85-Manual-typeset.pdf": {
+      "sha256": "f00ea70f6b092c80aaa50df45fecf639eec50fa8fb71ae5b30e6396b39b13ffa"
+    },
+    "Free85-Guidebook-typeset.html": {
+      "sha256": "2893b2c969bbe78a45ed47d18f27117a7583b8aca8a0bfe45023451b534c4e51",
+      "sourceSha256": "16e24dd4408f8c19ec8539faeb772406b12011a7a7828b79364057010910f5c8"
+    },
+    "Free85-Guidebook-typeset.pdf": {
+      "sha256": "b44a0d4d062113acf3c9a40f309be246c5c8738a6470999145a20709fa470db5"
+    },
+    "LICENSE": {
+      "sha256": "e7e342a1633608c0afaba7b06da3106b7e69bc27ef46837897aead81ef8af22d",
+      "sourceSha256": "9f39899a30bfb914f5848814a63d1542b70ae7051ea21640ec445afb2a3a126c"
+    },
+    "NOTICE.md": {
+      "sha256": "3e47bbc4335b1458748a83bcc47ff10aaf0dc7465f836166975b55ef976d9467"
+    }
+  },
+  "notes": "HTML source hashes are recorded before changing the back-to-calculator link for this host."
+}
